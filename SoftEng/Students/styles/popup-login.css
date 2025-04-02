@@ -1,0 +1,54 @@
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    padding: 40px;
+    background: linear-gradient(to bottom right, #d4e1ff, #b3ccff);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+/* Show popup when active */
+.popup.active {
+    display: block;
+}
+
+/* Style close button */
+.close-btn {
+    cursor: pointer;
+    font-size: 24px;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+}
+
+.popup input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #a2bdfb;
+    color: black;
+    font-size: 16px;
+    outline: none;
+    margin-bottom: 10px;
+}
+
+.popup button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #0056ff;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+.popup button:hover {
+    background: #0040c8;
+}

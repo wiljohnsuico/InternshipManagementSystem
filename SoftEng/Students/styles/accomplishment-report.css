@@ -1,0 +1,46 @@
+.title {
+    margin: 30px;
+    color: #26408B;
+}
+
+.title h1 {
+    margin-bottom: 0;
+}
+
+.title p {
+    margin-top: 0;
+}
+
+
+
+/* TIME IN TIME OUT*/
+.attendance {
+    display: flex;
+    justify-content: space-between;
+    margin: 30px;
+}
+
+.clock-box {
+    background: linear-gradient(to right, #dde9f7, #c9d9ec);
+    border: solid black;
+    font-family: Poppins, sans-serif;
+    padding: 30px;
+    border-radius: 5px;
+}
+
+#clock {
+    padding-bottom: 10px;
+    text-align: center;
+    font-size: 40px;
+    font-weight: bolder;
+}
+
+.attendance-time h3 {
+    margin-top: 0;
+}
+
+.buttons {
+    display: flex;
+    gap: 40px;
+
+}

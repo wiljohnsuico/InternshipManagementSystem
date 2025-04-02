@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Listings</title>
+    <link rel="stylesheet" href="styles/jobsearch.css">
+</head>
+<body>
+
+<header>
+    <img src="logo.png" alt="Logo" class="logo">
+    <nav>
+        <a href="home.html">Home</a>
+        <a href="student-profile.html">Profile</a>
+        <a href="jobsearch.html">Job</a>
+    </nav>
+</header>
+
+<div class="search-container">
+    <input type="text" id="search-title" placeholder="Search company or role...">
+    <input type="text" id="search-location" placeholder="Location">
+    <button id="search-btn">Search</button>
+</div>
+
+<div class="filter-box">
+    <h4>Filter</h4>
+    <a href="#" id="reset-filters">Delete All</a><br>
+    <input type="radio" name="salary" id="all" checked> All<br>
+    <input type="radio" name="salary" id="paid"> Paid<br>
+    <input type="radio" name="salary" id="unpaid"> Unpaid<br>
+</div>
+
+<h2 id="results-text">Showing <span id="result-count">10</span> Results</h2>
+<div id="job-listings"></div>
+
+<script src="scripts/jobsearch.js"></script>
+</body>
+</html>
