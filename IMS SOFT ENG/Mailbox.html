@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Information</title>
+    <link rel="stylesheet" href="CompanyInfo.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+   
+    <div class="nav-bar">
+        <img src="/img/QCU IMS (2 x 1.9 in).svg" alt="Logo" class="logo">
+        <div class="nav-links">
+            <a href="">Mailbox</a>
+            <a href="">Intern</a>
+            <a href="CompanyInfo.html">Company</a>
+            <a href="">Employer</a>
+            <a href="">Faculty</a>
+            <a href="">Archive</a>
+                <div class="user-icon">
+                    <img src="img/cat-svgrepo-com.svg" alt="User Icon">
+                </div>
+                <div class="user-menu">
+                <span class="admin-text">Admin <i class="fa-solid fa-angle-down"></i></span>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <a href="#">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="nav-bar.js"></script>
+</body>
+</html>
+    
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const adminText = document.querySelector('.admin-text');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    adminText.addEventListener('click', () => {
+        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!adminText.contains(event.target) && !dropdownMenu.contains(event.target)) {
+            dropdownMenu.style.display = 'none';
+        }
+    });
+});
+  
+</script>
+   
+  
+       <div class="header" style="text-align: left; padding-left: 25px;">
+    <h2>Mailbox</h2>
+</div>
+
+<div class="">
+    
+</div>

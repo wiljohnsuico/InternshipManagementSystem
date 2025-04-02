@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../js.basics"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "IMS"
+	}
+}
