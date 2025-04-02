@@ -1,0 +1,32 @@
+
+.header {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    background: rgba(229, 238, 255, 0.5);
+    box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 80%;
+    margin: 30px;
+}
+
+.header img {
+    height: 75px;
+    float: left;
+    margin-right: 12px;
+}
+
+.internship-posting {
+    margin: 30px;
+    border: solid;
+    padding: 30px;
+    background: rgba(229, 238, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    width: 80%;
+}
+
+.internship-posting h1 {
+    margin: 0;
+    padding-bottom: 40px;
+}

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interns Profile Page</title>
+    <link rel="stylesheet" href="styles/-profile.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/navbar.css">
+
+</head>
+<body>
+
+    <!--- NAVIGATION BAR -->
+    <div class="nav-bar">
+        <div class="nav-logo">
+            <img src="qcuims-logo" alt="LOGO HERE">
+        </div>
+    
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="student-profile.html">Profile</a>
+            <a href="jobsearch.html">Job</a>
+        </div>
+    </div>
+    <!--- END OF DIV-->
+
+
+
+
+    <!--- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <h1> Welcome, [Jak]</h1>
+        <p> BS Accountancy</p>
+      </div>
+      <div class="header-right">
+        <!----POP UP------>
+        <button id="openPopup">
+          View Resume
+        </button>
+      </div>
+    </div>
+    <!--- END OF DIV-->
+
+
+
+
+    <!--- POP UP RESUME-->
+    <div id="popupModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="resume-content">
+          
+          <img src="" alt="profile-photo" id="photo">
+          <h2 class="fullname">Full Name</h2>
+          <p class="contacts">Mobile Number | Email Address</p>
+
+          <h3>Objectives</h3>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit..</p>
+
+          <h3>Basic Information</h3>
+          <ul>
+            <li>Age: 23 years old</li>
+            <li>Date of Birth: January 1, 2000</li>
+            <li>Address: 00 Street, Brgy. 11, Novaliches, Q.C.</li>
+          </ul>
+
+          <h3>Educational Background</h3>
+          <p><strong>Name of School: </strong></p>
+          <p>Year</p>
+
+          <h3>Skills</h3>
+          <ul>
+            <li>Skill 1</li>
+            <li>Skill 2</li>
+            <li>Skill 3</li>
+            <li>Skill 4</li>
+            <li>Skill 5</li>
+            <li>Skill 6</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+    <!--- BASIC INFO CARD-->
+    <div class="info">
+      <div class="basic-info">
+        <h2> Basic Information</h2>
+      </div>
+
+      <div class="content-info">
+
+        <div class="content-left">
+          <p>LName, FName M.I.</p>
+          <p>Date of Birth</p>
+          <p>Address</p>
+          <p>Mobile Number</p>
+        </div>
+
+        <div class="content-right">
+          <p>Student Number</p>
+          <p>Course</p>
+          <p>OJT Professor</p>
+          <p>Email Address</p>
+        </div>
+
+      </div>
+
+    </div>
+    <!--- END ------>
+
+
+    <!--- SKILLS -->
+    <div class="skill-container">
+
+      <div class="skill-header">
+        <h2>Skills</h2>
+      </div>
+
+      <div class="skill-content">
+        <p> #Skill 1</p>
+        <p> #Skill 2</p>
+        <p> #Skill 3</p>
+        <p> #Skill 4</p>
+      </div>
+    </div>
+    <!--- END OF DIV-->
+
+    <div class="application-container">
+      <div class="application-header">
+        <h2>Pending Application</h2>
+      </div>
+      <div class="application-table">
+        <table>
+          <tr>
+            <th>Date</th>
+            <th>Position</th>
+            <th>Update</th>
+          </tr>
+          <tr>
+            <td> <!---PENDING APPLICATION--> JAN 1 </td>
+            <td> <!---PENDING APPLICATION--> INTERN </td>
+            <td> <!---PENDING APPLICATION--> HIRED </td>
+          </tr>
+          <tr>
+            <td> <!---PENDING APPLICATION--> JAN 1 </td>
+            <td> <!---PENDING APPLICATION--> INTERN </td>
+            <td> <!---PENDING APPLICATION--> HIRED </td>
+          </tr>
+          <tr>
+            <td> <!---PENDING APPLICATION--> JAN 1 </td>
+            <td> <!---PENDING APPLICATION--> INTERN </td>
+            <td> <!---PENDING APPLICATION--> HIRED </td>
+          </tr>
+          <tr>
+            <td> <!---PENDING APPLICATION--> JAN 1 </td>
+            <td> <!---PENDING APPLICATION--> INTERN </td>
+            <td> <!---PENDING APPLICATION--> HIRED </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+
+
+<script src="scripts/resume-popup.js"></script>
+</body>
+</html>
