@@ -1,0 +1,221 @@
+body {
+    background: linear-gradient(
+        130deg,
+        #89acf7 4%,
+        #DFE9FF 25%,
+        #E7ECF5 44%,
+        #82a8f6 94%
+    );
+    background-attachment: fixed;
+    font-family: Poppins, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-bar {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f4f4f4;
+    padding: 10px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.nav-links {
+    display: flex;
+    gap: 35px;
+    margin-top: 40px;
+    margin-bottom: 1px;
+    margin-right: 20px;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+    font-weight: bolder;
+    cursor: pointer;
+    padding: 0;
+}
+
+a:active, button:active {
+    color: rgb(48, 48, 48);
+}
+
+
+.logo {
+    margin: 0;
+    padding: 0;
+}
+
+.logo img {
+    height: 60px;
+    float: inherit;
+}
+
+.openLogin {
+    font-weight: bolder;
+    border-style: none;
+    font-size: inherit;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+}
+
+/* LOGIN POPUP BUTTON */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    padding: 40px;
+    background: linear-gradient(to bottom right, #d4e1ff, #b3ccff);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+
+.popup.active {
+    display: block;
+}
+
+.close-btn {
+    cursor: pointer;
+    font-size: 24px;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+}
+
+.popup * {
+    box-sizing: border-box;
+}
+
+.popup input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #a2bdfb;
+    color: black;
+    font-size: 16px;
+    outline: none;
+    margin-bottom: 10px;
+}
+
+.popup button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #0056ff;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+.popup button:hover {
+    background: #0040c8;
+}
+
+.popup p {
+    font-size: 14px;
+    text-align: center;
+}
+
+
+/*POP UP FOR SIGNUP*/
+
+.signupPopup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .signup-content {
+    background: linear-gradient(to bottom right, #d4e1ff, #b3ccff);
+    padding: 30px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .signup-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    color: #333;
+  }
+  
+  .signup-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+    color: #333;
+  }
+  
+  .signup-content form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .signup-content label {
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .signup-content input[type="text"],
+  .signup-content input[type="password"],
+  .signup-content input[type="email"] {
+    padding: 12px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #a2bdfb;
+    color: #131313;
+  }
+  
+  .signup-content input::placeholder {
+    color: #8899ac;
+  }
+  
+  .submitSignup {
+    background-color: #0066ff;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+  }
+  
+  .submitSignup:hover {
+    background-color: #0052cc;
+  }
+  
+  /* Prevent scrolling when popup is open */
+  .no-scroll {
+    overflow: hidden;
+  }
+
+  .signupPopup.active {
+    display: flex !important;
+}
