@@ -43,6 +43,20 @@
         <h2>Internship Offered</h2>
         <div id="job-listing" class="job-listing"></div>
     </section>
+    
+<!-- Application Modal -->
+<div id="apply-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Apply for <span id="job-title-placeholder"></span></h2>
+        <form id="application-form">
+            <input type="text" placeholder="Your Name" required>
+            <input type="email" placeholder="Your Email" required>
+            <textarea placeholder="Why are you a good fit?" rows="4" required></textarea>
+            <button type="submit">Submit Application</button>
+        </form>
+    </div>
+</div>
 
     <script src="script.js"></script>
 </body>
