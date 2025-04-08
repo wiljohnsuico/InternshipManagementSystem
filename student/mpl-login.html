@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/nav-bar.css">
+    <link rel="stylesheet" href="styles/landing.css">
+    <title>LANDING PAGE</title>
+</head>
+<body>
+    <header>
+        <!---NAV BAR-->
+        <div class="nav-bar">
+            <div class="logo">
+                <img src="imgs/qcuims-logo.png" alt="logo">
+            </div>
+
+            <div class="nav-links">
+                <a href="mplhome.html">Home</a>
+                <button type="" id="openLogin" class="openLogin">Login</button>
+                
+            </div>
+        </div>
+
+
+
+        <!---POP UP LOGIN---->
+        <div id="loginPopup" class="popup">
+            <div class="popup-content">
+                <span class="close-btn" id="closeLogin">&times;</span>
+                <h2>Login</h2>
+                <form action="">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter Email Address" required>
+
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter Password">
+
+                    <button type="submit" class="submitLogin">Login</button>
+                    <p>Don't have an account? <a href="#" id="signup-now">Sign up now</a></p>
+
+                </form>
+            </div>
+        </div>
+
+
+        <div class="signupPopup" id="signupPopup">
+            <div class="signup-content">
+                <span class="signup-close-btn" id="closeSignup">&times;</span>
+                <h2>Sign up</h2>
+                <form action="">
+                    <label for="firstname">Firstname</label>
+                    <input type="text" id="firstname" placeholder="Enter Firstname">
+
+                    <label for="lastname">Lastname</label>
+                    <input type="text" id="lastname" placeholder="Enter Lastname">
+
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Enter Active Email Address">
+
+                    <label for="">Password</label>
+                    <input type="password" placeholder="Enter Password">
+                    <input type="password" placeholder="Re-enter Password">
+
+                    <button type="submit" class="submitSignup" id="submitSignup">Sign up</button>
+                </form>
+            </div>
+        </div>
+
+        <script src="scripts/login-signup.js"></script>
+    </header>
+
+    <main>
+
+        <div class="div1">
+            <h1>Web Based Internship Management System</h1>
+            <p>Streamline Your Intership Search &#8212; A Smarter, Hassle&#8211;Free Way to Connect with Opportunities</p>
+        </div>
+
+        <div class="search-container">
+            <div class="search-bar">
+                <input type="text" placeholder="Search for company or role..">
+                <select name="locations" id="locations">
+                    <option value="">Location</option>
+                    <option value="#">#</option>
+                    <option value="#">#</option>
+                    <option value="#">#</option>
+                    <option value="#">#</option>
+                </select>
+                <button type="submit">Search</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-content">
+                <h3>About the QCUIMS</h3>
+                <p>Lorem ipsum odor amet, consectetuer adipiscing elit. Imperdiet ullamcorper vestibulum penatibus nullam lectus posuere. 
+                Sapien aliquet sociosqu purus diam porttitor torquent. Lorem ipsum odor amet, consectetuer adipiscing elit. Imperdiet ullamcorper vestibulum penatibus nullam lectus posuere. 
+                Sapien aliquet sociosqu purus diam porttitor torquent.</p>
+
+
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
