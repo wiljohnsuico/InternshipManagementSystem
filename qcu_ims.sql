@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 08, 2025 at 04:57 PM
+-- Generation Time: Apr 08, 2025 at 06:16 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -276,7 +276,8 @@ ALTER TABLE `companies_tbl`
 --
 ALTER TABLE `daily_accomplishment_tbl`
   ADD PRIMARY KEY (`accomplishment_id`),
-  ADD KEY `fk_interns_daily_accomplishment_idx` (`intern_id`);
+  ADD KEY `fk_interns_daily_accomplishment_idx` (`intern_id`),
+  ADD KEY `fk_companies_daily_accomplishment_tbl` (`company_id`) USING BTREE;
 
 --
 -- Indexes for table `employers_tbl`
@@ -445,6 +446,7 @@ ALTER TABLE `attendance_tracking_tbl`
 -- Constraints for table `daily_accomplishment_tbl`
 --
 ALTER TABLE `daily_accomplishment_tbl`
+  ADD CONSTRAINT `daily_accomplishment_tbl_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `companies_tbl` (`company_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_interns_daily_accomplishment` FOREIGN KEY (`intern_id`) REFERENCES `interns_tbl` (`intern_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
