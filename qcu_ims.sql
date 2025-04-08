@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 06, 2025 at 05:51 PM
+-- Generation Time: Apr 08, 2025 at 04:57 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -120,7 +120,7 @@ CREATE TABLE `faculties_tbl` (
   `last_name` varchar(50) NOT NULL,
   `first_name` varchar(50) NOT NULL,
   `middle_name` varchar(50) NOT NULL,
-  `dept` enum('CCS','COE','CEE','CBA') NOT NULL,
+  `dept` enum('College of Computer Studies','College of Engineering','College of Education','College of Accountancy') NOT NULL,
   `email` varchar(100) NOT NULL,
   `contact_number` int(11) NOT NULL,
   `date_registered` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -138,7 +138,7 @@ CREATE TABLE `internship_placements_tbl` (
   `company_id` int(11) NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
-  `department` varchar(255) NOT NULL,
+  `department` enum('College of Computer Studies','College of Engineering','College of Education','College of Accountancy') NOT NULL,
   `supervisor_name` varchar(255) NOT NULL,
   `supervisor_contact_number` int(11) NOT NULL,
   `supervisor_email` varchar(255) NOT NULL,
@@ -174,8 +174,9 @@ CREATE TABLE `interns_tbl` (
   `middle_name` varchar(50) NOT NULL,
   `email` varchar(100) NOT NULL,
   `contact_number` int(11) NOT NULL,
+  `year_level` enum('1st Year','2nd Year','3rd Year','4th Year') NOT NULL,
   `section` varchar(10) NOT NULL,
-  `dept` enum('CCS','COE','CEE','CBA') NOT NULL,
+  `dept` enum('College of Computer Studies','College of Engineering','College of Education','College of Accountancy') NOT NULL,
   `skills_qualifications` varchar(255) NOT NULL,
   `preferred_intern_fields` varchar(255) NOT NULL,
   `rsm_cv` blob NOT NULL,
@@ -194,7 +195,7 @@ CREATE TABLE `intern_requirements_submission_tbl` (
   `intern_id` int(11) NOT NULL,
   `requirement_id` int(11) NOT NULL,
   `submission_date` date NOT NULL,
-  `file_path` varchar(255) NOT NULL,
+  `file` blob NOT NULL,
   `submission_status` enum('Submitted','Reviewed','Approved') NOT NULL,
   `submission_remarks` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
@@ -261,7 +262,8 @@ ALTER TABLE `admin_tbl`
 --
 ALTER TABLE `attendance_tracking_tbl`
   ADD PRIMARY KEY (`attendance_id`),
-  ADD KEY `fk_interns_attendance_tracking_idx` (`intern_id`);
+  ADD KEY `fk_interns_attendance_tracking_idx` (`intern_id`),
+  ADD KEY `fk_companies_attendance_tracking_tbl` (`company_id`);
 
 --
 -- Indexes for table `companies_tbl`
@@ -436,6 +438,7 @@ ALTER TABLE `admin_tbl`
 -- Constraints for table `attendance_tracking_tbl`
 --
 ALTER TABLE `attendance_tracking_tbl`
+  ADD CONSTRAINT `attendance_tracking_tbl_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `companies_tbl` (`company_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_interns_attendance_tracking` FOREIGN KEY (`intern_id`) REFERENCES `interns_tbl` (`intern_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
