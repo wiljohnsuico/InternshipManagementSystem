@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     // Close modals when clicking outside
+    /*
     window.addEventListener("click", function (event) {
         if (event.target === loginModal) {
             loginModal.classList.remove("active");
@@ -54,7 +55,8 @@ document.addEventListener("DOMContentLoaded", function () {
             signupModal.classList.remove("active");
             document.body.classList.remove("no-scroll");
         }
-    });
+    });   
+    */  
 
     // Handle login form submission
     if (loginForm) {
