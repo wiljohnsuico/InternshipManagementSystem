@@ -1,24 +1,45 @@
 import mysql.connector
+from mysql.connector import Error
 
-# Connect to the MySQL database
-conn = mysql.connector.connect(
-    host="localhost",        # or your DB host
-    user="your_username",    # replace with your MySQL username
-    password="your_password",# replace with your MySQL password
-    database="qcu_ims"       # make sure this matches your .sql file
-)
+try:
+    # Connect to the MySQL database
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="qcu_ims"
+    )
 
-# Create a cursor
-cursor = conn.cursor()
+    if conn.is_connected():
+        print("✅ Successfully connected to MySQL database!")
 
-# Example query
-cursor.execute("SELECT * FROM students")  # Replace with your actual table
+        cursor = conn.cursor()
 
-# Fetch and print data
-rows = cursor.fetchall()
-for row in rows:
-    print(row)
+        # 🔎 Show all tables in the database
+        cursor.execute("SHOW TABLES")
+        print("📋 Available tables in 'qcu_ims':")
+        for table in cursor:
+            print(f" - {table[0]}")
 
-# Close connection
-cursor.close()
-conn.close()
+        print("\n📤 Fetching data from 'admin_tbl':")
+
+        # 📦 Fetch data from the 'admin_tbl' table
+        cursor.execute("SELECT * FROM admin_tbl")
+        rows = cursor.fetchall()
+
+        if rows:
+            print("📦 Data from 'admin_tbl':")
+            for row in rows:
+                print(row)
+        else:
+            print("⚠️ No data found in 'admin_tbl' table.")
+
+except Error as e:
+    print(f"❌ Error while connecting to MySQL: {e}")
+
+finally:
+    if 'cursor' in locals():
+        cursor.close()
+    if 'conn' in locals() and conn.is_connected():
+        conn.close()
+        print("🔌 MySQL connection closed.")
