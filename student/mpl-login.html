@@ -23,49 +23,49 @@
         </div>
 
 
-
-        <!---POP UP LOGIN---->
-        <div id="loginPopup" class="popup">
-            <div class="popup-content">
-                <span class="close-btn" id="closeLogin">&times;</span>
+        <!-- Login Modal -->
+        <div id="loginModal" class="modal-overlay">
+            <div class="modal-content">
+                <span class="modal-close" id="closeLogin">&times;</span>
                 <h2>Login</h2>
                 <form action="">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="Enter Email Address" required>
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter Email Address" required>
 
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Enter Password">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter Password" required>
 
-                    <button type="submit" class="submitLogin">Login</button>
+                    <button type="submit" class="modal-button">Login</button>
                     <p>Don't have an account? <a href="#" id="signup-now">Sign up now</a></p>
-
                 </form>
             </div>
         </div>
 
-
-        <div class="signupPopup" id="signupPopup">
-            <div class="signup-content">
-                <span class="signup-close-btn" id="closeSignup">&times;</span>
+        <!-- Signup Modal -->
+        <div id="signupModal" class="modal-overlay">
+            <div class="modal-content">
+                <span class="modal-close" id="closeSignup">&times;</span>
                 <h2>Sign up</h2>
                 <form action="">
                     <label for="firstname">Firstname</label>
-                    <input type="text" id="firstname" placeholder="Enter Firstname">
+                    <input type="text" id="firstname" placeholder="Enter Firstname" required>
 
                     <label for="lastname">Lastname</label>
-                    <input type="text" id="lastname" placeholder="Enter Lastname">
+                    <input type="text" id="lastname" placeholder="Enter Lastname" required>
 
                     <label for="studentId">Student ID</label>
-                    <input type="text" id="studentID" placeholder="E.g. 25-1900">
+                    <input type="text" id="studentId" placeholder="E.g. 25-1900" required>
 
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" placeholder="Enter Active Email Address">
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" placeholder="Enter Active Email Address" required>
 
-                    <label for="">Password</label>
-                    <input type="password" placeholder="Enter Password">
-                    <input type="password" placeholder="Re-enter Password">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter Password" required>
+                    
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Re-enter Password" required>
 
-                    <button type="submit" class="submitSignup" id="submitSignup">Sign up</button>
+                    <button type="submit" class="modal-button">Sign up</button>
                 </form>
             </div>
         </div>
