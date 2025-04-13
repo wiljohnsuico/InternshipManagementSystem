@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const closeSignupButton = document.getElementById("closeSignup");
     const signupLink = document.getElementById("signup-now");
     
+    // Form elements
+    const loginForm = loginModal.querySelector("form");
+    const signupForm = signupModal.querySelector("form");
+    
     // Open login modal
     if (openLoginButton) {
         openLoginButton.addEventListener("click", function () {
@@ -51,4 +55,108 @@ document.addEventListener("DOMContentLoaded", function () {
             document.body.classList.remove("no-scroll");
         }
     });
+
+    // Handle login form submission
+    if (loginForm) {
+        loginForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+
+            try {
+                const response = await fetch('http://localhost:5001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                console.log('Login response:', data);
+
+                if (data.success) {
+                    // Store the token in localStorage
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    // Redirect based on role
+                    switch (data.user.role) {
+                        case 'Intern':
+                            window.location.href = 'mplhome.html';
+                            break;
+                        case 'Employer':
+                            window.location.href = 'mplemployerprofile.html';
+                            break;
+                        case 'Faculty':
+                            window.location.href = 'faculty-dashboard.html';
+                            break;
+                        case 'Admin':
+                            window.location.href = 'admin-dashboard.html';
+                            break;
+                        default:
+                            alert('Unknown role');
+                    }
+                } else {
+                    alert(data.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('An error occurred during login. Please try again.');
+            }
+        });
+    }
+
+    // Handle signup form submission
+    if (signupForm) {
+        signupForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                email: document.getElementById("signupEmail").value,
+                password: document.getElementById("password").value,
+                confirmPassword: document.getElementById("confirmPassword").value,
+                first_name: document.getElementById("firstname").value,
+                last_name: document.getElementById("lastname").value,
+                student_id: document.getElementById("studentId").value,
+                role: 'Intern' // Default role for signup
+            };
+
+            console.log('Signup data being sent:', { ...formData, password: '***' });
+
+            if (formData.password !== formData.confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5001/api/auth/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                console.log('Signup response status:', response.status);
+                const data = await response.json();
+                console.log('Signup response data:', data);
+
+                if (response.ok && data.success) {
+                    alert('Signup successful! Please login.');
+                    signupModal.classList.remove("active");
+                    loginModal.classList.add("active");
+                    signupForm.reset(); // Clear the form
+                } else {
+                    // Handle specific error messages
+                    const errorMessage = data.message || 'Signup failed. Please try again.';
+                    alert(errorMessage);
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                alert('An error occurred during signup. Please check your connection and try again.');
+            }
+        });
+    }
 });
