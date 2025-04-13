@@ -1,57 +1,54 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Login popup elements
-  let openLoginButton = document.getElementById("openLogin");
-  let closeLoginButton = document.getElementById("closeLogin");
-  let loginPopup = document.getElementById("loginPopup");
-  
-  // Signup popup elements
-  let signupLink = document.getElementById("signup-now");
-  let closeSignupButton = document.getElementById("closeSignup");
-  let signupPopup = document.getElementById("signupPopup");
-  
-  console.log("JavaScript Loaded"); // Debugging step
-  
-  // Open login popup
-  if (openLoginButton) {
-      openLoginButton.addEventListener("click", function () {
-          console.log("Open login button clicked"); // Debugging step
-          loginPopup.classList.add("active"); // Show login popup
-      });
-  }
-  
-  // Close login popup
-  if (closeLoginButton) {
-      closeLoginButton.addEventListener("click", function () {
-          console.log("Close login button clicked"); // Debugging step
-          loginPopup.classList.remove("active"); // Hide login popup
-      });
-  }
-  
-  // Open signup popup from the login popup
-  if (signupLink) {
-      signupLink.addEventListener("click", function (e) {
-          e.preventDefault(); // Prevent default link behavior
-          console.log("Signup link clicked"); // Debugging step
-          loginPopup.classList.remove("active"); // Hide login popup
-          signupPopup.classList.add("active"); // Show signup popup
-      });
-  }
-  
-  // Close signup popup
-  if (closeSignupButton) {
-      closeSignupButton.addEventListener("click", function () {
-          console.log("Close signup button clicked"); // Debugging step
-          signupPopup.classList.remove("active"); // Hide signup popup
-      });
-  }
-  
-  // Close popups when clicking outside
-  window.addEventListener("click", function (event) {
-      if (event.target === loginPopup) {
-          loginPopup.classList.remove("active");
-      }
-      if (event.target === signupPopup) {
-          signupPopup.classList.remove("active");
-      }
-  });
+    // Modal elements
+    const openLoginButton = document.getElementById("openLogin");
+    const loginModal = document.getElementById("loginModal");
+    const signupModal = document.getElementById("signupModal");
+    const closeLoginButton = document.getElementById("closeLogin");
+    const closeSignupButton = document.getElementById("closeSignup");
+    const signupLink = document.getElementById("signup-now");
+    
+    // Open login modal
+    if (openLoginButton) {
+        openLoginButton.addEventListener("click", function () {
+            loginModal.classList.add("active");
+            document.body.classList.add("no-scroll");
+        });
+    }
+    
+    // Close login modal
+    if (closeLoginButton) {
+        closeLoginButton.addEventListener("click", function () {
+            loginModal.classList.remove("active");
+            document.body.classList.remove("no-scroll");
+        });
+    }
+    
+    // Switch from login to signup
+    if (signupLink) {
+        signupLink.addEventListener("click", function (e) {
+            e.preventDefault();
+            loginModal.classList.remove("active");
+            signupModal.classList.add("active");
+        });
+    }
+    
+    // Close signup modal
+    if (closeSignupButton) {
+        closeSignupButton.addEventListener("click", function () {
+            signupModal.classList.remove("active");
+            document.body.classList.remove("no-scroll");
+        });
+    }
+    
+    // Close modals when clicking outside
+    window.addEventListener("click", function (event) {
+        if (event.target === loginModal) {
+            loginModal.classList.remove("active");
+            document.body.classList.remove("no-scroll");
+        }
+        if (event.target === signupModal) {
+            signupModal.classList.remove("active");
+            document.body.classList.remove("no-scroll");
+        }
+    });
 });
