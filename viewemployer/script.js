@@ -53,11 +53,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Close modal when clicking outside content
+    /*
     window.addEventListener("click", (e) => {
         if (e.target === modal) {
             modal.style.display = "none";
         }
     });
-
+    */
     updateJobListings();
 });
