@@ -7,7 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const allFilter = document.getElementById("all");
     const resetFilters = document.getElementById("reset-filters");
 
-    /// wala to
+    /// wala to kasi protype lang yan para makita nyo and para may malagay lang
+    
     const jobs = [
         { title: "Software Engineer", company: "Google", location: "Manila", skills: ["JavaScript", "Python"], salary: "Paid" },
         { title: "Marketing Intern", company: "Facebook", location: "Quezon City", skills: ["Marketing", "SEO"], salary: "Unpaid" },
