@@ -9,22 +9,21 @@ const { validateEmail, validatePassword } = require('../utils/validators');
 router.post('/login', async (req, res) => {
     console.log('Login request received:', req.body);
     try {
-        const { email, password } = req.body;
+        const { username, password } = req.body;
 
         // Validate input
-        if (!email || !password) {
-            console.log('Missing email or password');
+        if (!username || !password) {
+            console.log('Missing username or password');
             return res.status(400).json({
                 success: false,
-                message: 'Please provide email and password'
+                message: 'Please provide username and password'
             });
         }
 
-        console.log('Attempting database query for email:', email);
-        // Get user from database
+        console.log('Attempting database query for username:', username);
         const [users] = await pool.query(
-            'SELECT * FROM users_tbl WHERE email = ?',
-            [email]
+            'SELECT * FROM users_tbl WHERE username = ?',
+            [username]
         );
         console.log('Database query result:', users.length > 0 ? 'User found' : 'No user found');
 
@@ -37,9 +36,7 @@ router.post('/login', async (req, res) => {
 
         const user = users[0];
         console.log('Found user:', { ...user, password: '[HIDDEN]' });
-        console.log('Verifying password for user:', email);
 
-        // Verify password
         const isMatch = await bcrypt.compare(password, user.password);
         console.log('Password verification result:', isMatch ? 'Match' : 'No match');
 
@@ -51,25 +48,24 @@ router.post('/login', async (req, res) => {
         }
 
         console.log('Generating JWT token');
-        // Generate JWT token
         const token = jwt.sign(
-            { 
+            {
                 user_id: user.user_id,
                 role: user.role,
-                email: user.email
+                username: user.username
             },
             process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: '24h' }
         );
 
-        console.log('Login successful for user:', email);
+        console.log('Login successful for user:', username);
         res.json({
             success: true,
             token,
             user: {
                 user_id: user.user_id,
                 role: user.role,
-                email: user.email,
+                username: user.username,
                 first_name: user.first_name,
                 last_name: user.last_name
             }
@@ -92,11 +88,10 @@ router.post('/login', async (req, res) => {
 router.post('/signup', async (req, res) => {
     console.log('Signup request received:', req.body);
     try {
-        const { email, password, role, first_name, last_name, student_id } = req.body;
+        const { username, password, role, first_name, last_name, student_id } = req.body;
 
-        // Validate input
-        if (!email || !password || !role || !first_name || !last_name) {
-            console.log('Missing required fields:', { email, role, first_name, last_name });
+        if (!username || !password || !role || !first_name || !last_name) {
+            console.log('Missing required fields:', { username, role, first_name, last_name });
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
@@ -111,11 +106,11 @@ router.post('/signup', async (req, res) => {
             });
         }
 
-        if (!validateEmail(email)) {
-            console.log('Invalid email format:', email);
+        if (!validateEmail(username)) {
+            console.log('Invalid username (email format) provided:', username);
             return res.status(400).json({
                 success: false,
-                message: 'Invalid email format'
+                message: 'Invalid username format (must be a valid email)'
             });
         }
 
@@ -127,42 +122,37 @@ router.post('/signup', async (req, res) => {
             });
         }
 
-        console.log('Checking for existing user with email:', email);
-        // Check if user already exists
+        console.log('Checking for existing user with username:', username);
         const [existingUsers] = await pool.query(
-            'SELECT * FROM users_tbl WHERE email = ?',
-            [email]
+            'SELECT * FROM users_tbl WHERE username = ?',
+            [username]
         );
 
         if (existingUsers.length > 0) {
-            console.log('User already exists with email:', email);
+            console.log('User already exists with username:', username);
             return res.status(400).json({
                 success: false,
                 message: 'User already exists'
             });
         }
 
-        // Hash password
         console.log('Hashing password');
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Start transaction
         console.log('Starting database transaction');
         await pool.query('START TRANSACTION');
 
         try {
             console.log('Inserting into users_tbl');
-            // Insert into users_tbl
             const [result] = await pool.query(
-                'INSERT INTO users_tbl (email, password, role, first_name, last_name) VALUES (?, ?, ?, ?, ?)',
-                [email, hashedPassword, role, first_name, last_name]
+                'INSERT INTO users_tbl (username, password, role, first_name, last_name) VALUES (?, ?, ?, ?, ?)',
+                [username, hashedPassword, role, first_name, last_name]
             );
 
             const userId = result.insertId;
             console.log('User created with ID:', userId);
 
-            // Insert into role-specific table
             let roleTable = '';
             let roleFields = ['user_id'];
             let roleValues = [userId];
@@ -197,7 +187,7 @@ router.post('/signup', async (req, res) => {
 
             await pool.query('COMMIT');
 
-            console.log('Signup successful for:', email);
+            console.log('Signup successful for:', username);
             res.status(201).json({
                 success: true,
                 message: 'User registered successfully'
@@ -221,4 +211,4 @@ router.post('/signup', async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router;

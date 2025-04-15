@@ -1,18 +1,8 @@
--- Drop existing tables if they exist (in correct order due to foreign key constraints)
+-- Disable FK checks temporarily (not needed unless altering schema)
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS daily_accomplishment_tbl;
-DROP TABLE IF EXISTS attendance_tracking_tbl;
-DROP TABLE IF EXISTS internship_placements_tbl;
-DROP TABLE IF EXISTS interns_tbl;
-DROP TABLE IF EXISTS employers_tbl;
-DROP TABLE IF EXISTS faculties_tbl;
-DROP TABLE IF EXISTS admin_tbl;
-DROP TABLE IF EXISTS users_tbl;
-DROP TABLE IF EXISTS companies_tbl;
-SET FOREIGN_KEY_CHECKS = 1;
 
 -- Create users table
-CREATE TABLE users_tbl (
+CREATE TABLE IF NOT EXISTS users_tbl (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
@@ -25,7 +15,7 @@ CREATE TABLE users_tbl (
 );
 
 -- Create companies table
-CREATE TABLE companies_tbl (
+CREATE TABLE IF NOT EXISTS companies_tbl (
     company_id INT PRIMARY KEY AUTO_INCREMENT,
     company_name VARCHAR(255) NOT NULL,
     industry_sector VARCHAR(100),
@@ -35,7 +25,7 @@ CREATE TABLE companies_tbl (
 );
 
 -- Create interns table
-CREATE TABLE interns_tbl (
+CREATE TABLE IF NOT EXISTS interns_tbl (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL UNIQUE,
     student_id VARCHAR(20) UNIQUE,
@@ -55,7 +45,7 @@ CREATE TABLE interns_tbl (
 );
 
 -- Create employers table
-CREATE TABLE employers_tbl (
+CREATE TABLE IF NOT EXISTS employers_tbl (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL UNIQUE,
     company_id INT NOT NULL,
@@ -66,8 +56,8 @@ CREATE TABLE employers_tbl (
     FOREIGN KEY (company_id) REFERENCES companies_tbl(company_id) ON DELETE CASCADE
 );
 
--- Create faculty table
-CREATE TABLE faculties_tbl (
+-- Create faculties table
+CREATE TABLE IF NOT EXISTS faculties_tbl (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL UNIQUE,
     department VARCHAR(100),
@@ -78,7 +68,7 @@ CREATE TABLE faculties_tbl (
 );
 
 -- Create admin table
-CREATE TABLE admin_tbl (
+CREATE TABLE IF NOT EXISTS admin_tbl (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL UNIQUE,
     department VARCHAR(100),
@@ -88,7 +78,7 @@ CREATE TABLE admin_tbl (
 );
 
 -- Create internship placements table
-CREATE TABLE internship_placements_tbl (
+CREATE TABLE IF NOT EXISTS internship_placements_tbl (
     placement_id INT PRIMARY KEY AUTO_INCREMENT,
     intern_id INT NOT NULL,
     company_id INT NOT NULL,
@@ -107,7 +97,7 @@ CREATE TABLE internship_placements_tbl (
 );
 
 -- Create daily accomplishment table
-CREATE TABLE daily_accomplishment_tbl (
+CREATE TABLE IF NOT EXISTS daily_accomplishment_tbl (
     accomplishment_id INT PRIMARY KEY AUTO_INCREMENT,
     intern_id INT NOT NULL,
     company_id INT NOT NULL,
@@ -116,33 +106,4 @@ CREATE TABLE daily_accomplishment_tbl (
     challenges_faced TEXT,
     skills_applied TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (intern_id) REFERENCES interns_tbl(id) ON DELETE CASCADE,
-    FOREIGN KEY (company_id) REFERENCES companies_tbl(company_id) ON DELETE CASCADE
-);
-
--- Create attendance tracking table
-CREATE TABLE attendance_tracking_tbl (
-    attendance_id INT PRIMARY KEY AUTO_INCREMENT,
-    intern_id INT NOT NULL,
-    company_id INT NOT NULL,
-    date DATE NOT NULL,
-    time_in TIME NOT NULL,
-    time_out TIME,
-    duration DECIMAL(4,2),
-    remarks TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (intern_id) REFERENCES interns_tbl(id) ON DELETE CASCADE,
-    FOREIGN KEY (company_id) REFERENCES companies_tbl(company_id) ON DELETE CASCADE
-);
-
--- Add indexes for better performance
-CREATE INDEX idx_user_role ON users_tbl(role);
-CREATE INDEX idx_intern_user ON interns_tbl(user_id);
-CREATE INDEX idx_employer_user ON employers_tbl(user_id);
-CREATE INDEX idx_faculty_user ON faculties_tbl(user_id);
-CREATE INDEX idx_admin_user ON admin_tbl(user_id);
-CREATE INDEX idx_placement_status ON internship_placements_tbl(placement_status);
-CREATE INDEX idx_accomplishment_date ON daily_accomplishment_tbl(date);
-CREATE INDEX idx_attendance_date ON attendance_tracking_tbl(date);
+    updated_at TIMESTAMP_

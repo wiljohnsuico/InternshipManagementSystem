@@ -14,4 +14,5 @@ const PORT = 3500;
 app.listen(PORT, () => {
     console.log(`Frontend server running at http://localhost:${PORT}`);
     console.log(`Access the login page at http://localhost:${PORT}/mpl-login.html`);
-}); 
+});
+    

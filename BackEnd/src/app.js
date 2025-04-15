@@ -11,13 +11,21 @@ const internRoutes = require('./routes/intern.routes');
 
 const app = express();
 
-// Middleware
+// ✅ Allow both localhost and 127.0.0.1
+const allowedOrigins = ['http://localhost:3500', 'http://127.0.0.1:3500'];
 app.use(cors({
-    origin: 'http://localhost:3500',
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -32,7 +40,7 @@ app.use(session({
     }
 }));
 
-// Request logging middleware
+// Request logging
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     console.log('Request body:', req.body);
@@ -66,7 +74,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Handle 404 routes
+// 404 handler
 app.use((req, res) => {
     console.log(`404 - Route not found: ${req.method} ${req.url}`);
     res.status(404).json({
@@ -79,27 +87,27 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5004;
 console.log('Using PORT:', PORT);
 
-// Start server after database initialization
+// Start server after short delay to allow DB init
 let server;
 setTimeout(() => {
     server = app.listen(PORT, () => {
-        console.log(`Backend server is running on port ${PORT}`);
+        console.log(`✅ Backend server is running on port ${PORT}`);
     }).on('error', (err) => {
-        console.error('Server failed to start:', err);
+        console.error('❌ Server failed to start:', err);
         if (err.code === 'EADDRINUSE') {
-            console.error(`Port ${PORT} is already in use. Please try a different port.`);
+            console.error(`Port ${PORT} is already in use.`);
         }
         process.exit(1);
     });
-}, 2000); // Give database 2 seconds to initialize
+}, 2000);
 
-// Handle graceful shutdown
+// Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('SIGTERM signal received. Closing server...');
+    console.log('SIGTERM received. Closing server...');
     if (server) {
         server.close(() => {
-            console.log('Server closed');
+            console.log('Server closed.');
             process.exit(0);
         });
     }
-}); 
+});
