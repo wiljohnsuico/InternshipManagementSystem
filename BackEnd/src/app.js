@@ -2,19 +2,22 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const path = require('path');
+const db = require('./config/database');
 require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
-const userRoutes = require('./routes/user.routes');
-const internshipRoutes = require('./routes/internship.routes');
-const applicationRoutes = require('./routes/application.routes');
-const accomplishmentRoutes = require('./routes/accomplishment.routes');
+const internRoutes = require('./routes/intern.routes');
 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3500',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -38,10 +41,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/internships', internshipRoutes);
-app.use('/api/applications', applicationRoutes);
-app.use('/api/accomplishments', accomplishmentRoutes);
+app.use('/api/interns', internRoutes);
 
 // Test route
 app.get('/', (req, res) => {
@@ -75,7 +75,31 @@ app.use((req, res) => {
     });
 });
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-    console.log(`Backend server is running on port ${PORT}`);
+// Port configuration
+const PORT = process.env.PORT || 5004;
+console.log('Using PORT:', PORT);
+
+// Start server after database initialization
+let server;
+setTimeout(() => {
+    server = app.listen(PORT, () => {
+        console.log(`Backend server is running on port ${PORT}`);
+    }).on('error', (err) => {
+        console.error('Server failed to start:', err);
+        if (err.code === 'EADDRINUSE') {
+            console.error(`Port ${PORT} is already in use. Please try a different port.`);
+        }
+        process.exit(1);
+    });
+}, 2000); // Give database 2 seconds to initialize
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received. Closing server...');
+    if (server) {
+        server.close(() => {
+            console.log('Server closed');
+            process.exit(0);
+        });
+    }
 }); 

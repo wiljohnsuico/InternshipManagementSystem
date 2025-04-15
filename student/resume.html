@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/home-navbar.css">
     <link rel="stylesheet" href="styles/resume.css">
-    <title>INTERN'S RESUME</title>
+    <title>RESUME</title>
 </head>
 <body>
     <header>
-        <!--NAV BAR--->
+        <!---NAV BAR-->
         <div class="nav-bar">
             <div class="logo">
                 <img src="imgs/qcuims-logo.png" alt="logo">
@@ -19,15 +19,18 @@
                 <a href="mplhome.html">Home</a>
 
                 <div class="profile">
-                    <button class="dropdown-profile">Profile</button>
+                    <button class="dropdown-profile profile-link">
+                        <span class="user-name">Profile</span>
+                    </button>
                     <div class="profile-content">
                         <a href="mplprofile.html">My Account</a>
                         <a href="resume.html">My Resume</a>
-                        <a href="#">Internship</a>
-                        <a href="#">Logout</a>
+                        <a href="#">Applications</a>
+                        <a href="#" class="logout-link">Logout</a>
                     </div>
                 </div>
-                
+
+                <button id="openLogin" class="openLogin login-button">Login</button>
             </div>
         </div>
     </header>
@@ -198,5 +201,10 @@
             });
         </script>
     </main>
+
+    <!-- Include auth utilities -->
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/protect-page.js"></script>
+    <script src="scripts/resume.js"></script>
 </body>
 </html>

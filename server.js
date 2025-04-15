@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'student', 'mpl-login.html'));
 });
 
-const PORT = 3000;
+const PORT = 3500;
 app.listen(PORT, () => {
     console.log(`Frontend server running at http://localhost:${PORT}`);
 }); 

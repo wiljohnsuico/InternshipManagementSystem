@@ -11,37 +11,50 @@ document.addEventListener("DOMContentLoaded", function () {
     const loginForm = loginModal.querySelector("form");
     const signupForm = signupModal.querySelector("form");
     
+    // Modal helper functions
+    function openLoginModal() {
+        loginModal.classList.add("active");
+        signupModal.classList.remove("active");
+        document.body.classList.add("no-scroll");
+    }
+
+    function closeLoginModal() {
+        loginModal.classList.remove("active");
+        document.body.classList.remove("no-scroll");
+    }
+
+    function openSignupModal() {
+        signupModal.classList.add("active");
+        loginModal.classList.remove("active");
+        document.body.classList.add("no-scroll");
+    }
+
+    function closeSignupModal() {
+        signupModal.classList.remove("active");
+        document.body.classList.remove("no-scroll");
+    }
+    
     // Open login modal
     if (openLoginButton) {
-        openLoginButton.addEventListener("click", function () {
-            loginModal.classList.add("active");
-            document.body.classList.add("no-scroll");
-        });
+        openLoginButton.addEventListener("click", openLoginModal);
     }
     
     // Close login modal
     if (closeLoginButton) {
-        closeLoginButton.addEventListener("click", function () {
-            loginModal.classList.remove("active");
-            document.body.classList.remove("no-scroll");
-        });
+        closeLoginButton.addEventListener("click", closeLoginModal);
     }
     
     // Switch from login to signup
     if (signupLink) {
         signupLink.addEventListener("click", function (e) {
             e.preventDefault();
-            loginModal.classList.remove("active");
-            signupModal.classList.add("active");
+            openSignupModal();
         });
     }
     
     // Close signup modal
     if (closeSignupButton) {
-        closeSignupButton.addEventListener("click", function () {
-            signupModal.classList.remove("active");
-            document.body.classList.remove("no-scroll");
-        });
+        closeSignupButton.addEventListener("click", closeSignupModal);
     }
     
     // Close modals when clicking outside
@@ -63,25 +76,36 @@ document.addEventListener("DOMContentLoaded", function () {
         loginForm.addEventListener("submit", async function(e) {
             e.preventDefault();
             
-            const email = document.getElementById("loginEmail").value;
-            const password = document.getElementById("loginPassword").value;
+            const loginData = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
 
             try {
-                const response = await fetch('http://localhost:5001/api/auth/login', {
+                const response = await fetch('http://localhost:5004/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify(loginData)
                 });
 
                 const data = await response.json();
-                console.log('Login response:', data);
+                console.log('Login response:', { ...data, token: data.token ? '[HIDDEN]' : null });
 
-                if (data.success) {
-                    // Store the token in localStorage
+                if (response.ok && data.success) {
+                    // Store token and user data
                     localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('user', JSON.stringify({
+                        user_id: data.user.user_id,
+                        role: data.user.role,
+                        email: data.user.email,
+                        first_name: data.user.first_name,
+                        last_name: data.user.last_name
+                    }));
+
+                    // Show success message
+                    alert('Login successful! Welcome ' + data.user.first_name + '!');
 
                     // Redirect based on role
                     switch (data.user.role) {
@@ -89,23 +113,23 @@ document.addEventListener("DOMContentLoaded", function () {
                             window.location.href = 'mplhome.html';
                             break;
                         case 'Employer':
-                            window.location.href = 'mplemployerprofile.html';
+                            window.location.href = 'mplhome.html';
                             break;
                         case 'Faculty':
-                            window.location.href = 'faculty-dashboard.html';
+                            window.location.href = 'mplhome.html';
                             break;
                         case 'Admin':
-                            window.location.href = 'admin-dashboard.html';
+                            window.location.href = 'mplhome.html';
                             break;
                         default:
-                            alert('Unknown role');
+                            alert('Unknown user role');
                     }
                 } else {
                     alert(data.message || 'Login failed');
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                alert('An error occurred during login. Please try again.');
+                alert('Error during login. Please try again.');
             }
         });
     }
@@ -115,49 +139,39 @@ document.addEventListener("DOMContentLoaded", function () {
         signupForm.addEventListener("submit", async function(e) {
             e.preventDefault();
             
-            const formData = {
-                email: document.getElementById("signupEmail").value,
-                password: document.getElementById("password").value,
-                confirmPassword: document.getElementById("confirmPassword").value,
-                first_name: document.getElementById("firstname").value,
-                last_name: document.getElementById("lastname").value,
-                student_id: document.getElementById("studentId").value,
-                role: 'Intern' // Default role for signup
+            const signupData = {
+                email: document.getElementById('signupEmail').value,
+                password: document.getElementById('signupPassword').value,
+                role: 'Intern',
+                first_name: document.getElementById('firstName').value,
+                last_name: document.getElementById('lastName').value,
+                student_id: document.getElementById('studentId').value
             };
 
-            console.log('Signup data being sent:', { ...formData, password: '***' });
-
-            if (formData.password !== formData.confirmPassword) {
-                alert('Passwords do not match');
-                return;
-            }
-
             try {
-                const response = await fetch('http://localhost:5001/api/auth/signup', {
+                console.log('Signup data:', { ...signupData, password: '[HIDDEN]' });
+                const response = await fetch('http://localhost:5004/api/auth/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(signupData)
                 });
 
-                console.log('Signup response status:', response.status);
                 const data = await response.json();
-                console.log('Signup response data:', data);
+                console.log('Signup response:', data);
 
                 if (response.ok && data.success) {
                     alert('Signup successful! Please login.');
-                    signupModal.classList.remove("active");
-                    loginModal.classList.add("active");
-                    signupForm.reset(); // Clear the form
+                    signupForm.reset();
+                    closeSignupModal();
+                    openLoginModal();
                 } else {
-                    // Handle specific error messages
-                    const errorMessage = data.message || 'Signup failed. Please try again.';
-                    alert(errorMessage);
+                    alert(data.message || 'Signup failed. Please try again.');
                 }
             } catch (error) {
                 console.error('Signup error:', error);
-                alert('An error occurred during signup. Please check your connection and try again.');
+                alert('Error during signup. Please try again.');
             }
         });
     }

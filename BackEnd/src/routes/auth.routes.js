@@ -36,6 +36,7 @@ router.post('/login', async (req, res) => {
         }
 
         const user = users[0];
+        console.log('Found user:', { ...user, password: '[HIDDEN]' });
         console.log('Verifying password for user:', email);
 
         // Verify password
@@ -53,8 +54,8 @@ router.post('/login', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { 
-                id: user.user_id,
-                role: user.user_role,
+                user_id: user.user_id,
+                role: user.role,
                 email: user.email
             },
             process.env.JWT_SECRET || 'your-secret-key',
@@ -66,9 +67,11 @@ router.post('/login', async (req, res) => {
             success: true,
             token,
             user: {
-                id: user.user_id,
-                role: user.user_role,
-                email: user.email
+                user_id: user.user_id,
+                role: user.role,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name
             }
         });
     } catch (error) {
@@ -89,7 +92,7 @@ router.post('/login', async (req, res) => {
 router.post('/signup', async (req, res) => {
     console.log('Signup request received:', req.body);
     try {
-        const { email, password, role, first_name, last_name } = req.body;
+        const { email, password, role, first_name, last_name, student_id } = req.body;
 
         // Validate input
         if (!email || !password || !role || !first_name || !last_name) {
@@ -97,6 +100,14 @@ router.post('/signup', async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
+            });
+        }
+
+        if (role === 'Intern' && !student_id) {
+            console.log('Missing student ID for intern signup');
+            return res.status(400).json({
+                success: false,
+                message: 'Student ID is required for intern signup'
             });
         }
 
@@ -138,15 +149,14 @@ router.post('/signup', async (req, res) => {
 
         // Start transaction
         console.log('Starting database transaction');
-        const connection = await pool.getConnection();
-        await connection.beginTransaction();
+        await pool.query('START TRANSACTION');
 
         try {
             console.log('Inserting into users_tbl');
             // Insert into users_tbl
-            const [result] = await connection.query(
-                'INSERT INTO users_tbl (email, password, user_role) VALUES (?, ?, ?)',
-                [email, hashedPassword, role]
+            const [result] = await pool.query(
+                'INSERT INTO users_tbl (email, password, role, first_name, last_name) VALUES (?, ?, ?, ?, ?)',
+                [email, hashedPassword, role, first_name, last_name]
             );
 
             const userId = result.insertId;
@@ -154,29 +164,25 @@ router.post('/signup', async (req, res) => {
 
             // Insert into role-specific table
             let roleTable = '';
-            let roleFields = [];
-            let roleValues = [];
+            let roleFields = ['user_id'];
+            let roleValues = [userId];
 
             switch (role) {
                 case 'Intern':
                     roleTable = 'interns_tbl';
-                    roleFields = ['user_id', 'first_name', 'last_name'];
-                    roleValues = [userId, first_name, last_name];
+                    if (student_id) {
+                        roleFields.push('student_id');
+                        roleValues.push(student_id);
+                    }
                     break;
                 case 'Employer':
                     roleTable = 'employers_tbl';
-                    roleFields = ['user_id', 'first_name', 'last_name'];
-                    roleValues = [userId, first_name, last_name];
                     break;
                 case 'Faculty':
                     roleTable = 'faculties_tbl';
-                    roleFields = ['user_id', 'first_name', 'last_name'];
-                    roleValues = [userId, first_name, last_name];
                     break;
                 case 'Admin':
                     roleTable = 'admin_tbl';
-                    roleFields = ['user_id', 'first_name', 'last_name'];
-                    roleValues = [userId, first_name, last_name];
                     break;
                 default:
                     throw new Error('Invalid role');
@@ -187,10 +193,9 @@ router.post('/signup', async (req, res) => {
             console.log('Role table query:', query);
             console.log('Role table values:', roleValues);
 
-            await connection.query(query, roleValues);
+            await pool.query(query, roleValues);
 
-            await connection.commit();
-            connection.release();
+            await pool.query('COMMIT');
 
             console.log('Signup successful for:', email);
             res.status(201).json({
@@ -199,8 +204,7 @@ router.post('/signup', async (req, res) => {
             });
         } catch (error) {
             console.error('Transaction error:', error);
-            await connection.rollback();
-            connection.release();
+            await pool.query('ROLLBACK');
             throw error;
         }
     } catch (error) {
