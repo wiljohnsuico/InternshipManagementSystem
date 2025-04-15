@@ -112,6 +112,7 @@
                     <div class="form-group" style="flex: 0.5;">
                         <label>Date</label>
                     </div>
+                    <div style="width: 35px;"></div>
                 </div>
                 
                 <div class="education-entries">
@@ -126,6 +127,7 @@
                         <div class="form-group" style="flex: 0.5;">
                             <input type="text">
                         </div>
+                        <button class="delete-btn" onclick="deleteEducationEntry(this)">×</button>
                     </div>
                 </div>
                 
@@ -195,10 +197,24 @@
                     <div class="form-group" style="flex: 0.5;">
                         <input type="text">
                     </div>
+                    <button class="delete-btn" onclick="deleteEducationEntry(this)">×</button>
                 `;
                 
                 educationEntries.appendChild(newEntry);
             });
+
+            // Delete education entry functionality
+            function deleteEducationEntry(button) {
+                const entry = button.parentElement;
+                const educationEntries = document.querySelector('.education-entries');
+                educationEntries.removeChild(entry);
+                
+                // Update numbering for remaining entries
+                const remainingEntries = document.querySelectorAll('.education-entry');
+                remainingEntries.forEach((entry, index) => {
+                    entry.querySelector('.education-number').textContent = index + 1;
+                });
+            }
         </script>
     </main>
 
