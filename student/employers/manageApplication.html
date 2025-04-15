@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/student/styles/home-navbar.css">
+    <link rel="stylesheet" href="/student/styles/manageApplicants.css">
+    <title>Manage Applicants</title>
+</head>
+<head>
+    <!---NAV BAR--->
+    <div class="nav-bar">
+        <div class="logo">
+            <img src="/student/imgs/qcuims-logo.png" alt="logo">
+        </div>
+        
+        <div class="nav-links">
+            <div class="profile">
+                <button class="dropdown-profile">Menu</button>
+                <div class="profile-content">
+                    <a href="/student/employers/mplemployer.html" id="postInternship">Post An Internship</a>
+                    <a href="/student/employers/manageApplication.html">Manage Applicants</a>
+                    <a href="#">Log out</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</head>
+<body>
+    <div class="container">
+        <h2>Applicants</h2>
+        <div class="table-container">
+            <table id="applicants-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Position</th>
+                        <th>Salary</th>
+                        <th>Documents</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Sample data directly in HTML to avoid loading errors -->
+                    <tr>
+                        <td>Dela Cruz, Juanna</td>
+                        <td>Financial Analyst Intern</td>
+                        <td class="salary-cell">
+                            <select class="salary-select">
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid" selected>Unpaid</option>
+                            </select>
+                        </td>
+                        <td>Resume.pdf</td>
+                        <td class="status-cell">
+                            <span class="status-indicator" style="background-color: #60a5fa;"></span>
+                            <select class="status-select">
+                                <option value="Application Received" selected>Application Received</option>
+                                <option value="Under Review">Under Review</option>
+                                <option value="Shortlisted">Shortlisted</option>
+                                <option value="Interview Scheduled">Interview Scheduled</option>
+                                <option value="Upcoming Interview">Upcoming Interview</option>
+                                <option value="Interviewed">Interviewed</option>
+                                <option value="Offer Extended">Offer Extended</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Declined">Declined</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Withdrawn">Withdrawn</option>
+                                <option value="Unqualified">Unqualified</option>
+                            </select>
+                            <div class="status-help" onclick="showStatusInfo()">?</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Dela Cruz, Juanna</td>
+                        <td>Financial Analyst Intern</td>
+                        <td class="salary-cell">
+                            <select class="salary-select">
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid" selected>Unpaid</option>
+                            </select>
+                        </td>
+                        <td>Resume.pdf</td>
+                        <td class="status-cell">
+                            <span class="status-indicator" style="background-color: #f59e0b;"></span>
+                            <select class="status-select">
+                                <option value="Application Received">Application Received</option>
+                                <option value="Under Review" selected>Under Review</option>
+                                <option value="Shortlisted">Shortlisted</option>
+                                <option value="Interview Scheduled">Interview Scheduled</option>
+                                <option value="Upcoming Interview">Upcoming Interview</option>
+                                <option value="Interviewed">Interviewed</option>
+                                <option value="Offer Extended">Offer Extended</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Declined">Declined</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Withdrawn">Withdrawn</option>
+                                <option value="Unqualified">Unqualified</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Dela Cruz, Juanna</td>
+                        <td>Financial Analyst Intern</td>
+                        <td class="salary-cell">
+                            <select class="salary-select">
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid" selected>Unpaid</option>
+                            </select>
+                        </td>
+                        <td>Resume.pdf</td>
+                        <td class="status-cell">
+                            <span class="status-indicator" style="background-color: #8b5cf6;"></span>
+                            <select class="status-select">
+                                <option value="Application Received">Application Received</option>
+                                <option value="Under Review">Under Review</option>
+                                <option value="Shortlisted">Shortlisted</option>
+                                <option value="Interview Scheduled" selected>Interview Scheduled</option>
+                                <option value="Upcoming Interview">Upcoming Interview</option>
+                                <option value="Interviewed">Interviewed</option>
+                                <option value="Offer Extended">Offer Extended</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Declined">Declined</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Withdrawn">Withdrawn</option>
+                                <option value="Unqualified">Unqualified</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Dela Cruz, Juanna</td>
+                        <td>Financial Analyst Intern</td>
+                        <td class="salary-cell">
+                            <select class="salary-select">
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid" selected>Unpaid</option>
+                            </select>
+                        </td>
+                        <td>Resume.pdf</td>
+                        <td class="status-cell">
+                            <span class="status-indicator" style="background-color: #059669;"></span>
+                            <select class="status-select">
+                                <option value="Application Received">Application Received</option>
+                                <option value="Under Review">Under Review</option>
+                                <option value="Shortlisted">Shortlisted</option>
+                                <option value="Interview Scheduled">Interview Scheduled</option>
+                                <option value="Upcoming Interview">Upcoming Interview</option>
+                                <option value="Interviewed">Interviewed</option>
+                                <option value="Offer Extended" selected>Offer Extended</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Declined">Declined</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Withdrawn">Withdrawn</option>
+                                <option value="Unqualified">Unqualified</option>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Interns</h2>
+        <div class="table-container">
+            <table id="interns-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Position</th>
+                        <th>Salary</th>
+                        <th>Hours Required</th>
+                        <th>Hours Completed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Sample data directly in HTML to avoid loading errors -->
+                    <tr>
+                        <td>Dela Cruz, Juanna</td>
+                        <td>Financial Analyst Intern</td>
+                        <td class="salary-cell">
+                            <select class="salary-select">
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid" selected>Unpaid</option>
+                            </select>
+                        </td>
+                        <td>360 h</td>
+                        <td>7 h</td>
+                    </tr>
+                    <tr>
+                        <td>Dela Cruz, Juanna</td>
+                        <td>Financial Analyst Intern</td>
+                        <td class="salary-cell">
+                            <select class="salary-select">
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid" selected>Unpaid</option>
+                            </select>
+                        </td>
+                        <td>360 h</td>
+                        <td>0 h</td>
+                    </tr>
+                    <tr>
+                        <td>Dela Cruz, Juanna</td>
+                        <td>Financial Analyst Intern</td>
+                        <td class="salary-cell">
+                            <select class="salary-select">
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid" selected>Unpaid</option>
+                            </select>
+                        </td>
+                        <td>360 h</td>
+                        <td>0 h</td>
+                    </tr>
+                    <tr>
+                        <td>Dela Cruz, Juanna</td>
+                        <td>Financial Analyst Intern</td>
+                        <td class="salary-cell">
+                            <select class="salary-select">
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid" selected>Unpaid</option>
+                            </select>
+                        </td>
+                        <td>360 h</td>
+                        <td>0 h</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Status Info Dialog -->
+    <div class="overlay" id="overlay"></div>
+    <div class="status-info" id="status-info">
+        <button class="close-btn" onclick="closeStatusInfo()">×</button>
+        <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#22c55e" stroke-width="2"/>
+                <path d="M8 12L11 15L16 9" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Recommended Applicant Status Options:
+        </h3>
+        <ol>
+            <li><span>Application Received</span> – default status once an applicant submits.</li>
+            <li><span>Under Review</span> – when the employer is checking the application.</li>
+            <li><span>Shortlisted</span> – applicant has passed the initial screening.</li>
+            <li><span>Interview Scheduled</span> – interview has been arranged.</li>
+            <li><span>Upcoming Interview</span> – closer to the interview date.</li>
+            <li><span>Interviewed</span> – applicant has completed the interview.</li>
+            <li><span>Offer Extended</span> – an internship offer has been made.</li>
+            <li><span>Accepted</span> – applicant accepted the offer.</li>
+            <li><span>Declined</span> – applicant declined the offer.</li>
+            <li><span>Rejected</span> – not selected at any stage.</li>
+            <li><span>Withdrawn</span> – applicant withdrew their application.</li>
+            <li><span>Unqualified</span> – does not meet basic requirements.</li>
+        </ol>
+    </div>
+    <script src="/student/scripts/manageApplicants.js"></script>
+</body>
+</html>
