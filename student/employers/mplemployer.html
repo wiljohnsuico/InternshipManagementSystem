@@ -19,7 +19,7 @@
                 <div class="profile">
                     <button class="dropdown-profile">Menu</button>
                     <div class="profile-content">
-                        <a href="#">Post An Internship</a>
+                        <a href="#" id="postInternship">Post An Internship</a>
                         <a href="#">View Applications</a>
                         <a href="#">Manage Interns</a>
                         <a href="#">Log out</a>
@@ -28,6 +28,45 @@
                 
             </div>
         </div>
+
+        <!--Post An Internship Modal-->
+        <div class="modal-overlay" id="postInternship-modal">
+            <div class="modal-content">
+                <span class="modal-close" id="closeAddInternshipModal">&times;</span>
+                <h3>Post An Internship</h3>
+                <p>Job Details</p>
+
+                <form action="">
+
+                    <label for="jobTitle">Job Title</label>
+                    <input type="text" id="jobTitle" placeholder="Job Title" required>
+
+                    <select name="department[]" id="department">
+                        <option value="IT">IT</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Engineering">Engineering</option>
+                    </select>
+
+                    <label for="Salary">Salary</label>
+                    <input type="text" id="salary" placeholder="Paid or Unpaid" required>
+
+                    <label for="Requirement Qouta">Requirement Qouta</label>
+                    <input type="number" id="qouta" placeholder="Requirement Qouta" required>
+
+                    <label for="Skills">Skills</label>
+                    <input type="text" id="skills" placeholder="Enter Skills required" required>
+
+                    <label for="Details">Details</label>
+                    <input type="text" id="details" placeholder="Enter details for the job" required>
+
+                    <button type="submit" id="submitInternship">Posts</button>
+        
+                </form>
+            </div>
+        </div>
+                
+        <script src="/student/scripts/post-internship.js"></script>
+
     </header>
     <main>
         <div class="container">
@@ -36,22 +75,38 @@
             <div class="stats-container">
               <div class="stat-box">
                 <div class="stat-label">Active Internships Posted</div>
-                <div class="stat-number" id="stats-number">0</div>
+                <div class="stat-number" id="activeInternship">0</div>
               </div>
               
               <div class="stat-box">
                 <div class="stat-label">Applications Received</div>
-                <div class="stat-number" id="stats-number">0</div>
+                <div class="stat-number" id="applicationReceived">0</div>
               </div>
               
               <div class="stat-box">
                 <div class="stat-label">Hired Interns</div>
-                <div class="stat-number" id="stats-number">0</div>
+                <div class="stat-number" id="hiredInterns">0</div>
               </div>
             </div>
           </div>
 
-          <hr>
+        <hr>
+        
+        <h3>Posted Internships</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Position</th>
+                    <th>Salary</th>
+                    <th>Recruitment Qouta</th>
+                    <th>Skill Set</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="internship-table-body">
+                <!--JS will populate rows here-->
+            </tbody>
+        </table>
     </main>
 </body>
 </html>
