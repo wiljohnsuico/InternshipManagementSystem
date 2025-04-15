@@ -90,7 +90,70 @@
         .btn-edit:hover {
             background-color: #0b7dda;
         }
+
+        /* Profile Picture Upload Styles */
+        .profile-pic {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin-right: 20px;
+        }
+
+        .profile-pic-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .profile-pic-overlay {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background-color: #1a237e;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .profile-pic-input {
+            display: none;
+        }
+
+        /* Picture Upload Modal */
+        #profilePicModal .modal-content {
+            max-width: 400px;
+        }
+
+        .profile-pic-preview {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #ddd;
+        }
+
+        .profile-pic-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
     </style>
+
     <title>INTERN'S PROFILE</title>
 </head>
 <body>
@@ -115,8 +178,6 @@
                         <a href="#" class="logout-link">Logout</a>
                     </div>
                 </div>
-
-                <button id="openLogin" class="openLogin login-button">Login</button>
             </div>
         </div>
     </header>
@@ -124,7 +185,12 @@
     <main>
         <div class="profile-section">
             <div class="profile-pic">
-                <img src="imgs/user.png" alt="profile picture"></div>
+                <img src="imgs/user.png" alt="profile picture" id="profileImage" class="profile-pic-image">
+                <div class="profile-ic-overlay" id="changePicBtn">
+                    <i>+</i>
+                    <input type="file" id="profilePicInput" class="profile-pic-input" accept="image/*">
+                </div>
+            </div>
             <div class="profile-info">
                 <h1>Jane Doe</h1>
                 <p>BS Accounting</p>
@@ -223,14 +289,29 @@
                 <div class="resume-signature">Lastname, Firstname MI</div>
             </div>
         </div>
+
+        <!-- Profile Picture Upload Modal -->
+        <div id="profilePicModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closePicModal">&times;</span>
+                <h2>Update Profile Picture</h2>
+                
+                <div class="profile-pic-preview">
+                    <img src="imgs/user.png" alt="Preview" id="picPreview">
+                </div>
+                
+                <div class="upload-options">
+                    <input type="file" id="fileInput" accept="image/*" class="form-group">
+                    <button class="btn-save" id="savePicBtn">Save Profile Picture</button>
+                </div>
+            </div>
+        </div>
         
         <script>
             // Get the modal
             const modal = document.getElementById("resumeModal");
-            
             // Get the button that opens the modal
             const btn = document.getElementById("resumeBtn");
-            
             // Get the <span> element that closes the modal
             const span = document.getElementsByClassName("close")[0];
             
@@ -243,6 +324,70 @@
             span.onclick = function() {
                 modal.style.display = "none";
             }
+
+            // Profile Picture Functionality
+            const profileImage = document.getElementById('profileImage');
+            const changePicBtn = document.getElementById('changePicBtn');
+            const profilePicInput = document.getElementById('profilePicInput');
+            const profilePicModal = document.getElementById('profilePicModal');
+            const closePicModal = document.getElementById('closePicModal');
+            const fileInput = document.getElementById('fileInput');
+            const picPreview = document.getElementById('picPreview');
+            const savePicBtn = document.getElementById('savePicBtn');
+            
+            // Open profile picture selection when clicking the + button
+            changePicBtn.addEventListener('click', function() {
+                profilePicModal.style.display = 'flex';
+            });
+            
+            // Handle file selection for preview
+            fileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        picPreview.src = e.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Save the profile picture
+            savePicBtn.addEventListener('click', function() {
+                const file = fileInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        // Update the profile picture
+                        profileImage.src = e.target.result;
+                        
+                        // Store in local storage (optional)
+                        localStorage.setItem('profilePicture', e.target.result);
+                        
+                        // Close the modal
+                        profilePicModal.style.display = 'none';
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('Please select an image first.');
+                }
+            });
+            
+            // Close the profile picture modal
+            closePicModal.addEventListener('click', function() {
+                profilePicModal.style.display = 'none';
+            });
+            
+            // Load saved profile picture from localStorage if available
+            document.addEventListener('DOMContentLoaded', function() {
+                const savedPic = localStorage.getItem('profilePicture');
+                if (savedPic) {
+                    profileImage.src = savedPic;
+                }
+            });
+            
+
+
             
             // When the user clicks anywhere outside of the modal, close it
             window.onclick = function(event) {
