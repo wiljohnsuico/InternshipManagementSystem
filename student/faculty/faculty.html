@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/student/styles/home-navbar.css">
+    <link rel="stylesheet" href="/student/styles/faculty.css">
+    <title>Faculty</title>
+</head>
+<body>
+    <header>
+        <!---NAV BAR--->
+        <div class="nav-bar">
+            <div class="logo">
+                <img src="/student/imgs/qcuims-logo.png" alt="logo">
+            </div>
+            
+            <div class="nav-links">
+                <div class="profile">
+                    <button class="dropdown-profile">Menu</button>
+                    <div class="profile-content">
+                       <a href="#">Log out</a>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="dashboard">
+            <header class="header">
+                <h1>Welcome, Professor</h1>
+                <p>College of Comuter Studies</p>
+                <p>IT Department</p>
+            </header>
+            
+            <div class="stats-container">
+                <div class="stats-row">
+                    <div class="stats-right">
+                        
+                        <div class="stats-text">
+                            <p class="stat-label">Attendance Rate</p>
+                            <p class="stat-value">67%</p>
+                            <p class="stat-label">Remaining Hours</p>
+                            <p class="stat-value">50</p>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="attendance-chart" class="donut-chart"></canvas>
+                    </div>
+                    
+                    <div class="stats-left">
+                        <p class="stat-label">Students Applied</p>
+                        <p class="stat-value">19</p>
+                        <p class="stat-label">Students Accepted</p>
+                        <p class="stat-value">14</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="students-container">
+                <h2>Students</h2>
+                <div style="overflow-x: auto;">
+                    <table class="students-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Student #</th>
+                                <th>Section</th>
+                                <th>Company Applied</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body">
+                            <!-- Table rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+        <script>
+            // Sample data - In a real application, you would fetch this from your database
+            const stats = {
+                attendanceRatio: 67,
+                remainingHours: 50,
+                studentsApplied: 19,
+                studentsAccepted: 14
+            };
+            
+            const students = [
+                { id: 31159, name: "Gina Cruz-Jones", section: "BUS-40", companyApplied: "Sampler Company" },
+                { id: 31239, name: "Jacob Patel", section: "BUS-40", companyApplied: "Sampler Company" }
+            ];
+    
+            // Initialize the attendance chart
+            function initializeChart() {
+                const ctx = document.getElementById('attendance-chart').getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [stats.attendanceRatio, 100 - stats.attendanceRatio],
+                            backgroundColor: ['#0088FE', '#FFFFFF'],
+                            borderWidth: 0,
+                            cutout: '70%'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        }
+                    }
+                });
+            }
+    
+            // Populate the students table
+            function populateStudentsTable() {
+                const tableBody = document.getElementById('students-table-body');
+                
+                // Clear existing rows
+                tableBody.innerHTML = '';
+                
+                // Add student data rows
+                students.forEach(student => {
+                    const row = document.createElement('tr');
+                    
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = student.name;
+                    row.appendChild(nameCell);
+                    
+                    const idCell = document.createElement('td');
+                    idCell.textContent = student.id;
+                    row.appendChild(idCell);
+                    
+                    const sectionCell = document.createElement('td');
+                    sectionCell.textContent = student.section;
+                    row.appendChild(sectionCell);
+                    
+                    const companyCell = document.createElement('td');
+                    companyCell.textContent = student.companyApplied;
+                    row.appendChild(companyCell);
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                // Add empty rows to match the design
+                for (let i = 0; i < 5; i++) {
+                    const emptyRow = document.createElement('tr');
+                    
+                    for (let j = 0; j < 4; j++) {
+                        const emptyCell = document.createElement('td');
+                        emptyCell.innerHTML = '&nbsp;';
+                        emptyRow.appendChild(emptyCell);
+                    }
+                    
+                    tableBody.appendChild(emptyRow);
+                }
+            }
+            
+            // Function to fetch data from database (to be implemented)
+            async function fetchDataFromDatabase() {
+                // In a real implementation, you would fetch data from your API
+                // Example:
+                // const statsResponse = await fetch('/api/faculty/stats');
+                // const statsData = await statsResponse.json();
+                // const studentsResponse = await fetch('/api/faculty/students');
+                // const studentsData = await studentsResponse.json();
+                
+                // Update the UI with the fetched data
+                // updateStats(statsData);
+                // updateStudents(studentsData);
+                
+                // For now, we'll use the sample data
+                initializeChart();
+                populateStudentsTable();
+            }
+            
+            // Initialize the page
+            document.addEventListener('DOMContentLoaded', function() {
+                fetchDataFromDatabase();
+            });
+        </script>
+    </main>
+    
+</body>
+</html>
