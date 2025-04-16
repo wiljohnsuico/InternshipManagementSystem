@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             };
         }
+        
+        // Setup resume modal with data from localStorage
+        setupResumeModal();
     });
 });
 
@@ -538,3 +541,289 @@ document.addEventListener('DOMContentLoaded', function() {
         skillsSection.querySelector('h3').appendChild(editButton);
     }
 });
+
+// Add event listener for resumeUpdated event
+window.addEventListener('resumeUpdated', function(event) {
+    console.log('Resume updated event received:', event.detail);
+    setupResumeModal();
+});
+
+// Function to setup resume modal with data from localStorage
+function setupResumeModal() {
+    console.log('Setting up resume modal');
+    
+    // Get resume data from localStorage
+    const resumeData = JSON.parse(localStorage.getItem('resumeForProfile')) || JSON.parse(localStorage.getItem('resumeData'));
+    const userData = JSON.parse(localStorage.getItem('userData')) || JSON.parse(localStorage.getItem('user'));
+    
+    if (!resumeData && !userData) {
+        console.log('No resume data found');
+        return;
+    }
+    
+    // Get resume modal elements
+    const modal = document.getElementById('resumeModal');
+    if (!modal) {
+        console.error('Resume modal not found in the DOM');
+        return;
+    }
+    
+    const resumeBtn = document.getElementById('resumeBtn');
+    const closeBtn = modal.querySelector('.close');
+    
+    // Populate resume modal with data
+    if (resumeData) {
+        console.log('Populating resume modal with data:', resumeData);
+        
+        // Basic information
+        const fullName = modal.querySelector('h2');
+        const contactInfo = modal.querySelector('h2 + p');
+        
+        if (fullName) {
+            if (resumeData.fullName) {
+                fullName.textContent = resumeData.fullName;
+            } else if (resumeData.basic) {
+                fullName.textContent = `${resumeData.basic.firstName || ''} ${resumeData.basic.lastName || ''}${resumeData.basic.suffix ? ' ' + resumeData.basic.suffix : ''}`;
+            } else if (userData) {
+                fullName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`;
+            }
+        }
+        
+        if (contactInfo) {
+            if (resumeData.contactInfo) {
+                contactInfo.textContent = resumeData.contactInfo;
+            } else if (resumeData.basic) {
+                contactInfo.textContent = `${resumeData.basic.mobile || ''} | ${resumeData.basic.email || ''}`;
+            } else if (userData) {
+                contactInfo.textContent = `${userData.contact_number || ''} | ${userData.email || ''}`;
+            }
+        }
+        
+        // Get all resume sections
+        const resumeSections = modal.querySelectorAll('.resume-section');
+        
+        // Populate objectives section
+        const objectivesSection = Array.from(resumeSections).find(section => {
+            const heading = section.querySelector('h3');
+            return heading && (heading.textContent.toUpperCase() === 'OBJECTIVES');
+        });
+        if (objectivesSection) {
+            const p = objectivesSection.querySelector('p');
+            if (p) {
+                if (resumeData.objectives) {
+                    p.textContent = resumeData.objectives;
+                    console.log('Setting objectives to:', resumeData.objectives);
+                } else if (resumeData.basic && resumeData.basic.objectives) {
+                    p.textContent = resumeData.basic.objectives;
+                    console.log('Setting objectives from basic to:', resumeData.basic.objectives);
+                } else {
+                    p.textContent = 'No objectives provided';
+                    console.log('No objectives found in resume data');
+                }
+            }
+        } else {
+            console.log('Objectives section not found in the resume modal');
+        }
+        
+        // Populate basic information section
+        const basicInfoSection = Array.from(resumeSections).find(section => section.querySelector('h3')?.textContent === 'Basic Information');
+        if (basicInfoSection) {
+            const ul = basicInfoSection.querySelector('ul');
+            if (ul) {
+                ul.innerHTML = '';
+                
+                // Age
+                const age = resumeData.age || (resumeData.basic ? resumeData.basic.age : '') || userData.age || '';
+                if (age) {
+                    const li = document.createElement('li');
+                    li.textContent = `${age} years old`;
+                    ul.appendChild(li);
+                }
+                
+                // Birthday
+                const birthday = resumeData.birthday || (resumeData.basic ? resumeData.basic.birthday : '') || '';
+                if (birthday) {
+                    const li = document.createElement('li');
+                    li.textContent = birthday;
+                    ul.appendChild(li);
+                }
+                
+                // Address
+                let address = '';
+                if (resumeData.address) {
+                    address = resumeData.address;
+                } else if (resumeData.basic && resumeData.basic.address) {
+                    const addr = resumeData.basic.address;
+                    address = `${addr.street || ''}, ${addr.barangay || ''}, ${addr.city || ''}, ${addr.country || ''}`;
+                } else if (userData.address) {
+                    address = userData.address;
+                }
+                
+                if (address) {
+                    const li = document.createElement('li');
+                    li.textContent = address;
+                    ul.appendChild(li);
+                }
+            }
+        }
+        
+        // Populate education section
+        const educationSection = Array.from(resumeSections).find(section => section.querySelector('h3')?.textContent === 'Education');
+        if (educationSection) {
+            const p = educationSection.querySelector('p');
+            if (p) {
+                if (resumeData.education) {
+                    if (typeof resumeData.education === 'string') {
+                        p.innerHTML = resumeData.education;
+                    } else if (Array.isArray(resumeData.education)) {
+                        p.innerHTML = resumeData.education.map(edu => 
+                            `${edu.school || ''}<br>${edu.year || ''}${edu.date ? ' - ' + edu.date : ''}`
+                        ).join('<br><br>');
+                    }
+                } else if (userData.course) {
+                    p.innerHTML = `${userData.course || ''}<br>Quezon City University`;
+                }
+            }
+        }
+        
+        // Populate work experience section
+        const workSection = Array.from(resumeSections).find(section => section.querySelector('h3')?.textContent === 'Work Experience');
+        if (workSection) {
+            const p = workSection.querySelector('p');
+            if (p) {
+                if (resumeData.work) {
+                    if (typeof resumeData.work === 'string') {
+                        p.innerHTML = resumeData.work;
+                    } else if (Array.isArray(resumeData.work)) {
+                        p.innerHTML = resumeData.work.map(work => 
+                            `${work.position || ''}<br>${work.company || ''}${work.duration ? ' | ' + work.duration : ''}`
+                        ).join('<br><br>');
+                    }
+                } else {
+                    p.innerHTML = 'No work experience added';
+                }
+            }
+        } else {
+            // Create work experience section if it doesn't exist
+            if (resumeData.work) {
+                // Find EDUCATION section to place WORK EXPERIENCE after it
+                const educationSection = Array.from(resumeSections).find(section => 
+                    section.querySelector('h3')?.textContent === 'Education');
+                
+                if (educationSection) {
+                    const workSection = document.createElement('div');
+                    workSection.className = 'resume-section';
+                    
+                    let workHtml = '';
+                    if (typeof resumeData.work === 'string') {
+                        workHtml = resumeData.work;
+                    } else if (Array.isArray(resumeData.work)) {
+                        workHtml = resumeData.work.map(work => 
+                            `${work.position || ''}<br>${work.company || ''}${work.duration ? ' | ' + work.duration : ''}`
+                        ).join('<br><br>');
+                    }
+                    
+                    workSection.innerHTML = `
+                        <h3>Work Experience</h3>
+                        <p>${workHtml || 'No work experience added'}</p>
+                    `;
+                    
+                    educationSection.insertAdjacentElement('afterend', workSection);
+                }
+            }
+        }
+        
+        // Populate skills section
+        const skillsSection = Array.from(resumeSections).find(section => section.querySelector('h3')?.textContent === 'Skills');
+        if (skillsSection) {
+            const ul = skillsSection.querySelector('ul');
+            if (ul) {
+                ul.innerHTML = '';
+                
+                const skills = resumeData.skills || [];
+                if (skills.length > 0) {
+                    skills.forEach(skill => {
+                        const li = document.createElement('li');
+                        li.textContent = skill;
+                        ul.appendChild(li);
+                    });
+                } else if (userData.skills && Array.isArray(userData.skills)) {
+                    userData.skills.forEach(skill => {
+                        const li = document.createElement('li');
+                        li.textContent = skill;
+                        ul.appendChild(li);
+                    });
+                }
+            }
+        }
+    }
+    
+    // Set up resume button click handler
+    if (resumeBtn) {
+        resumeBtn.onclick = function() {
+            modal.style.display = "flex";
+        };
+    }
+    
+    // Set up close button click handler
+    if (closeBtn) {
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        };
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    };
+}
+
+// Function to update the resume preview
+function updateResumePreview() {
+    // Get resume data from localStorage
+    const resumeData = JSON.parse(localStorage.getItem('resumeForProfile') || '{}');
+    
+    // Update the resume modal with the data
+    if (resumeData) {
+        document.getElementById('resumeFullName').textContent = resumeData.fullName || '';
+        document.getElementById('resumeContactInfo').textContent = resumeData.contactInfo || '';
+        document.getElementById('resumeAddress').textContent = resumeData.address || '';
+        document.getElementById('resumeAge').textContent = resumeData.age ? `Age: ${resumeData.age}` : '';
+        document.getElementById('resumeBirthday').textContent = resumeData.birthday ? `Birthday: ${resumeData.birthday}` : '';
+        
+        // Update objectives
+        const objectivesSection = document.getElementById('resumeObjectives');
+        if (objectivesSection && resumeData.objectives) {
+            objectivesSection.textContent = resumeData.objectives;
+        } else if (objectivesSection) {
+            objectivesSection.textContent = 'No objectives provided';
+        }
+        
+        // Update education
+        const educationSection = document.getElementById('resumeEducation');
+        if (educationSection) {
+            educationSection.innerHTML = resumeData.education || 'No education entries';
+        }
+        
+        // Update skills
+        const skillsSection = document.getElementById('resumeSkills');
+        if (skillsSection) {
+            if (resumeData.skills && resumeData.skills.length > 0) {
+                skillsSection.innerHTML = resumeData.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('');
+            } else {
+                skillsSection.innerHTML = 'No skills added';
+            }
+        }
+        
+        // Update resume image if available
+        const resumeImage = document.getElementById('resumeImage');
+        if (resumeImage && resumeData.imageData) {
+            resumeImage.src = resumeData.imageData;
+            resumeImage.style.display = 'block';
+        } else if (resumeImage) {
+            resumeImage.style.display = 'none';
+        }
+    }
+}

@@ -8,6 +8,11 @@ require('dotenv').config();
 // Import routes
 const authRoutes = require('./routes/auth.routes');
 const internRoutes = require('./routes/intern.routes');
+const accomplishmentRoutes = require('./routes/accomplishment.routes');
+const internshipRoutes = require('./routes/internship.routes');
+const applicationRoutes = require('./routes/application.routes');
+const userRoutes = require('./routes/user.routes');
+const resumeRoutes = require('./routes/resume.routes');
 
 const app = express();
 
@@ -22,6 +27,10 @@ app.use(cors({
 // Parse JSON request bodies with increased limit for file uploads
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from the student directory
+// This assumes your student folder is at the project root level
+app.use(express.static(path.join(__dirname, '../../')));
 
 // Session configuration
 app.use(session({
@@ -49,6 +58,11 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/interns', internRoutes);
+app.use('/api/accomplishments', accomplishmentRoutes);
+app.use('/api/internships', internshipRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/resumes', resumeRoutes);
 
 // Test route
 app.get('/', (req, res) => {

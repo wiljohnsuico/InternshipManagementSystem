@@ -9,22 +9,30 @@ const { validateEmail, validatePassword } = require('../utils/validators');
 router.post('/login', async (req, res) => {
     console.log('Login request received:', req.body);
     try {
-        const { username, password } = req.body;
+        // Extract login credentials
+        // Note: Frontend might still send 'username' even though we use 'email' in the database
+        const { username, password, email } = req.body;
+        
+        // Use either provided email or username as the email field
+        const loginEmail = email || username;
 
         // Validate input
-        if (!username || !password) {
-            console.log('Missing username or password');
+        if (!loginEmail || !password) {
+            console.log('Missing email or password');
             return res.status(400).json({
                 success: false,
-                message: 'Please provide username and password'
+                message: 'Please provide email and password'
             });
         }
 
-        console.log('Attempting database query for username:', username);
+        console.log('Attempting database query for email:', loginEmail);
+        
+        // Query to find user by email (there's no username field in the database)
         const [users] = await pool.query(
-            'SELECT * FROM users_tbl WHERE username = ?',
-            [username]
+            'SELECT * FROM users_tbl WHERE email = ?',
+            [loginEmail]
         );
+        
         console.log('Database query result:', users.length > 0 ? 'User found' : 'No user found');
 
         if (users.length === 0) {
@@ -52,20 +60,20 @@ router.post('/login', async (req, res) => {
             {
                 user_id: user.user_id,
                 role: user.role,
-                username: user.username
+                email: user.email
             },
             process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: '24h' }
         );
 
-        console.log('Login successful for user:', username);
+        console.log('Login successful for user:', user.email);
         res.json({
             success: true,
             token,
             user: {
                 user_id: user.user_id,
                 role: user.role,
-                username: user.username,
+                email: user.email,
                 first_name: user.first_name,
                 last_name: user.last_name
             }
@@ -88,10 +96,10 @@ router.post('/login', async (req, res) => {
 router.post('/signup', async (req, res) => {
     console.log('Signup request received:', req.body);
     try {
-        const { username, password, role, first_name, last_name, student_id } = req.body;
+        const { email, password, role, first_name, last_name, student_id } = req.body;
 
-        if (!username || !password || !role || !first_name || !last_name) {
-            console.log('Missing required fields:', { username, role, first_name, last_name });
+        if (!email || !password || !role || !first_name || !last_name) {
+            console.log('Missing required fields:', { email, role, first_name, last_name });
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
@@ -106,11 +114,11 @@ router.post('/signup', async (req, res) => {
             });
         }
 
-        if (!validateEmail(username)) {
-            console.log('Invalid username (email format) provided:', username);
+        if (!validateEmail(email)) {
+            console.log('Invalid email format provided:', email);
             return res.status(400).json({
                 success: false,
-                message: 'Invalid username format (must be a valid email)'
+                message: 'Invalid email format'
             });
         }
 
@@ -122,14 +130,14 @@ router.post('/signup', async (req, res) => {
             });
         }
 
-        console.log('Checking for existing user with username:', username);
+        console.log('Checking for existing user with email:', email);
         const [existingUsers] = await pool.query(
-            'SELECT * FROM users_tbl WHERE username = ?',
-            [username]
+            'SELECT * FROM users_tbl WHERE email = ?',
+            [email]
         );
 
         if (existingUsers.length > 0) {
-            console.log('User already exists with username:', username);
+            console.log('User already exists with email:', email);
             return res.status(400).json({
                 success: false,
                 message: 'User already exists'
@@ -146,8 +154,8 @@ router.post('/signup', async (req, res) => {
         try {
             console.log('Inserting into users_tbl');
             const [result] = await pool.query(
-                'INSERT INTO users_tbl (username, password, role, first_name, last_name) VALUES (?, ?, ?, ?, ?)',
-                [username, hashedPassword, role, first_name, last_name]
+                'INSERT INTO users_tbl (first_name, last_name, email, password, role) VALUES (?, ?, ?, ?, ?)',
+                [first_name, last_name, email, hashedPassword, role]
             );
 
             const userId = result.insertId;
@@ -187,7 +195,7 @@ router.post('/signup', async (req, res) => {
 
             await pool.query('COMMIT');
 
-            console.log('Signup successful for:', username);
+            console.log('Signup successful for:', email);
             res.status(201).json({
                 success: true,
                 message: 'User registered successfully'

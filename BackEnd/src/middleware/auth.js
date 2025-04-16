@@ -18,7 +18,7 @@ module.exports = (req, res, next) => {
         console.log('Token received:', token);
 
         // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
         console.log('Decoded token:', decoded);
 
         // Add user info to request

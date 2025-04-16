@@ -144,6 +144,7 @@ CREATE TABLE IF NOT EXISTS resumes (
     user_id INT NOT NULL UNIQUE,
     basic JSON DEFAULT '{}',
     education JSON DEFAULT '[]',
+    work JSON DEFAULT '[]',
     skills JSON DEFAULT '[]',
     image_data MEDIUMTEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

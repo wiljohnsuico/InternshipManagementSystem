@@ -18,6 +18,7 @@ async function ensureResumesTableExists() {
                     user_id INT NOT NULL UNIQUE,
                     basic JSON DEFAULT '{}',
                     education JSON DEFAULT '[]',
+                    work JSON DEFAULT '[]',
                     skills JSON DEFAULT '[]',
                     image_data MEDIUMTEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -27,7 +28,17 @@ async function ensureResumesTableExists() {
             `);
             console.log('Resumes table created successfully');
         } else {
-            console.log('Resumes table already exists');
+            // Check if work column exists, add it if it doesn't
+            try {
+                const [columns] = await db.query("SHOW COLUMNS FROM resumes LIKE 'work'");
+                if (columns.length === 0) {
+                    console.log('Adding work column to resumes table...');
+                    await db.query("ALTER TABLE resumes ADD COLUMN work JSON DEFAULT '[]' AFTER education");
+                    console.log('Work column added successfully');
+                }
+            } catch (error) {
+                console.error('Error checking/adding work column:', error);
+            }
         }
     } catch (error) {
         console.error('Error ensuring resumes table exists:', error);
@@ -44,10 +55,12 @@ router.get('/profile', auth, async (req, res) => {
         console.log('Fetching profile for user:', userId);
         
         // First check if user exists and is an intern
-        const [user] = await db.query(
+        const [userRows] = await db.query(
             'SELECT * FROM users_tbl WHERE user_id = ? AND role = "Intern"',
             [userId]
         );
+        
+        const user = userRows[0];
         
         if (!user) {
             return res.status(404).json({
@@ -69,25 +82,44 @@ router.get('/profile', auth, async (req, res) => {
         const intern = rows[0];
         console.log('Raw intern data:', intern);
         
-        if (!intern) {
+        if (!intern.course && !intern.skills) {
             // Create intern profile if it doesn't exist
-            await db.query(
-                'INSERT INTO interns_tbl (user_id, skills) VALUES (?, ?)',
-                [userId, '[]']
-            );
+            console.log('Creating new intern profile for user:', userId);
             
-            // Return basic profile
-            return res.json({
-                success: true,
-                data: {
-                    user_id: user.user_id,
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                    email: user.email,
-                    contact_number: user.contact_number,
-                    skills: []
-                }
-            });
+            try {
+                await db.query(
+                    'INSERT INTO interns_tbl (user_id, skills) VALUES (?, ?)',
+                    [userId, '[]']
+                );
+                console.log('Created intern profile for user:', userId);
+                
+                // Return basic profile
+                return res.json({
+                    success: true,
+                    data: {
+                        user_id: user.user_id,
+                        first_name: user.first_name,
+                        last_name: user.last_name,
+                        email: user.email,
+                        contact_number: user.contact_number,
+                        skills: []
+                    }
+                });
+            } catch (error) {
+                console.error('Error creating intern profile:', error);
+                // Return what we have without creating profile if insert fails
+                return res.json({
+                    success: true,
+                    data: {
+                        user_id: user.user_id,
+                        first_name: user.first_name,
+                        last_name: user.last_name,
+                        email: user.email,
+                        contact_number: user.contact_number,
+                        skills: []
+                    }
+                });
+            }
         }
         
         // Parse skills if it's a JSON string
@@ -147,10 +179,12 @@ router.put('/profile', auth, async (req, res) => {
         console.log('Skills to save:', skillsJson);
         
         // First check if user exists and is an intern
-        const [user] = await db.query(
+        const [userRows] = await db.query(
             'SELECT * FROM users_tbl WHERE user_id = ? AND role = "Intern"',
             [userId]
         );
+        
+        const user = userRows[0];
         
         if (!user) {
             return res.status(404).json({
@@ -181,7 +215,7 @@ router.put('/profile', auth, async (req, res) => {
                 [userId]
             );
             
-            if (existingProfile) {
+            if (existingProfile.length > 0) {
                 console.log('Updating existing profile...');
                 await conn.query(
                     `UPDATE interns_tbl 
@@ -268,10 +302,12 @@ router.get('/resume', auth, async (req, res) => {
         console.log('Fetching resume for user:', userId);
         
         // Check if user exists and is an intern
-        const [user] = await db.query(
+        const [userRows] = await db.query(
             'SELECT * FROM users_tbl WHERE user_id = ? AND role = "Intern"',
             [userId]
         );
+        
+        const user = userRows[0];
         
         if (!user) {
             return res.status(404).json({
@@ -301,6 +337,7 @@ router.get('/resume', auth, async (req, res) => {
         // Parse JSON fields
         try {
             resume.education = resume.education ? JSON.parse(resume.education) : [];
+            resume.work = resume.work ? JSON.parse(resume.work) : [];
             resume.skills = resume.skills ? JSON.parse(resume.skills) : [];
             resume.basic = resume.basic ? JSON.parse(resume.basic) : {};
         } catch (e) {
@@ -329,21 +366,23 @@ router.post('/resume', auth, async (req, res) => {
         console.log('Saving resume for user:', userId);
         console.log('Resume data:', req.body);
         
-        const { basic, education, skills, imageData } = req.body;
+        const { basic, education, work, skills, objectives, imageData } = req.body;
         
         // Validate required fields
-        if (!basic || !education || !skills) {
+        if (!basic) {
             return res.status(400).json({
                 success: false,
-                message: 'Missing required fields'
+                message: 'Missing basic information'
             });
         }
         
         // Check if user exists and is an intern
-        const [user] = await db.query(
+        const [userRows] = await db.query(
             'SELECT * FROM users_tbl WHERE user_id = ? AND role = "Intern"',
             [userId]
         );
+        
+        const user = userRows[0];
         
         if (!user) {
             return res.status(404).json({
@@ -366,28 +405,45 @@ router.post('/resume', auth, async (req, res) => {
             );
             
             // Prepare data
-            const basicJson = JSON.stringify(basic);
-            const educationJson = JSON.stringify(education);
-            const skillsJson = JSON.stringify(skills);
+            let basicJson = JSON.stringify(basic);
+            const educationJson = JSON.stringify(education || []);
+            const workJson = JSON.stringify(work || []);
+            const skillsJson = JSON.stringify(skills || []);
+            
+            // Include objectives in basic info if it's not already there
+            if (objectives && basic && !basic.objectives) {
+                const basicObj = typeof basic === 'string' ? JSON.parse(basic) : basic;
+                basicObj.objectives = objectives;
+                basicJson = JSON.stringify(basicObj);
+            }
             
             if (existing.length > 0) {
                 // Update existing resume
                 await conn.query(
                     `UPDATE resumes 
-                     SET basic = ?, education = ?, skills = ?, image_data = ?, updated_at = NOW()
+                     SET basic = ?, education = ?, work = ?, skills = ?, image_data = ?, updated_at = NOW()
                      WHERE user_id = ?`,
-                    [basicJson, educationJson, skillsJson, imageData, userId]
+                    [basicJson, educationJson, workJson, skillsJson, imageData, userId]
                 );
                 console.log('Updated existing resume for user', userId);
             } else {
                 // Create new resume
                 await conn.query(
-                    `INSERT INTO resumes (user_id, basic, education, skills, image_data)
-                     VALUES (?, ?, ?, ?, ?)`,
-                    [userId, basicJson, educationJson, skillsJson, imageData]
+                    `INSERT INTO resumes (user_id, basic, education, work, skills, image_data)
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    [userId, basicJson, educationJson, workJson, skillsJson, imageData]
                 );
                 console.log('Created new resume for user', userId);
             }
+            
+            // Update skills in intern profile as well for consistency
+            await conn.query(
+                `UPDATE interns_tbl 
+                 SET skills = ?
+                 WHERE user_id = ?`,
+                [skillsJson, userId]
+            );
+            console.log('Updated skills in intern profile');
             
             // Commit transaction
             await conn.commit();

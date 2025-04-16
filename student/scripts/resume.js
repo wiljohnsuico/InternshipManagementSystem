@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const ageInput = document.querySelector('input[name="age"]');
     const mobileInput = document.querySelector('input[name="mobile"]');
     const emailInput = document.querySelector('input[name="email"]');
+    const objectivesInput = document.querySelector('textarea[name="objectives"]');
     
     const streetInput = document.querySelector('input[name="street"]');
     const barangayInput = document.querySelector('input[name="barangay"]');
@@ -60,8 +61,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
+            // Get work experience entries
+            const workEntries = [];
+            document.querySelectorAll('.work-entry').forEach(entry => {
+                const positionInput = entry.querySelector('input[name="position"]');
+                const companyInput = entry.querySelector('input[name="company"]');
+                const durationInput = entry.querySelector('input[name="duration"]');
+                
+                if (positionInput && positionInput.value.trim() && companyInput && companyInput.value.trim()) {
+                    workEntries.push({
+                        position: positionInput.value,
+                        company: companyInput.value,
+                        duration: durationInput ? durationInput.value : ''
+                    });
+                }
+            });
+            
             // Get skills (comma separated)
             const skills = skillsInput.value.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0);
+            
+            // Get objectives text
+            const objectives = objectivesInput.value.trim();
             
             // Build resume data object
             const resumeData = {
@@ -80,13 +100,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         country: countryInput.value
                     }
                 },
+                objectives: objectives,
                 education: educationEntries,
+                work: workEntries,
                 skills: skills,
                 imageData: previewImage.src || ''
             };
             
             // Save to localStorage
             localStorage.setItem('resumeData', JSON.stringify(resumeData));
+            
+            // Also update the resumeForProfile data to sync with profile page
+            const resumeForProfile = {
+                fullName: `${firstNameInput.value} ${lastNameInput.value}${suffixInput.value ? ' ' + suffixInput.value : ''}`,
+                contactInfo: `${mobileInput.value} | ${emailInput.value}`,
+                address: `${streetInput.value}, ${barangayInput.value}, ${cityInput.value}, ${countryInput.value}`,
+                age: ageInput.value,
+                birthday: birthdayInput.value,
+                objectives: objectives,
+                education: educationEntries.map(edu => `${edu.school}<br>${edu.year}${edu.date ? ' - ' + edu.date : ''}`).join('<br><br>'),
+                work: workEntries.map(work => `${work.position}<br>${work.company}${work.duration ? ' | ' + work.duration : ''}`).join('<br><br>'),
+                skills: skills
+            };
+            localStorage.setItem('resumeForProfile', JSON.stringify(resumeForProfile));
             
             // Log what we're sending to the server
             console.log('Sending resume data:', JSON.stringify(resumeData));
@@ -108,6 +144,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 const responseData = await response.json();
                 console.log('Response data:', responseData);
                 showMessage('Resume saved successfully!', 'success');
+                
+                // Update profile data with skills
+                try {
+                    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                    userData.skills = skills;
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    
+                    // Also update user data in the main storage that profile.js uses
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    user.skills = skills;
+                    localStorage.setItem('user', JSON.stringify(user));
+                } catch (e) {
+                    console.error('Error updating user data:', e);
+                }
+                
+                // Trigger an update event to notify other parts of the app
+                window.dispatchEvent(new CustomEvent('resumeUpdated', { detail: resumeData }));
             } else {
                 let errorMessage = 'Failed to save resume';
                 try {
@@ -151,6 +204,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             resumeData = result.data;
                             // Save to localStorage for faster access next time
                             localStorage.setItem('resumeData', JSON.stringify(resumeData));
+                            
+                            // Also update the resumeForProfile data for consistency
+                            updateResumeForProfile(resumeData);
                         }
                     } else {
                         console.error('Error fetching resume:', response.status);
@@ -185,6 +241,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
+            // Fill objectives
+            objectivesInput.value = resumeData.objectives || '';
+            
             // Fill education information
             if (resumeData.education && resumeData.education.length > 0) {
                 // Clear existing entries
@@ -213,6 +272,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             
+            // Fill work experience information
+            if (resumeData.work && resumeData.work.length > 0) {
+                // Clear existing entries
+                document.querySelector('.work-entries').innerHTML = '';
+                
+                // Add new entries
+                resumeData.work.forEach((work, index) => {
+                    const newEntry = document.createElement('div');
+                    newEntry.className = 'work-entry';
+                    
+                    newEntry.innerHTML = `
+                        <div class="work-number">${index + 1}</div>
+                        <div class="form-group">
+                            <input type="text" name="position" value="${work.position || ''}">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="company" value="${work.company || ''}">
+                        </div>
+                        <div class="form-group" style="flex: 0.5;">
+                            <input type="text" name="duration" value="${work.duration || ''}">
+                        </div>
+                        <button class="delete-btn" onclick="deleteWorkEntry(this)">×</button>
+                    `;
+                    
+                    document.querySelector('.work-entries').appendChild(newEntry);
+                });
+            }
+            
             // Fill skills
             if (resumeData.skills && resumeData.skills.length > 0) {
                 skillsInput.value = resumeData.skills.join(', ');
@@ -237,6 +324,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 skillsInput.value = userData.skills.join(', ');
             }
         }
+    }
+    
+    // Function to update resumeForProfile data from resumeData
+    function updateResumeForProfile(resumeData) {
+        if (!resumeData || !resumeData.basic) return;
+        
+        const resumeForProfile = {
+            fullName: `${resumeData.basic.firstName || ''} ${resumeData.basic.lastName || ''}${resumeData.basic.suffix ? ' ' + resumeData.basic.suffix : ''}`,
+            contactInfo: `${resumeData.basic.mobile || ''} | ${resumeData.basic.email || ''}`,
+            address: resumeData.basic.address ? 
+                `${resumeData.basic.address.street || ''}, ${resumeData.basic.address.barangay || ''}, ${resumeData.basic.address.city || ''}, ${resumeData.basic.address.country || ''}` : '',
+            age: resumeData.basic.age || '',
+            birthday: resumeData.basic.birthday || '',
+            objectives: resumeData.objectives || resumeData.basic.objectives || '',
+            skills: resumeData.skills || []
+        };
+        
+        // Format education entries
+        if (resumeData.education && resumeData.education.length > 0) {
+            resumeForProfile.education = resumeData.education.map(edu => 
+                `${edu.school || ''}<br>${edu.year || ''}${edu.date ? ' - ' + edu.date : ''}`
+            ).join('<br><br>');
+        }
+        
+        // Format work experience entries
+        if (resumeData.work && resumeData.work.length > 0) {
+            resumeForProfile.work = resumeData.work.map(work => 
+                `${work.position || ''}<br>${work.company || ''}${work.duration ? ' | ' + work.duration : ''}`
+            ).join('<br><br>');
+        }
+        
+        // Log the profile data we're about to save
+        console.log('Saving resume profile data with objectives:', resumeForProfile.objectives);
+        
+        // Save updated profile to localStorage
+        localStorage.setItem('resumeForProfile', JSON.stringify(resumeForProfile));
     }
     
     // Function to show messages to the user
@@ -287,4 +410,30 @@ document.addEventListener('DOMContentLoaded', function() {
             statusMessage.className = 'status-message';
         }, 5000);
     }
+    
+    // Add CSS for work experience entries
+    const style = document.createElement('style');
+    style.textContent = `
+        .work-entry {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .work-number {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #4a7ebb;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    `;
+    document.head.appendChild(style);
 }); 

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth.middleware');
+const path = require('path');
+const fs = require('fs');
 
 // Submit daily accomplishment (Intern only)
 router.post('/daily', authMiddleware, roleMiddleware(['Intern']), async (req, res) => {
@@ -27,7 +29,7 @@ router.post('/daily', authMiddleware, roleMiddleware(['Intern']), async (req, re
         if (internships.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'No active internship found for this date'
+                message: 'No active internship found for this date. Please ensure you have an approved internship placement that covers this date.'
             });
         }
 
@@ -78,7 +80,7 @@ router.post('/attendance', authMiddleware, roleMiddleware(['Intern']), async (re
         if (internships.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'No active internship found for this date'
+                message: 'No active internship found for this date. Please ensure you have an approved internship placement that covers this date.'
             });
         }
 
@@ -193,6 +195,78 @@ router.get('/intern/:intern_id', authMiddleware, roleMiddleware(['Employer']), a
         res.status(500).json({
             success: false,
             message: 'Error fetching intern accomplishments'
+        });
+    }
+});
+
+// Generate report (Intern only)
+router.post('/report', authMiddleware, roleMiddleware(['Intern']), async (req, res) => {
+    try {
+        const intern_id = req.user.id;
+        
+        // Ensure the uploads directory exists
+        const uploadsDir = path.join(__dirname, '../../uploads');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        // Fetch intern details
+        const [internDetails] = await pool.query(`
+            SELECT i.*, u.first_name, u.last_name, u.email 
+            FROM interns_tbl i
+            JOIN users_tbl u ON i.user_id = u.user_id
+            WHERE i.id = ?
+        `, [intern_id]);
+        
+        if (internDetails.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Intern not found'
+            });
+        }
+        
+        // Fetch attendance records
+        const [attendance] = await pool.query(`
+            SELECT a.*, c.company_name 
+            FROM attendance_tracking_tbl a
+            JOIN companies_tbl c ON a.company_id = c.company_id
+            WHERE a.intern_id = ?
+            ORDER BY a.date DESC
+        `, [intern_id]);
+        
+        // Fetch accomplishment records
+        const [accomplishments] = await pool.query(`
+            SELECT a.*, c.company_name 
+            FROM daily_accomplishment_tbl a
+            JOIN companies_tbl c ON a.company_id = c.company_id
+            WHERE a.intern_id = ?
+            ORDER BY a.date DESC
+        `, [intern_id]);
+        
+        // Generate PDF filename
+        const timestamp = new Date().toISOString().replace(/[^0-9]/g, '');
+        const filename = `intern_report_${intern_id}_${timestamp}.pdf`;
+        const filePath = path.join(uploadsDir, filename);
+        
+        // The PDF generation would typically happen here with a library like PDFKit
+        // For the MVP, we'll just return the data for client-side PDF generation
+        
+        // Return data to client for client-side PDF generation
+        res.json({
+            success: true,
+            message: 'Report data retrieved successfully',
+            data: {
+                intern: internDetails[0],
+                attendance: attendance,
+                accomplishments: accomplishments,
+                generatedAt: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        console.error('Error generating report:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating report'
         });
     }
 });

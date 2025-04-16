@@ -76,36 +76,121 @@ async function initializeDatabase() {
                 }
             }
 
-            // Create a test user if none exists
-            const [existingUsers] = await connection.query('SELECT COUNT(*) as count FROM users_tbl');
-            if (existingUsers[0].count === 0) {
-                console.log('Creating test user...');
-                const bcrypt = require('bcryptjs');
-                const hashedPassword = await bcrypt.hash('password123', 10);
-                
-                // Create test user
-                const [userResult] = await connection.query(
-                    `INSERT INTO users_tbl (first_name, last_name, email, password, role) 
-                     VALUES (?, ?, ?, ?, ?)`,
-                    ['Test', 'User', 'test@example.com', hashedPassword, 'Intern']
+            // Create test users
+            const bcrypt = require('bcryptjs');
+            const hashedPassword1 = await bcrypt.hash('password123', 10);
+            const hashedPassword2 = await bcrypt.hash('testtest', 10);
+            
+            // Create test users with specific IDs
+            try {
+                // Test user 1
+                console.log('Creating test user 1...');
+                await connection.query(
+                    `INSERT INTO users_tbl (user_id, first_name, last_name, email, password, role) 
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    [1, 'Test', 'User', 'test@example.com', hashedPassword1, 'Intern']
                 );
-                console.log('Test user created successfully');
+                console.log('Test user 1 created successfully');
                 
                 // Create corresponding intern profile
                 await connection.query(
                     `INSERT INTO interns_tbl (user_id, course, skills) 
                      VALUES (?, ?, ?)`,
-                    [userResult.insertId, 'Test Course', '[]']
+                    [1, 'Test Course', '[]']
                 );
-                console.log('Test intern profile created successfully');
+                console.log('Test intern profile 1 created successfully');
+                
+                // Test user 2 - Justin Cabang with password 'testtest'
+                console.log('Creating test user 2...');
+                await connection.query(
+                    `INSERT INTO users_tbl (user_id, first_name, last_name, email, password, role) 
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    [2, 'Justin', 'Cabang', 'justincabang@gmail.com', hashedPassword2, 'Intern']
+                );
+                console.log('Test user 2 created successfully');
+                
+                // Create corresponding intern profile
+                await connection.query(
+                    `INSERT INTO interns_tbl (user_id, course, skills) 
+                     VALUES (?, ?, ?)`,
+                    [2, 'Computer Science', '[]']
+                );
+                console.log('Test intern profile 2 created successfully');
+            } catch (error) {
+                console.error('Error creating test users:', error);
             }
         } else {
-            console.log('Tables already exist, skipping initialization');
+            console.log('Tables already exist, checking for test users');
+            
+            // Check if specific user with ID 2 exists
+            const [user2] = await connection.query('SELECT * FROM users_tbl WHERE user_id = 2');
+            if (user2.length === 0) {
+                console.log('User with ID 2 not found, creating now...');
+                try {
+                    const bcrypt = require('bcryptjs');
+                    const hashedPassword = await bcrypt.hash('testtest', 10);
+                    
+                    await connection.query(
+                        `INSERT INTO users_tbl (user_id, first_name, last_name, email, password, role) 
+                         VALUES (?, ?, ?, ?, ?, ?)`,
+                        [2, 'Justin', 'Cabang', 'justincabang@gmail.com', hashedPassword, 'Intern']
+                    );
+                    console.log('User 2 created successfully');
+                    
+                    // Check if intern profile exists for user 2
+                    const [profile] = await connection.query('SELECT * FROM interns_tbl WHERE user_id = 2');
+                    if (profile.length === 0) {
+                        await connection.query(
+                            `INSERT INTO interns_tbl (user_id, course, skills) 
+                             VALUES (?, ?, ?)`,
+                            [2, 'Computer Science', '[]']
+                        );
+                        console.log('Created intern profile for user 2');
+                    }
+                } catch (error) {
+                    console.error('Error creating user 2:', error);
+                }
+            } else {
+                console.log('User with ID 2 already exists');
+                
+                // Update password for user 2 if it exists
+                try {
+                    const bcrypt = require('bcryptjs');
+                    const hashedPassword = await bcrypt.hash('testtest', 10);
+                    
+                    await connection.query(
+                        `UPDATE users_tbl SET password = ? WHERE user_id = 2`,
+                        [hashedPassword]
+                    );
+                    console.log('Updated password for user 2');
+                } catch (error) {
+                    console.error('Error updating password for user 2:', error);
+                }
+                
+                // Check if intern profile exists for user 2
+                const [profile] = await connection.query('SELECT * FROM interns_tbl WHERE user_id = 2');
+                if (profile.length === 0) {
+                    try {
+                        await connection.query(
+                            `INSERT INTO interns_tbl (user_id, course, skills) 
+                             VALUES (?, ?, ?)`,
+                            [2, 'Computer Science', '[]']
+                        );
+                        console.log('Created intern profile for user 2');
+                    } catch (error) {
+                        console.error('Error creating intern profile for user 2:', error);
+                    }
+                }
+            }
         }
 
         // Verify tables
         const [finalTables] = await connection.query('SHOW TABLES');
         console.log('Available tables:', finalTables.map(t => Object.values(t)[0]));
+        
+        // Verify users
+        const [users] = await connection.query('SELECT user_id, email, role FROM users_tbl');
+        console.log('Available users:', users);
 
         connection.release();
         console.log('Database initialization completed successfully');

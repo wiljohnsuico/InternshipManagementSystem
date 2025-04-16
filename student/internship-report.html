@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/student/styles/home-navbar.css">
-    <link rel="stylesheet" href="/student/styles/internship-report.css">
+    <link rel="stylesheet" href="styles/home-navbar.css">
+    <link rel="stylesheet" href="styles/internship-report.css">
     <title>Intern's Report</title>
     <!-- Add these libraries for PDF and file download functionality -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -22,16 +22,17 @@
                 <a href="mplhome.html">Home</a>
 
                 <div class="profile">
-                    <button class="dropdown-profile">Profile</button>
+                    <button class="dropdown-profile profile-link">
+                        <span class="user-name">Profile</span>
+                    </button>
                     <div class="profile-content">
-                        <a href="">My Account</a>
+                        <a href="mplprofile.html">My Account</a>
                         <a href="resume.html">My Resume</a>
                         <a href="internship-report.html">Internship</a>
-                        <a href="application-tracking.html">Applications</a>
-                        <a href="#">Logout</a>
+                        <a href="#">Applications</a>
+                        <a href="#" class="logout-link">Logout</a>
                     </div>
                 </div>
-                
             </div>
         </div>
     </header>
@@ -105,16 +106,18 @@
                 </div>
             </div>
     
-            <button id="new-entry-btn" class="btn-primary float-right">New Entry</button>
-            
-            <!-- Download Report Buttons -->
-            <div class="download-section">
-                <button id="download-pdf-btn" class="btn-primary">Download PDF Report</button>
-                <button id="download-csv-btn" class="btn-light">Download CSV Report</button>
+            <div class="action-buttons-container">
+                <button id="new-entry-btn" class="btn-primary">New Entry</button>
+                <button id="download-report-btn" class="btn-primary">Download Report</button>
             </div>
         </div>
-    
-        <script src="/student/scripts/internReport.js"></script>
     </main>
+    
+    <!-- Include auth utilities -->
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/protect-page.js"></script>
+    <script src="scripts/internReport.js"></script>
+    <!-- html2pdf library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </body>
 </html>

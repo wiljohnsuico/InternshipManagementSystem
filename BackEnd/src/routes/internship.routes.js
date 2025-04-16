@@ -135,4 +135,34 @@ router.patch('/:id/status', authMiddleware, roleMiddleware(['Admin', 'Faculty'])
     }
 });
 
+// Get active internship for current user (for a specific date)
+router.get('/active', authMiddleware, roleMiddleware(['Intern']), async (req, res) => {
+    try {
+        const intern_id = req.user.id;
+        const date = req.query.date || new Date().toISOString().split('T')[0]; // Default to today
+
+        // Get active internship for the given date
+        const [internships] = await pool.query(`
+            SELECT ip.*, c.company_name, c.industry_sector
+            FROM internship_placements_tbl ip
+            JOIN companies_tbl c ON ip.company_id = c.company_id
+            WHERE ip.intern_id = ? 
+            AND ip.placement_status = 'Approved'
+            AND ip.start_date <= ? 
+            AND ip.end_date >= ?
+        `, [intern_id, date, date]);
+
+        res.json({
+            success: true,
+            data: internships
+        });
+    } catch (error) {
+        console.error('Error fetching active internship:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching active internship'
+        });
+    }
+});
+
 module.exports = router; 

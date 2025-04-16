@@ -19,12 +19,11 @@
                 <a href="mplhome.html">Home</a>
 
                 <div class="profile">
-                    <button class="dropdown-profile profile-link">
-                        <span class="user-name">Profile</span>
-                    </button>
+                    <button class="dropdown-profile">Profile</button>
                     <div class="profile-content">
                         <a href="mplprofile.html">My Account</a>
                         <a href="resume.html">My Resume</a>
+                        <a href="internship-report.html">Internship</a>
                         <a href="#">Applications</a>
                         <a href="#" class="logout-link">Logout</a>
                     </div>
@@ -103,6 +102,15 @@
             </div>
             
             <div class="section">
+                <div class="section-title">Objectives</div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <textarea name="objectives" rows="3" placeholder="Briefly describe your career objectives and goals..."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
                 <div class="section-title">Education</div>
                 
                 <div class="form-row">
@@ -137,6 +145,44 @@
                 
                 <div class="form-row" style="margin-top: 10px;">
                     <button class="add-btn" id="add-education">+</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Work Experience</div>
+                
+                <div class="form-row">
+                    <div style="width: 35px;"></div>
+                    <div class="form-group">
+                        <label>Position</label>
+                    </div>
+                    <div class="form-group">
+                        <label>Company</label>
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <label>Duration</label>
+                    </div>
+                    <div style="width: 35px;"></div>
+                </div>
+                
+                <div class="work-entries">
+                    <div class="work-entry">
+                        <div class="work-number">1</div>
+                        <div class="form-group">
+                            <input type="text" name="position">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="company">
+                        </div>
+                        <div class="form-group" style="flex: 0.5;">
+                            <input type="text" name="duration">
+                        </div>
+                        <button class="delete-btn" onclick="deleteWorkEntry(this)">×</button>
+                    </div>
+                </div>
+                
+                <div class="form-row" style="margin-top: 10px;">
+                    <button class="add-btn" id="add-work">+</button>
                 </div>
             </div>
             
@@ -218,6 +264,45 @@
                 const remainingEntries = document.querySelectorAll('.education-entry');
                 remainingEntries.forEach((entry, index) => {
                     entry.querySelector('.education-number').textContent = index + 1;
+                });
+            }
+            
+            // Add work experience entry functionality
+            document.getElementById('add-work').addEventListener('click', function(e) {
+                e.preventDefault();
+                const workEntries = document.querySelector('.work-entries');
+                const entries = document.querySelectorAll('.work-entry').length;
+                
+                const newEntry = document.createElement('div');
+                newEntry.className = 'work-entry';
+                
+                newEntry.innerHTML = `
+                    <div class="work-number">${entries + 1}</div>
+                    <div class="form-group">
+                        <input type="text" name="position">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="company">
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <input type="text" name="duration">
+                    </div>
+                    <button class="delete-btn" onclick="deleteWorkEntry(this)">×</button>
+                `;
+                
+                workEntries.appendChild(newEntry);
+            });
+
+            // Delete work entry functionality
+            function deleteWorkEntry(button) {
+                const entry = button.parentElement;
+                const workEntries = document.querySelector('.work-entries');
+                workEntries.removeChild(entry);
+                
+                // Update numbering for remaining entries
+                const remainingEntries = document.querySelectorAll('.work-entry');
+                remainingEntries.forEach((entry, index) => {
+                    entry.querySelector('.work-number').textContent = index + 1;
                 });
             }
         </script>
