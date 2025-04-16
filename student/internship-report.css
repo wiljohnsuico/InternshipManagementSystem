@@ -1,0 +1,159 @@
+
+/* Container */
+.container {
+    max-width: 95%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--light-bg);
+    border-radius: 8px;
+    min-height: 80vh;
+}
+
+/* Typography */
+.report-title {
+    color: var(--primary-color);
+    margin-bottom: 5px;
+    font-size: 24px;
+}
+
+.report-subtitle {
+    color: var(--light-text);
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.section-title {
+    margin: 20px 0;
+    color: var(--text-color);
+}
+
+/* Grid Layout */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* Cards */
+.card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.attendance-card {
+    position: relative;
+}
+
+.report-card, .full-width {
+    overflow: auto;
+}
+
+/* Date and Time Display */
+.date-display {
+    margin: 15px 0;
+    font-size: 14px;
+    color: var(--light-text);
+}
+
+.time-display {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+/* Buttons */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-light {
+    background-color: #f0f2f5;
+    color: var(--text-color);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-light:hover, .btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-light:disabled, .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.float-right {
+    float: right;
+    margin-top: 20px;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    color: var(--light-text);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Divider */
+.section-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 30px 0;
+}
+
+/* Form styles */
+.entry-form {
+    margin: 20px 0;
+}
+
+.entry-form h3 {
+    margin-bottom: 15px;
+}
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 100px;
+    margin-bottom: 15px;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.hidden {
+    display: none;
+}

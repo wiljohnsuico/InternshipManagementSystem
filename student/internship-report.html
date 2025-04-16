@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/student/styles/home-navbar.css">
+    <link rel="stylesheet" href="/student/styles/internship-report.css">
+    <title>Intern's Report</title>
+</head>
+<body>
+    <header>
+        <!---NAV BAR-->
+        <div class="nav-bar">
+            <div class="logo">
+                <img src="imgs/qcuims-logo.png" alt="logo">
+            </div>
+            
+            <div class="nav-links">
+                <a href="mplhome.html">Home</a>
+
+                <div class="profile">
+                    <button class="dropdown-profile">Profile</button>
+                    <div class="profile-content">
+                        <a href="">My Account</a>
+                        <a href="resume.html">My Resume</a>
+                        <a href="internship-report.html">Internship</a>
+                        <a href="#">Logout</a>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <h1 class="report-title">Internship Report</h1>
+            <p class="report-subtitle">Detailed record of your progress</p>
+    
+            <div class="content-grid">
+                <!-- Attendance Section -->
+                <div class="card attendance-card">
+                    <h2>Attendance</h2>
+                    <div class="date-display">
+                        <span id="current-date"></span>
+                    </div>
+                    <div class="time-display">
+                        <span id="current-time">7:00:00 AM</span>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="time-in-btn" class="btn-light">Time In</button>
+                        <button id="time-out-btn" class="btn-light">Time Out</button>
+                    </div>
+                </div>
+    
+                <!-- Attendance Report -->
+                <div class="card report-card">
+                    <h2>Attendance Report</h2>
+                    <table id="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>DATE</th>
+                                <th>DETAILS</th>
+                                <th>APPROVED</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Attendance records will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    
+            <!-- Accomplishment Report Section -->
+            <div class="section-divider"></div>
+            
+            <h2 class="section-title">Accomplishment Report</h2>
+            <div class="card full-width">
+                <table id="accomplishment-table">
+                    <thead>
+                        <tr>
+                            <th>NO.</th>
+                            <th>DATE</th>
+                            <th>DETAILS</th>
+                            <th>APPROVED</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Accomplishment records will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+    
+            <!-- New Entry Form (Hidden by default) -->
+            <div id="entry-form" class="card entry-form hidden">
+                <h3>New Accomplishment Entry</h3>
+                <textarea id="accomplishment-input" placeholder="Enter your daily accomplishment"></textarea>
+                <div class="form-buttons">
+                    <button id="cancel-entry-btn" class="btn-light">Cancel</button>
+                    <button id="add-entry-btn" class="btn-primary">Save</button>
+                </div>
+            </div>
+    
+            <button id="new-entry-btn" class="btn-primary float-right">New Entry</button>
+        </div>
+    
+        <script src="/student/scripts/internReport.js"></script>
+    </main>
+</body>
+</html>
