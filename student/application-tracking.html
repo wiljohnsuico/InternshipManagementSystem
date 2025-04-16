@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/student/styles/applicationTracking.css">
+    <link rel="stylesheet" href="/student/styles/home-navbar.css">
+    <title>Application Tracking</title>
+</head>
+<body>
+    <header>
+        <!---NAV BAR-->
+        <div class="nav-bar">
+            <div class="logo">
+                <img src="imgs/qcuims-logo.png" alt="logo">
+            </div>
+            
+            <div class="nav-links">
+                <a href="mplhome.html">Home</a>
+
+                <div class="profile">
+                    <button class="dropdown-profile">Profile</button>
+                    <div class="profile-content">
+                        <a href="">My Account</a>
+                        <a href="resume.html">My Resume</a>
+                        <a href="internship-report.html">Internship</a>
+                        <a href="">Applications</a>
+                        <a href="#">Logout</a>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <h1>My Jobs</h1>
+            
+            <div class="job-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Company</th>
+                            <th>Salary</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applications-table-body">
+                        <tr>
+                            <td colspan="4" class="loading">Loading your applications...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                loadJobApplications();
+            });
+    
+            async function loadJobApplications() {
+                const tableBody = document.getElementById('applications-table-body');
+                
+                try {
+                    // Replace with your actual API endpoint
+                    const response = await fetch('/api/applications');
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch applications');
+                    }
+                    
+                    const applications = await response.json();
+                    
+                    // Clear loading message
+                    tableBody.innerHTML = '';
+                    
+                    if (applications.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="no-applications">
+                                    You haven't applied to any internships yet.
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    // Render each application
+                    applications.forEach(app => {
+                        const row = document.createElement('tr');
+                        
+                        // Get appropriate status class
+                        let statusClass = '';
+                        switch(app.status) {
+                            case 'Applied':
+                                statusClass = 'status-applied';
+                                break;
+                            case 'Upcoming Interview':
+                                statusClass = 'status-interview';
+                                break;
+                            case 'Rejected':
+                                statusClass = 'status-rejected';
+                                break;
+                            default:
+                                statusClass = '';
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${escapeHTML(app.position)}</td>
+                            <td>${escapeHTML(app.company)}</td>
+                            <td>${escapeHTML(app.salary || 'Unpaid')}</td>
+                            <td class="status ${statusClass}">${escapeHTML(app.status)}</td>
+                        `;
+                        
+                        tableBody.appendChild(row);
+                    });
+                    
+                } catch (error) {
+                    console.error('Error loading applications:', error);
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="error-message">
+                                Failed to load your applications. Please try again later.
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            // Helper function to prevent XSS
+            function escapeHTML(str) {
+                if (!str) return '';
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+        </script>
+    </main>
+</body>
+</html>
