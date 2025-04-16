@@ -50,51 +50,62 @@ async function initializeDatabase() {
         const connection = await pool.getConnection();
         console.log('Successfully connected to MySQL database');
 
-        // Read and execute the setup.sql file
-        const setupSQL = fs.readFileSync(path.join(__dirname, 'setup.sql'), 'utf8');
+        // Check if tables exist
+        const [tables] = await connection.query('SHOW TABLES');
+        const tableNames = tables.map(t => Object.values(t)[0]);
         
-        // Split into individual statements and execute them
-        const statements = setupSQL
-            .split(';')
-            .map(stmt => stmt.trim())
-            .filter(stmt => stmt.length > 0);
-        
-        for (const statement of statements) {
-            try {
-                await connection.query(statement);
-                console.log('Successfully executed schema statement');
-            } catch (error) {
-                console.error('Error executing schema statement:', error);
+        // If no tables exist, run the setup script
+        if (tableNames.length === 0) {
+            console.log('No tables found. Running initial setup...');
+            
+            // Read and execute the setup.sql file
+            const setupSQL = fs.readFileSync(path.join(__dirname, 'setup.sql'), 'utf8');
+            
+            // Split into individual statements and execute them
+            const statements = setupSQL
+                .split(';')
+                .map(stmt => stmt.trim())
+                .filter(stmt => stmt.length > 0);
+            
+            for (const statement of statements) {
+                try {
+                    await connection.query(statement);
+                    console.log('Successfully executed schema statement');
+                } catch (error) {
+                    console.error('Error executing schema statement:', error);
+                }
             }
-        }
 
-        // Create a test user if none exists
-        const [existingUsers] = await connection.query('SELECT COUNT(*) as count FROM users_tbl');
-        if (existingUsers[0].count === 0) {
-            console.log('Creating test user...');
-            const bcrypt = require('bcryptjs');
-            const hashedPassword = await bcrypt.hash('password123', 10);
-            
-            // Create test user
-            const [userResult] = await connection.query(
-                `INSERT INTO users_tbl (first_name, last_name, email, password, role) 
-                 VALUES (?, ?, ?, ?, ?)`,
-                ['Test', 'User', 'test@example.com', hashedPassword, 'Intern']
-            );
-            console.log('Test user created successfully');
-            
-            // Create corresponding intern profile
-            await connection.query(
-                `INSERT INTO interns_tbl (user_id, course, skills) 
-                 VALUES (?, ?, ?)`,
-                [userResult.insertId, 'Test Course', '[]']
-            );
-            console.log('Test intern profile created successfully');
+            // Create a test user if none exists
+            const [existingUsers] = await connection.query('SELECT COUNT(*) as count FROM users_tbl');
+            if (existingUsers[0].count === 0) {
+                console.log('Creating test user...');
+                const bcrypt = require('bcryptjs');
+                const hashedPassword = await bcrypt.hash('password123', 10);
+                
+                // Create test user
+                const [userResult] = await connection.query(
+                    `INSERT INTO users_tbl (first_name, last_name, email, password, role) 
+                     VALUES (?, ?, ?, ?, ?)`,
+                    ['Test', 'User', 'test@example.com', hashedPassword, 'Intern']
+                );
+                console.log('Test user created successfully');
+                
+                // Create corresponding intern profile
+                await connection.query(
+                    `INSERT INTO interns_tbl (user_id, course, skills) 
+                     VALUES (?, ?, ?)`,
+                    [userResult.insertId, 'Test Course', '[]']
+                );
+                console.log('Test intern profile created successfully');
+            }
+        } else {
+            console.log('Tables already exist, skipping initialization');
         }
 
         // Verify tables
-        const [tables] = await connection.query('SHOW TABLES');
-        console.log('Available tables:', tables.map(t => Object.values(t)[0]));
+        const [finalTables] = await connection.query('SHOW TABLES');
+        console.log('Available tables:', finalTables.map(t => Object.values(t)[0]));
 
         connection.release();
         console.log('Database initialization completed successfully');

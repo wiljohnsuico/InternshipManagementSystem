@@ -43,11 +43,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>First Name</label>
-                        <input type="text" name="first_name">
+                        <input type="text" name="firstName">
                     </div>
                     <div class="form-group">
                         <label>Last Name</label>
-                        <input type="text" name="last_name">
+                        <input type="text" name="lastName">
                     </div>
                     <div class="form-group">
                         <label>Suffix</label>
@@ -81,7 +81,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>House No., Street</label>
-                        <input type="text" name="house">
+                        <input type="text" name="street">
                     </div>
                     <div class="form-group">
                         <label>Barangay</label>
@@ -119,13 +119,13 @@
                     <div class="education-entry">
                         <div class="education-number">1</div>
                         <div class="form-group">
-                            <input type="text" name="education[0][school]">
+                            <input type="text" name="school">
                         </div>
                         <div class="form-group">
-                            <input type="text" name="education[0][year]">
+                            <input type="text" name="year">
                         </div>
                         <div class="form-group" style="flex: 0.5;">
-                            <input type="text" name="education[0][date]">
+                            <input type="text" name="date">
                         </div>
                         <button class="delete-btn" onclick="deleteEducationEntry(this)">×</button>
                     </div>
@@ -140,7 +140,7 @@
                 <div class="section-title">Skills</div>
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
-                        <textarea class="skills-box" name="skills"></textarea>
+                        <textarea class="skills-box" name="skills" placeholder="Enter skills separated by commas (e.g., JavaScript, HTML, CSS)"></textarea>
                     </div>
                     <div class="form-group" style="flex: 1;">
                         <label>Upload Image</label>
@@ -153,6 +153,7 @@
                 </div>
             </div>
             
+            <div id="statusMessage" class="status-message"></div>
             <button type="submit" class="submit-btn">Save</button>
         </form>
     
@@ -189,13 +190,13 @@
                 newEntry.innerHTML = `
                     <div class="education-number">${entries + 1}</div>
                     <div class="form-group">
-                        <input type="text" name="education[${entries}][school]">
+                        <input type="text" name="school">
                     </div>
                     <div class="form-group">
-                        <input type="text" name="education[${entries}][year]">
+                        <input type="text" name="year">
                     </div>
                     <div class="form-group" style="flex: 0.5;">
-                        <input type="text" name="education[${entries}][date]">
+                        <input type="text" name="date">
                     </div>
                     <button class="delete-btn" onclick="deleteEducationEntry(this)">×</button>
                 `;

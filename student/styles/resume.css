@@ -131,3 +131,33 @@ textarea {
     margin-top: 6px;
     align-self: flex-start; /* If using flex */
 }
+
+/* Status message styles */
+.status-message {
+    margin: 15px 0;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    display: none;
+}
+
+.status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    display: block;
+}
+
+.status-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    display: block;
+}
+
+.status-message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+    display: block;
+}

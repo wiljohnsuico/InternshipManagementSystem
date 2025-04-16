@@ -11,22 +11,16 @@ const internRoutes = require('./routes/intern.routes');
 
 const app = express();
 
-// ✅ Allow both localhost and 127.0.0.1
-const allowedOrigins = ['http://localhost:3500', 'http://127.0.0.1:3500'];
+// CORS configuration - Allow development requests from anywhere
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: '*',  // Allow requests from any origin in development
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 
-app.use(express.json());
+// Parse JSON request bodies with increased limit for file uploads
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Session configuration
@@ -43,7 +37,12 @@ app.use(session({
 // Request logging
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-    console.log('Request body:', req.body);
+    // Don't log the entire body for large requests
+    if (req.method === 'POST' && req.url.includes('/resume')) {
+        console.log('Request body: [Resume data - too large to log]');
+    } else {
+        console.log('Request body:', req.body);
+    }
     next();
 });
 
