@@ -10,6 +10,8 @@ const entryForm = document.getElementById('entry-form');
 const addEntryBtn = document.getElementById('add-entry-btn');
 const cancelEntryBtn = document.getElementById('cancel-entry-btn');
 const accomplishmentInput = document.getElementById('accomplishment-input');
+const downloadPdfBtn = document.getElementById('download-pdf-btn');
+const downloadCsvBtn = document.getElementById('download-csv-btn');
 
 // IndexedDB Setup
 const dbName = "InternshipDB";
@@ -284,6 +286,194 @@ function renderAccomplishments() {
     };
 }
 
+// Function to fetch attendance data
+function fetchAttendanceData() {
+    return new Promise((resolve) => {
+        const transaction = db.transaction(logsStore, "readonly");
+        const store = transaction.objectStore(logsStore);
+        const request = store.getAll();
+        
+        request.onsuccess = (event) => {
+            const logs = event.target.result;
+            logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            resolve(logs);
+        };
+    });
+}
+
+// Function to fetch accomplishments data
+function fetchAccomplishmentsData() {
+    return new Promise((resolve) => {
+        const transaction = db.transaction(accomplishmentsStore, "readonly");
+        const store = transaction.objectStore(accomplishmentsStore);
+        const request = store.getAll();
+        
+        request.onsuccess = (event) => {
+            const accomplishments = event.target.result;
+            accomplishments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            resolve(accomplishments);
+        };
+    });
+}
+
+// Generate and download PDF report
+function generatePdfReport() {
+    // Create a new jsPDF instance
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Internship Report', 105, 15, { align: 'center' });
+    
+    // Add date range
+    const today = new Date();
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${today.toLocaleDateString()}`, 105, 25, { align: 'center' });
+    
+    // Add attendance section
+    doc.setFontSize(16);
+    doc.text('Attendance Log', 14, 35);
+    
+    // Async function to generate the PDF
+    async function createPdf() {
+        // Get data
+        const attendanceLogs = await fetchAttendanceData();
+        const accomplishments = await fetchAccomplishmentsData();
+        
+        // Add attendance table
+        let yPos = 40;
+        doc.setFontSize(10);
+        doc.text('Date', 20, yPos);
+        doc.text('Time In', 60, yPos);
+        doc.text('Time Out', 100, yPos);
+        doc.text('Status', 140, yPos);
+        
+        yPos += 5;
+        doc.line(14, yPos, 196, yPos);
+        yPos += 8;
+        
+        attendanceLogs.forEach(log => {
+            doc.text(formatDateDisplay(log.date), 20, yPos);
+            doc.text(log.timeIn || 'N/A', 60, yPos);
+            doc.text(log.timeOut || 'N/A', 100, yPos);
+            doc.text('Pending', 140, yPos);
+            yPos += 8;
+            
+            // Add a new page if we're near the bottom
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+            }
+        });
+        
+        // Add accomplishments section
+        yPos += 10;
+        doc.setFontSize(16);
+        doc.text('Accomplishments', 14, yPos);
+        yPos += 10;
+        
+        doc.setFontSize(10);
+        doc.text('Date', 20, yPos);
+        doc.text('Details', 60, yPos);
+        doc.text('Status', 160, yPos);
+        
+        yPos += 5;
+        doc.line(14, yPos, 196, yPos);
+        yPos += 8;
+        
+        accomplishments.forEach(item => {
+            // Check if we need a new page
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            doc.text(formatDateDisplay(item.date), 20, yPos);
+            
+            // Handle long text with wrapping
+            const splitDetails = doc.splitTextToSize(item.details, 90);
+            doc.text(splitDetails, 60, yPos);
+            
+            doc.text('Pending', 160, yPos);
+            
+            // Move down based on number of lines in details
+            yPos += Math.max(8, splitDetails.length * 6);
+        });
+        
+        // Save the PDF
+        doc.save('Internship_Report.pdf');
+    }
+    
+    createPdf();
+}
+
+// Generate and download CSV report
+function generateCsvReport() {
+    // Function to convert array to CSV
+    function arrayToCSV(data, headers) {
+        // Create header row
+        let csvContent = headers.join(',') + '\n';
+        
+        // Add data rows
+        data.forEach(row => {
+            const values = headers.map(header => {
+                const value = row[header] || '';
+                // Quote values that contain commas
+                return value.toString().includes(',') ? `"${value}"` : value;
+            });
+            csvContent += values.join(',') + '\n';
+        });
+        
+        return csvContent;
+    }
+    
+    // Async function to create the CSV
+    async function createCsv() {
+        // Fetch data
+        const attendanceLogs = await fetchAttendanceData();
+        const accomplishments = await fetchAccomplishmentsData();
+        
+        // Format attendance data for CSV
+        const attendanceFormattedData = attendanceLogs.map(log => ({
+            date: formatDateDisplay(log.date),
+            timeIn: log.timeIn || 'N/A',
+            timeOut: log.timeOut || 'N/A',
+            status: 'Pending'
+        }));
+        
+        // Format accomplishments data for CSV
+        const accomplishmentsFormattedData = accomplishments.map(item => ({
+            date: formatDateDisplay(item.date),
+            details: item.details,
+            status: 'Pending'
+        }));
+        
+        // Create attendance CSV
+        const attendanceCsv = arrayToCSV(
+            attendanceFormattedData, 
+            ['date', 'timeIn', 'timeOut', 'status']
+        );
+        
+        // Create accomplishments CSV
+        const accomplishmentsCsv = arrayToCSV(
+            accomplishmentsFormattedData,
+            ['date', 'details', 'status']
+        );
+        
+        // Combine into a single CSV with sections
+        const combinedCsv = 
+            'ATTENDANCE LOG\n' + attendanceCsv + 
+            '\nACCOMPLISHMENTS\n' + accomplishmentsCsv;
+        
+        // Create blob and download
+        const blob = new Blob([combinedCsv], { type: 'text/csv;charset=utf-8' });
+        saveAs(blob, 'Internship_Report.csv');
+    }
+    
+    createCsv();
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     openDB();
@@ -294,4 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
     newEntryBtn.addEventListener('click', toggleEntryForm);
     cancelEntryBtn.addEventListener('click', toggleEntryForm);
     addEntryBtn.addEventListener('click', addAccomplishment);
+    downloadPdfBtn?.addEventListener('click', generatePdfReport);
+    downloadCsvBtn?.addEventListener('click', generateCsvReport);
 });
