@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Intern Management</title>
+  <link rel="stylesheet" href="Intrn.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+  <div class="nav-bar">
+    <img src="img/QCU IMS (2 x 1.9 in).svg" alt="Logo" class="logo"/>
+    <div class="nav-links">
+      <a href="Intrn.html">Intern</a>
+      <a href="Cmpny.html">Company</a>
+      <a href="Emplyr.html">Employer</a>
+      <a href="fclty.html">Faculty</a>
+      <a href="Archv.html">Archive</a>
+      <div class="user-icon" onclick="toggleDropdown()">
+        <img src="img/cat-svgrepo-com.svg" alt="User Icon"/>
+      </div>
+      <div class="admin-text">
+        <span>Admin <i class="fa-solid fa-angle-down"></i></span>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <a href="#">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="header">
+    <h2>Intern</h2>
+    <p>Displays all Intern account enrolled in the system</p>
+  </div>
+
+  <div class="mid-top">
+    <div class="search">
+      <input type="text" id="searchInput" placeholder="Search..."/>
+      <button onclick="searchTable()">Search</button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Student No.</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>College Department</th>
+          <th>Course</th>
+          <th>Username</th>
+          <th>Password</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="internTableBody"></tbody>
+    </table>
+  </div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeEditModal()">&times;</span>
+    <h3>Edit Intern</h3>
+    <form id="editForm">
+      <input type="hidden" id="editIndex">
+      <label>First Name:</label>
+      <input type="text" id="editFirstName" required>
+      <label>Last Name:</label>
+      <input type="text" id="editLastName" required>
+      <label>College Department:</label>
+      <input type="text" id="editCollegeDepartment" required>
+      <label>Course:</label>
+      <input type="text" id="editCourse" required>
+      <button type="submit">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+
+  <script src="Intrn.js"></script>
+</body>
+</html>
