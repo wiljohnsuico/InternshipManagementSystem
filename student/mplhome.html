@@ -65,10 +65,16 @@
             <form id="application-form">
                 <label for="resume">Upload Resume:</label><br>
                 <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required><br><br>
-
-                <!--Time Availability-->
-                <!--<label for="interview-time">Available Interview Time:</label><br>
-                <input type="datetime-local" id="interview-time" name="interview-time" required><br><br>-->
+    
+                <label for="resume">Upload CV:</label><br>
+                <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required><br><br>
+    
+                <label for="resume">Upload Endorsement Letter:</label><br>
+                <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required><br><br>
+    
+                <label for="resume">Upload Other Supporting Documents:</label><br>
+                <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" multiple required><br><br>
+                <!-- Di makapag upload ng multiple document. Handle mo daw sa server side, ikaw na bahala -->
     
                 <button type="submit">Submit Application</button>
             </form>
