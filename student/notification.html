@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../student/styles/home-navbar.css">
+    <link rel="stylesheet" href="../student/styles/notification.css">
+    <title>Document</title>
+</head>
+<body>
+    <header>
+        <!---NAV BAR-->
+        <div class="nav-bar">
+            <div class="logo">
+                <img src="imgs/qcuims-logo.png" alt="logo">
+            </div>
+            
+            <div class="nav-links">
+                <a href="mplhome.html">Home</a>
+
+                <!-- Add notification dropdown here -->
+                <div class="notifications">
+                    <button class="dropdown-notifications">
+                        <img src="imgs/bell-icon.png" alt="Notifications" class="bell-icon">
+                        <span class="notification-count">0</span>
+                    </button>
+                    <div class="notifications-content">
+                        <h3>Notifications</h3>
+                        <!-- Notifications will be loaded here -->
+                        <a href="notification.html" class="view-all">View all notifications</a>
+                    </div>
+                </div>
+                
+                <script src="../student/scripts/notification.js"></script>
+
+                <div class="profile">
+                    <button class="dropdown-profile profile-link">
+                        <span class="user-name">Profile</span>
+                    </button>
+                    <div class="profile-content">
+                        <a href="mplprofile.html">My Account</a>
+                        <a href="#">Applications</a>
+                        <a href="#" class="logout-link">Logout</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <div class="notifications-header">
+                <h1>Notifications</h1>
+                <div class="notifications-actions">
+                    <button id="mark-all-read" class="btn">Mark all as read</button>
+                    <select id="filter-notifications" class="filter-dropdown">
+                        <option value="all">All notifications</option>
+                        <option value="unread">Unread</option>
+                        <option value="read">Read</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" data-tab="all">All</button>
+                <button class="tab-button" data-tab="applications">Applications</button>
+                <button class="tab-button" data-tab="internship">Internship</button>
+                <button class="tab-button" data-tab="jobs">Jobs</button>
+                <button class="tab-button" data-tab="messages">Messages</button>
+            </div>
+
+            <div class="notifications-list">
+                <!-- Notifications will be loaded here -->
+                <div class="loading">Loading notifications...</div>
+            </div>
+
+            <div class="pagination">
+                <button class="pagination-button" id="prev-page" disabled>Previous</button>
+                <span class="pagination-info">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
+                <button class="pagination-button" id="next-page">Next</button>
+            </div>
+        </div>
+        
+        <script src="../student/scripts/notification-pages.js"></script>
+    </main>
+</body>
+</html>
