@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Guide - QCU IMS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../styles/resources.css">
+    <style>
+        #back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background: var(--secondary-color);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .completed {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        .question-item h3 {
+            cursor: pointer;
+            position: relative;
+            padding-right: 30px;
+        }
+        
+        .question-item h3::after {
+            content: '\f078';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 0;
+            transition: transform 0.3s ease;
+        }
+        
+        .question-item h3.expanded::after {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="../imgs/logo.png" alt="QCU Logo">
+                <h1 class="logo-text">QCU Internship Management System</h1>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="../mplhome.html">Home</a></li>
+                    <li><a href="../resume.html">Resume</a></li>
+                    <li><a href="../jobListings.html">Job Listings</a></li>
+                    <li><a href="../application-tracking.html">My Applications</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="resource-content">
+        <h1>Interview Preparation Guide</h1>
+        
+        <div class="search-filter">
+            <input type="text" id="resource-search" placeholder="Search in guide...">
+            <button id="print-guide" class="btn">
+                <i class="fas fa-print"></i> Print Guide
+            </button>
+        </div>
+        
+        <section class="guide-section">
+            <h2>Before the Interview</h2>
+            <div class="content-box">
+                <div class="prep-checklist">
+                    <div class="checklist-item">
+                        <i class="fas fa-building"></i>
+                        <h3>Research the Company</h3>
+                        <ul>
+                            <li>Study the company's mission and values</li>
+                            <li>Review recent news and developments</li>
+                            <li>Understand their products/services</li>
+                        </ul>
+                    </div>
+                    <div class="checklist-item">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>Review Your Materials</h3>
+                        <ul>
+                            <li>Know your resume thoroughly</li>
+                            <li>Prepare portfolio if applicable</li>
+                            <li>Bring extra copies of documents</li>
+                        </ul>
+                    </div>
+                    <div class="checklist-item">
+                        <i class="fas fa-clock"></i>
+                        <h3>Plan Logistics</h3>
+                        <ul>
+                            <li>Confirm interview time and location</li>
+                            <li>Plan your route in advance</li>
+                            <li>Arrive 10-15 minutes early</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="guide-section">
+            <h2>Common Interview Questions</h2>
+            <div class="content-box">
+                <div class="question-list">
+                    <div class="question-item">
+                        <h3>Tell me about yourself</h3>
+                        <p>Focus on professional background and relevant experiences</p>
+                    </div>
+                    <div class="question-item">
+                        <h3>Why are you interested in this position?</h3>
+                        <p>Connect your skills and goals to the role</p>
+                    </div>
+                    <div class="question-item">
+                        <h3>What are your strengths and weaknesses?</h3>
+                        <p>Be honest and show self-awareness</p>
+                    </div>
+                    <div class="question-item">
+                        <h3>Where do you see yourself in 5 years?</h3>
+                        <p>Align your career goals with the company</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="guide-section">
+            <h2>Professional Etiquette</h2>
+            <div class="content-box">
+                <div class="etiquette-grid">
+                    <div class="etiquette-item">
+                        <i class="fas fa-tshirt"></i>
+                        <h3>Dress Code</h3>
+                        <p>Professional attire, conservative colors</p>
+                    </div>
+                    <div class="etiquette-item">
+                        <i class="fas fa-handshake"></i>
+                        <h3>Body Language</h3>
+                        <p>Maintain eye contact, firm handshake</p>
+                    </div>
+                    <div class="etiquette-item">
+                        <i class="fas fa-comments"></i>
+                        <h3>Communication</h3>
+                        <p>Clear, concise responses</p>
+                    </div>
+                    <div class="etiquette-item">
+                        <i class="fas fa-envelope"></i>
+                        <h3>Follow-up</h3>
+                        <p>Send a thank-you email within 24 hours</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <button id="back-to-top" title="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <footer>
+        <p>&copy; 2023 QCU Internship Management System. All rights reserved.</p>
+    </footer>
+    <script src="../scripts/resources.js"></script>
+</body>
+</html> 

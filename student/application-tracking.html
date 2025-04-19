@@ -3,143 +3,620 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/student/styles/applicationTracking.css">
-    <link rel="stylesheet" href="/student/styles/home-navbar.css">
-    <title>Application Tracking</title>
+    <meta name="api-url" content="http://localhost:5004/api">
+    <title>My Applications - QCU IMS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 0;
+            color: #2c3e50;
+        }
+        
+        /* Modern Header Styles */
+        .main-header {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo-container img {
+            height: 40px;
+            margin-right: 15px;
+        }
+        
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #3498db;
+            margin: 0;
+        }
+        
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .main-nav li {
+            margin: 0;
+            position: relative;
+        }
+        
+        .main-nav a {
+            display: block;
+            padding: 25px 20px;
+            text-decoration: none;
+            color: #34495e;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .main-nav a:hover {
+            color: #3498db;
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .main-nav a.active {
+            color: #3498db;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            background-color: transparent;
+            border: none;
+            color: #e74c3c;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 25px 20px;
+            transition: all 0.2s;
+        }
+        
+        .logout-btn i {
+            margin-right: 8px;
+        }
+        
+        .logout-btn:hover {
+            background-color: rgba(231, 76, 60, 0.05);
+        }
+        
+        /* Content Styles */
+        .applications-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+        }
+        
+        .page-title {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .page-description {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .application-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .application-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #ecf0f1;
+        }
+        
+        .application-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #ecf0f1;
+            background-color: #f8fafc;
+        }
+        
+        .job-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+        }
+        
+        .company-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #34495e;
+            font-size: 14px;
+        }
+        
+        .company-info i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+        
+        .location-info {
+            display: flex;
+            align-items: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .location-info i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+        
+        .card-body {
+            padding: 15px 20px;
+        }
+        
+        .date-applied {
+            display: flex;
+            align-items: center;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .date-applied i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+        
+        .application-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        
+        .status-pending {
+            background-color: #fff8e6;
+            color: #f39c12;
+        }
+        
+        .status-under-review {
+            background-color: #e6f4ff;
+            color: #3498db;
+        }
+        
+        .status-interview {
+            background-color: #e7f8f0;
+            color: #27ae60;
+        }
+        
+        .status-hired {
+            background-color: #e6ffe6;
+            color: #2ecc71;
+        }
+        
+        .status-rejected {
+            background-color: #ffe6e6;
+            color: #e74c3c;
+        }
+        
+        .status-withdrawn {
+            background-color: #f2f2f2;
+            color: #7f8c8d;
+        }
+        
+        .card-actions {
+            padding: 15px 20px;
+            border-top: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+        }
+        
+        .btn-outline:hover {
+            background-color: #fff8f8;
+        }
+        
+        /* Withdraw button specific styles */
+        .withdraw-btn {
+            background-color: transparent;
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+        }
+        
+        .withdraw-btn:hover {
+            background-color: #ffe6e6;
+        }
+        
+        .btn-outline:disabled {
+            border-color: #bdc3c7;
+            color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        /* Loading and empty states */
+        .empty-state {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            padding: 40px;
+            text-align: center;
+            margin: 30px 0;
+            border: 1px solid #ecf0f1;
+        }
+        
+        .empty-state i {
+            font-size: 50px;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 50px 0;
+        }
+        
+        .loading-spinner i {
+            font-size: 50px;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 60px auto;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: modalFadeIn 0.3s;
+            border: 1px solid #ecf0f1;
+        }
+        
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8fafc;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .close {
+            font-size: 24px;
+            color: #95a5a6;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .application-detail {
+            margin-bottom: 20px;
+        }
+        
+        .detail-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+        }
+        
+        .detail-value {
+            font-size: 15px;
+            color: #2c3e50;
+        }
+        
+        .cover-letter {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            color: #2c3e50;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.6;
+            border: 1px solid #ecf0f1;
+        }
+        
+        .confirm-modal .modal-content {
+            max-width: 400px;
+        }
+        
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .error-message {
+            padding: 20px;
+            text-align: center;
+            color: #e74c3c;
+            background-color: #fff8f8;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #fadbd8;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .application-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-container {
+                flex-direction: column;
+                padding: 10px 20px;
+            }
+            
+            .logo-container {
+                padding: 10px 0;
+            }
+            
+            .main-nav {
+                width: 100%;
+                overflow-x: auto;
+            }
+            
+            .main-nav ul {
+                width: max-content;
+            }
+            
+            .main-nav a, .logout-btn {
+                padding: 15px 15px;
+            }
+        }
+        
+        /* Status notification styles */
+        .status-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            max-width: 400px;
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .notification-icon {
+            margin-right: 12px;
+            font-size: 20px;
+        }
+        
+        .status-notification.success {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .status-notification.success .notification-icon:before {
+            content: "\f00c";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            color: #2ecc71;
+        }
+        
+        .status-notification.error {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .status-notification.error .notification-icon:before {
+            content: "\f071";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            color: #e74c3c;
+        }
+        
+        .status-notification.info {
+            border-left: 4px solid #3498db;
+        }
+        
+        .status-notification.info .notification-icon:before {
+            content: "\f05a";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            color: #3498db;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <!---NAV BAR-->
-        <div class="nav-bar">
-            <div class="logo">
-                <img src="imgs/qcuims-logo.png" alt="logo">
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="imgs/logo.png" alt="QCU Logo">
+                <h1 class="logo-text">QCU Internship Management System</h1>
             </div>
-            
-            <div class="nav-links">
-                <a href="mplhome.html">Home</a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="mplhome.html">Home</a></li>
+                    <li><a href="resume.html">Resume</a></li>
+                    <li><a href="jobListings.html">Job Listings</a></li>
+                    <li><a href="application-tracking.html" class="active">My Applications</a></li>
+                    <li>
+                        <button id="logoutBtn" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-                <div class="profile">
-                    <button class="dropdown-profile">Profile</button>
-                    <div class="profile-content">
-                        <a href="">My Account</a>
-                        <a href="resume.html">My Resume</a>
-                        <a href="internship-report.html">Internship</a>
-                        <a href="">Applications</a>
-                        <a href="#">Logout</a>
+    <div class="applications-container">
+        <div class="page-header">
+            <h1 class="page-title">My Applications</h1>
+            <p class="page-description">Track the status of your internship applications</p>
+        </div>
+        
+        <div id="application-list" class="application-cards">
+            <!-- Applications will be loaded dynamically here -->
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading your applications...</p>
                     </div>
                 </div>
                 
+        <!-- Status notification -->
+        <div id="status-notification" class="status-notification" style="display: none;">
+            <div class="notification-content">
+                <i class="notification-icon"></i>
+                <span class="notification-message"></span>
             </div>
         </div>
-    </header>
-    <main>
-        <div class="container">
-            <h1>My Jobs</h1>
-            
-            <div class="job-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Position</th>
-                            <th>Company</th>
-                            <th>Salary</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="applications-table-body">
-                        <tr>
-                            <td colspan="4" class="loading">Loading your applications...</td>
-                        </tr>
-                    </tbody>
-                </table>
+    </div>
+    
+    <!-- Application Details Modal -->
+    <div id="applicationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Application Details</h2>
+                <button class="close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="application-details">
+                    <!-- Application details will be loaded here -->
+                </div>
+            </div>
             </div>
         </div>
     
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                loadJobApplications();
-            });
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Cancel Application</h2>
+                <button class="close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationText">Are you sure you want to cancel this application? This action cannot be undone.</p>
+                <div class="confirm-actions">
+                    <button class="btn btn-outline confirm-cancel">Cancel</button>
+                    <button class="btn btn-primary confirm-delete" id="confirmDeleteBtn">Cancel Application</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
-            async function loadJobApplications() {
-                const tableBody = document.getElementById('applications-table-body');
-                
-                try {
-                    // Replace with your actual API endpoint
-                    const response = await fetch('/api/applications');
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch applications');
-                    }
-                    
-                    const applications = await response.json();
-                    
-                    // Clear loading message
-                    tableBody.innerHTML = '';
-                    
-                    if (applications.length === 0) {
-                        tableBody.innerHTML = `
-                            <tr>
-                                <td colspan="4" class="no-applications">
-                                    You haven't applied to any internships yet.
-                                </td>
-                            </tr>
-                        `;
-                        return;
-                    }
-                    
-                    // Render each application
-                    applications.forEach(app => {
-                        const row = document.createElement('tr');
-                        
-                        // Get appropriate status class
-                        let statusClass = '';
-                        switch(app.status) {
-                            case 'Applied':
-                                statusClass = 'status-applied';
-                                break;
-                            case 'Upcoming Interview':
-                                statusClass = 'status-interview';
-                                break;
-                            case 'Rejected':
-                                statusClass = 'status-rejected';
-                                break;
-                            default:
-                                statusClass = '';
-                        }
-                        
-                        row.innerHTML = `
-                            <td>${escapeHTML(app.position)}</td>
-                            <td>${escapeHTML(app.company)}</td>
-                            <td>${escapeHTML(app.salary || 'Unpaid')}</td>
-                            <td class="status ${statusClass}">${escapeHTML(app.status)}</td>
-                        `;
-                        
-                        tableBody.appendChild(row);
-                    });
-                    
-                } catch (error) {
-                    console.error('Error loading applications:', error);
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="4" class="error-message">
-                                Failed to load your applications. Please try again later.
-                            </td>
-                        </tr>
-                    `;
-                }
-            }
-            
-            // Helper function to prevent XSS
-            function escapeHTML(str) {
-                if (!str) return '';
-                return str
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            }
-        </script>
-    </main>
+    <!-- Include utility scripts -->
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/applications.js"></script>
 </body>
 </html>

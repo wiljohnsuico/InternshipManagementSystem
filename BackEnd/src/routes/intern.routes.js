@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const auth = require('../middleware/auth');
+const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 // Ensure resumes table exists
 async function ensureResumesTableExists() {
@@ -470,6 +471,237 @@ router.post('/resume', auth, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Server error',
+            error: error.message
+        });
+    }
+});
+
+// Get all interns (admin only)
+router.get('/', authenticateToken, authorizeRoles(['Admin']), async (req, res) => {
+    try {
+        // Query to get all interns with their user data
+        const [interns] = await db.query(`
+            SELECT u.user_id, u.first_name, u.last_name, u.email, 
+                   i.student_id, i.course, i.dept, i.year_level, i.section,
+                   IFNULL(i.status, 'Pending') as status
+            FROM users_tbl u
+            JOIN interns_tbl i ON u.user_id = i.user_id
+            WHERE u.role = 'Intern'
+            ORDER BY u.created_at DESC
+        `);
+        
+        res.json({ 
+            success: true, 
+            interns 
+        });
+    } catch (error) {
+        console.error('Error fetching interns:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching interns', 
+            error: error.message 
+        });
+    }
+});
+
+// Update intern status (admin only)
+router.put('/:userId/status', authenticateToken, authorizeRoles(['Admin']), async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { status } = req.body;
+        
+        if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status. Status must be Pending, Approved, or Rejected'
+            });
+        }
+        
+        // Check if intern exists
+        const [interns] = await db.query(
+            'SELECT * FROM interns_tbl WHERE user_id = ?',
+            [userId]
+        );
+        
+        if (interns.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Intern not found'
+            });
+        }
+        
+        // Update intern status
+        await db.query(
+            'UPDATE interns_tbl SET status = ? WHERE user_id = ?',
+            [status, userId]
+        );
+        
+        res.json({
+            success: true,
+            message: `Intern status updated to ${status} successfully`
+        });
+    } catch (error) {
+        console.error('Error updating intern status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating intern status',
+            error: error.message
+        });
+    }
+});
+
+// Delete intern (admin only)
+router.delete('/:userId', authenticateToken, authorizeRoles(['Admin']), async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Start a transaction
+        await db.beginTransaction();
+        
+        // Check if intern exists
+        const [interns] = await db.query(
+            'SELECT * FROM interns_tbl WHERE user_id = ?',
+            [userId]
+        );
+        
+        if (interns.length === 0) {
+            await db.rollback();
+            return res.status(404).json({
+                success: false,
+                message: 'Intern not found'
+            });
+        }
+        
+        // Archive intern data if needed
+        // For now, we'll just delete the records
+        
+        // Delete from interns_tbl
+        await db.query(
+            'DELETE FROM interns_tbl WHERE user_id = ?',
+            [userId]
+        );
+        
+        // Delete from users_tbl
+        await db.query(
+            'DELETE FROM users_tbl WHERE user_id = ?',
+            [userId]
+        );
+        
+        // Commit the transaction
+        await db.commit();
+        
+        res.json({
+            success: true,
+            message: 'Intern deleted successfully'
+        });
+    } catch (error) {
+        // Rollback transaction in case of error
+        await db.rollback();
+        console.error('Error deleting intern:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting intern',
+            error: error.message
+        });
+    }
+});
+
+// Update intern details (admin only)
+router.put('/:userId', authenticateToken, authorizeRoles(['Admin']), async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { first_name, last_name, dept, course, year_level, section, student_id } = req.body;
+        
+        // Start a transaction
+        await db.beginTransaction();
+        
+        // Check if intern exists
+        const [interns] = await db.query(
+            'SELECT * FROM interns_tbl WHERE user_id = ?',
+            [userId]
+        );
+        
+        if (interns.length === 0) {
+            await db.rollback();
+            return res.status(404).json({
+                success: false,
+                message: 'Intern not found'
+            });
+        }
+        
+        // Update user details if provided
+        if (first_name || last_name) {
+            const updateFields = [];
+            const updateValues = [];
+            
+            if (first_name) {
+                updateFields.push('first_name = ?');
+                updateValues.push(first_name);
+            }
+            
+            if (last_name) {
+                updateFields.push('last_name = ?');
+                updateValues.push(last_name);
+            }
+            
+            if (updateFields.length > 0) {
+                await db.query(
+                    `UPDATE users_tbl SET ${updateFields.join(', ')} WHERE user_id = ?`,
+                    [...updateValues, userId]
+                );
+            }
+        }
+        
+        // Update intern details if provided
+        const internUpdateFields = [];
+        const internUpdateValues = [];
+        
+        if (dept) {
+            internUpdateFields.push('dept = ?');
+            internUpdateValues.push(dept);
+        }
+        
+        if (course) {
+            internUpdateFields.push('course = ?');
+            internUpdateValues.push(course);
+        }
+        
+        if (year_level) {
+            internUpdateFields.push('year_level = ?');
+            internUpdateValues.push(year_level);
+        }
+        
+        if (section) {
+            internUpdateFields.push('section = ?');
+            internUpdateValues.push(section);
+        }
+        
+        if (student_id) {
+            internUpdateFields.push('student_id = ?');
+            internUpdateValues.push(student_id);
+        }
+        
+        if (internUpdateFields.length > 0) {
+            await db.query(
+                `UPDATE interns_tbl SET ${internUpdateFields.join(', ')} WHERE user_id = ?`,
+                [...internUpdateValues, userId]
+            );
+        }
+        
+        // Commit the transaction
+        await db.commit();
+        
+        res.json({
+            success: true,
+            message: 'Intern details updated successfully'
+        });
+    } catch (error) {
+        // Rollback transaction in case of error
+        await db.rollback();
+        console.error('Error updating intern details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating intern details',
             error: error.message
         });
     }

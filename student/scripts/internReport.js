@@ -426,10 +426,10 @@ async function handleTimeOut() {
             time_out: now.toISOString(),
             remarks: todayRecord.remarks || 'Submitted via webapp'
         });
-        
-        // Update UI
-        timeOutBtn.disabled = true;
-        
+            
+            // Update UI
+            timeOutBtn.disabled = true;
+            
         // Reset button text
         setButtonLoading(timeOutBtn, false, 'Time Out');
         

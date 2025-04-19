@@ -58,6 +58,30 @@ async function initializeDatabase() {
             console.log('Test intern profile created successfully');
         }
 
+        // Create an admin user if none exists
+        const [existingAdmins] = await connection.query('SELECT COUNT(*) as count FROM users_tbl WHERE role = "Admin"');
+        if (existingAdmins[0].count === 0) {
+            console.log('Creating admin user...');
+            const bcrypt = require('bcryptjs');
+            const hashedPassword = await bcrypt.hash('password', 10);
+            
+            // Create admin user
+            const [adminResult] = await connection.query(
+                `INSERT INTO users_tbl (first_name, last_name, email, password, role, contact_number) 
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                ['Admin', 'User', 'admin@example.com', hashedPassword, 'Admin', '1234567890']
+            );
+            console.log('Admin user created successfully');
+            
+            // Create corresponding admin profile
+            await connection.query(
+                `INSERT INTO admins_tbl (user_id, department) 
+                 VALUES (?, ?)`,
+                [adminResult.insertId, 'Test Department']
+            );
+            console.log('Test admin profile created successfully');
+        }
+
         console.log('Database initialization completed successfully');
     } catch (error) {
         console.error('Error initializing database:', error);

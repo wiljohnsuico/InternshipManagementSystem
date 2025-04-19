@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Get form elements
     const firstNameInput = document.querySelector('input[name="firstName"]');
+    const middleNameInput = document.querySelector('input[name="middleName"]');
     const lastNameInput = document.querySelector('input[name="lastName"]');
     const suffixInput = document.querySelector('input[name="suffix"]');
     const birthdayInput = document.querySelector('input[name="birthday"]');
@@ -83,10 +84,89 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get objectives text
             const objectives = objectivesInput.value.trim();
             
+            // Process image data to reduce size before saving
+            let imageData = '';
+            if (previewImage.src && previewImage.src.startsWith('data:image')) {
+                try {
+                    // Create a temporary image for compression
+                    const tempImg = new Image();
+                    
+                    // Need to wait for the image to load before getting dimensions
+                    tempImg.onload = function() {
+                        // Create a canvas to resize the image
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 400;
+                        const MAX_HEIGHT = 400;
+                        
+                        let width = tempImg.width;
+                        let height = tempImg.height;
+                        
+                        // Calculate new dimensions while maintaining aspect ratio
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Draw and compress the image
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(tempImg, 0, 0, width, height);
+                        
+                        // Get compressed image data (reduced quality)
+                        imageData = canvas.toDataURL('image/jpeg', 0.6);
+                        console.log('Image compressed successfully');
+                        
+                        // Now that compression is done, continue with the save process
+                        completeResumeSave({
+                            basic: {
+                                firstName: firstNameInput.value,
+                                middleName: middleNameInput.value,
+                                lastName: lastNameInput.value,
+                                suffix: suffixInput.value,
+                                birthday: birthdayInput.value,
+                                age: ageInput.value,
+                                mobile: mobileInput.value,
+                                email: emailInput.value,
+                                address: {
+                                    street: streetInput.value,
+                                    barangay: barangayInput.value,
+                                    city: cityInput.value,
+                                    country: countryInput.value
+                                }
+                            },
+                            objectives: objectives,
+                            education: educationEntries,
+                            work: workEntries,
+                            skills: skills,
+                            imageData: imageData
+                        });
+                    };
+                    
+                    // Set the source to trigger loading
+                    tempImg.src = previewImage.src;
+                    return; // Exit here as the save will be handled by the onload callback
+                } catch (e) {
+                    console.error('Error compressing image:', e);
+                    imageData = previewImage.src;
+                }
+            } else {
+                imageData = previewImage.src || '';
+            }
+            
             // Build resume data object
             const resumeData = {
                 basic: {
                     firstName: firstNameInput.value,
+                    middleName: middleNameInput.value,
                     lastName: lastNameInput.value,
                     suffix: suffixInput.value,
                     birthday: birthdayInput.value,
@@ -104,29 +184,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 education: educationEntries,
                 work: workEntries,
                 skills: skills,
-                imageData: previewImage.src || ''
+                imageData: imageData
             };
             
+            // Complete the save process if not waiting for image compression
+            completeResumeSave(resumeData);
+        } catch (error) {
+            console.error('Error saving resume:', error);
+            showMessage(`An error occurred while saving your resume: ${error.message}`, 'error');
+        }
+    }
+    
+    // Function to complete the resume save process
+    async function completeResumeSave(resumeData) {
+        try {
             // Save to localStorage
             localStorage.setItem('resumeData', JSON.stringify(resumeData));
             
             // Also update the resumeForProfile data to sync with profile page
             const resumeForProfile = {
-                fullName: `${firstNameInput.value} ${lastNameInput.value}${suffixInput.value ? ' ' + suffixInput.value : ''}`,
-                contactInfo: `${mobileInput.value} | ${emailInput.value}`,
-                address: `${streetInput.value}, ${barangayInput.value}, ${cityInput.value}, ${countryInput.value}`,
-                age: ageInput.value,
-                birthday: birthdayInput.value,
-                objectives: objectives,
-                education: educationEntries.map(edu => `${edu.school}<br>${edu.year}${edu.date ? ' - ' + edu.date : ''}`).join('<br><br>'),
-                work: workEntries.map(work => `${work.position}<br>${work.company}${work.duration ? ' | ' + work.duration : ''}`).join('<br><br>'),
-                skills: skills
+                fullName: `${resumeData.basic.firstName || ''} ${resumeData.basic.middleName ? resumeData.basic.middleName + ' ' : ''}${resumeData.basic.lastName || ''}${resumeData.basic.suffix ? ' ' + resumeData.basic.suffix : ''}`,
+                contactInfo: `${resumeData.basic.mobile || ''} | ${resumeData.basic.email || ''}`,
+                address: resumeData.basic.address ? 
+                    `${resumeData.basic.address.street || ''}, ${resumeData.basic.address.barangay || ''}, ${resumeData.basic.address.city || ''}, ${resumeData.basic.address.country || ''}` : '',
+                age: resumeData.basic.age || '',
+                birthday: resumeData.basic.birthday || '',
+                objectives: resumeData.objectives || '',
+                skills: resumeData.skills || [],
+                firstName: resumeData.basic.firstName || '',
+                middleName: resumeData.basic.middleName || '',
+                lastName: resumeData.basic.lastName || '',
+                suffix: resumeData.basic.suffix || ''
             };
+            
+            // Format education entries
+            if (resumeData.education && resumeData.education.length > 0) {
+                resumeForProfile.education = resumeData.education.map(edu => 
+                    `${edu.school || ''}<br>${edu.year || ''}${edu.date ? ' - ' + edu.date : ''}`
+                ).join('<br><br>');
+            }
+            
+            // Format work experience entries
+            if (resumeData.work && resumeData.work.length > 0) {
+                resumeForProfile.work = resumeData.work.map(work => 
+                    `${work.position || ''}<br>${work.company || ''}${work.duration ? ' | ' + work.duration : ''}`
+                ).join('<br><br>');
+            }
+            
             localStorage.setItem('resumeForProfile', JSON.stringify(resumeForProfile));
             
             // Log what we're sending to the server
-            console.log('Sending resume data:', JSON.stringify(resumeData));
+            console.log('Sending resume data with compressed image');
             
+            const token = localStorage.getItem('token');
             // Save to backend
             const response = await fetch(`${API_BASE_URL}/api/interns/resume`, {
                 method: 'POST',
@@ -148,12 +258,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update profile data with skills
                 try {
                     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-                    userData.skills = skills;
+                    userData.skills = resumeData.skills;
                     localStorage.setItem('userData', JSON.stringify(userData));
                     
                     // Also update user data in the main storage that profile.js uses
                     const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    user.skills = skills;
+                    user.skills = resumeData.skills;
                     localStorage.setItem('user', JSON.stringify(user));
                 } catch (e) {
                     console.error('Error updating user data:', e);
@@ -172,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showMessage(`${errorMessage} (Status: ${response.status})`, 'error');
             }
         } catch (error) {
-            console.error('Error saving resume:', error);
+            console.error('Error in completeResumeSave:', error);
             showMessage(`An error occurred while saving your resume: ${error.message}`, 'error');
         }
     }
@@ -226,6 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fill basic information
             if (resumeData.basic) {
                 firstNameInput.value = resumeData.basic.firstName || '';
+                middleNameInput.value = resumeData.basic.middleName || '';
                 lastNameInput.value = resumeData.basic.lastName || '';
                 suffixInput.value = resumeData.basic.suffix || '';
                 birthdayInput.value = resumeData.basic.birthday || '';
@@ -307,15 +418,64 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Set profile image if available
             if (resumeData.imageData) {
-                previewImage.src = resumeData.imageData;
-                previewImage.style.display = 'block';
-                placeholderText.style.display = 'none';
+                try {
+                    // Attempt to compress the image on load as well
+                    if (resumeData.imageData.startsWith('data:image')) {
+                        const tempImg = new Image();
+                        tempImg.onload = function() {
+                            // Create canvas for resizing
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 400;
+                            const MAX_HEIGHT = 400;
+                            
+                            let width = tempImg.width;
+                            let height = tempImg.height;
+                            
+                            // Calculate new dimensions
+                            if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                }
+                            } else {
+                                if (height > MAX_HEIGHT) {
+                                    width *= MAX_HEIGHT / height;
+                                    height = MAX_HEIGHT;
+                                }
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            // Draw and compress
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(tempImg, 0, 0, width, height);
+                            
+                            // Use the compressed version
+                            previewImage.src = canvas.toDataURL('image/jpeg', 0.7);
+                            previewImage.style.display = 'block';
+                            placeholderText.style.display = 'none';
+                        };
+                        tempImg.src = resumeData.imageData;
+                    } else {
+                        // Fallback to original image if not a data URL
+                        previewImage.src = resumeData.imageData;
+                        previewImage.style.display = 'block';
+                        placeholderText.style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error('Error processing image on load:', e);
+                    previewImage.src = resumeData.imageData;
+                    previewImage.style.display = 'block';
+                    placeholderText.style.display = 'none';
+                }
             }
         }
         
         // If we don't have resume data but have user data, prefill with user profile data
         else if (userData && Object.keys(userData).length > 0) {
             firstNameInput.value = userData.first_name || '';
+            middleNameInput.value = userData.middle_name || '';
             lastNameInput.value = userData.last_name || '';
             emailInput.value = userData.email || '';
             mobileInput.value = userData.contact_number || '';
@@ -331,14 +491,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!resumeData || !resumeData.basic) return;
         
         const resumeForProfile = {
-            fullName: `${resumeData.basic.firstName || ''} ${resumeData.basic.lastName || ''}${resumeData.basic.suffix ? ' ' + resumeData.basic.suffix : ''}`,
+            fullName: `${resumeData.basic.firstName || ''} ${resumeData.basic.middleName ? resumeData.basic.middleName + ' ' : ''}${resumeData.basic.lastName || ''}${resumeData.basic.suffix ? ' ' + resumeData.basic.suffix : ''}`,
             contactInfo: `${resumeData.basic.mobile || ''} | ${resumeData.basic.email || ''}`,
             address: resumeData.basic.address ? 
                 `${resumeData.basic.address.street || ''}, ${resumeData.basic.address.barangay || ''}, ${resumeData.basic.address.city || ''}, ${resumeData.basic.address.country || ''}` : '',
             age: resumeData.basic.age || '',
             birthday: resumeData.basic.birthday || '',
             objectives: resumeData.objectives || resumeData.basic.objectives || '',
-            skills: resumeData.skills || []
+            skills: resumeData.skills || [],
+            firstName: resumeData.basic.firstName || '',
+            middleName: resumeData.basic.middleName || '',
+            lastName: resumeData.basic.lastName || '',
+            suffix: resumeData.basic.suffix || ''
         };
         
         // Format education entries

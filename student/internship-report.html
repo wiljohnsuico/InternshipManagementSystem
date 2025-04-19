@@ -41,6 +41,15 @@
             <h1 class="report-title">Internship Report</h1>
             <p class="report-subtitle">Detailed record of your progress</p>
     
+            <!-- Report Types Tabs -->
+            <div class="report-tabs">
+                <button class="tab-button active" data-tab="daily">Daily Reports</button>
+                <button class="tab-button" data-tab="weekly">Weekly Reports</button>
+                <button class="tab-button" data-tab="monthly">Monthly Reports</button>
+            </div>
+    
+            <!-- Daily Reports Tab Content -->
+            <div class="tab-content active" id="daily-tab">
             <div class="content-grid">
                 <!-- Attendance Section -->
                 <div class="card attendance-card">
@@ -79,7 +88,7 @@
             <!-- Accomplishment Report Section -->
             <div class="section-divider"></div>
             
-            <h2 class="section-title">Accomplishment Report</h2>
+                <h2 class="section-title">Daily Accomplishment Report</h2>
             <div class="card full-width">
                 <table id="accomplishment-table">
                     <thead>
@@ -98,7 +107,7 @@
     
             <!-- New Entry Form (Hidden by default) -->
             <div id="entry-form" class="card entry-form hidden">
-                <h3>New Accomplishment Entry</h3>
+                    <h3>New Daily Accomplishment Entry</h3>
                 <textarea id="accomplishment-input" placeholder="Enter your daily accomplishment"></textarea>
                 <div class="form-buttons">
                     <button id="cancel-entry-btn" class="btn-light">Cancel</button>
@@ -106,17 +115,201 @@
                 </div>
             </div>
     
-            <div class="action-buttons-container">
-                <button id="new-entry-btn" class="btn-primary">New Entry</button>
-                <button id="download-report-btn" class="btn-primary">Download Report</button>
+                <div class="action-buttons-container">
+                    <button id="new-entry-btn" class="btn-primary">New Daily Entry</button>
+                    <button id="download-report-btn" class="btn-primary">Download Report</button>
+                </div>
+            </div>
+            
+            <!-- Weekly Reports Tab Content -->
+            <div class="tab-content" id="weekly-tab">
+                <h2 class="section-title">Weekly Reports</h2>
+                <p class="section-description">Submit comprehensive weekly reports about your internship progress.</p>
+                
+                <div class="card full-width">
+                    <table id="weekly-report-table">
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>WEEK PERIOD</th>
+                                <th>SUMMARY</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Weekly reports will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Weekly Report Form (Hidden by default) -->
+                <div id="weekly-form" class="card entry-form hidden">
+                    <h3 id="weekly-form-title">New Weekly Report</h3>
+                    <form id="weekly-report-form">
+                        <input type="hidden" id="weekly-report-id">
+                        
+                        <div class="form-group">
+                            <label for="week-start-date">Week Start Date</label>
+                            <input type="date" id="week-start-date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="week-end-date">Week End Date</label>
+                            <input type="date" id="week-end-date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="weekly-summary">Weekly Summary</label>
+                            <textarea id="weekly-summary" placeholder="Provide a summary of your work this week" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="key-learnings">Key Learnings</label>
+                            <textarea id="key-learnings" placeholder="What skills or knowledge did you gain this week?" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="goals-achieved">Goals Achieved</label>
+                            <textarea id="goals-achieved" placeholder="What goals did you accomplish this week?"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="next-week-goals">Next Week Goals</label>
+                            <textarea id="next-week-goals" placeholder="What do you plan to achieve next week?"></textarea>
+                        </div>
+                        
+                        <div class="form-buttons">
+                            <button type="button" id="cancel-weekly-btn" class="btn-light">Cancel</button>
+                            <button type="button" id="save-weekly-draft-btn" class="btn-light">Save Draft</button>
+                            <button type="button" id="submit-weekly-btn" class="btn-primary">Submit Report</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="action-buttons-container">
+                    <button id="new-weekly-btn" class="btn-primary">New Weekly Report</button>
+                    <button id="download-weekly-btn" class="btn-primary">Download All Reports</button>
+                </div>
+            </div>
+            
+            <!-- Monthly Reports Tab Content -->
+            <div class="tab-content" id="monthly-tab">
+                <h2 class="section-title">Monthly Reports</h2>
+                <p class="section-description">Submit detailed monthly reports summarizing your internship experience.</p>
+                
+                <div class="card full-width">
+                    <table id="monthly-report-table">
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>MONTH</th>
+                                <th>SUMMARY</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Monthly reports will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Monthly Report Form (Hidden by default) -->
+                <div id="monthly-form" class="card entry-form hidden">
+                    <h3 id="monthly-form-title">New Monthly Report</h3>
+                    <form id="monthly-report-form">
+                        <input type="hidden" id="monthly-report-id">
+                        
+                        <div class="form-group">
+                            <label for="report-month">Month</label>
+                            <select id="report-month" required>
+                                <option value="">Select Month</option>
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="report-year">Year</label>
+                            <input type="number" id="report-year" min="2020" max="2030" value="2023" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="monthly-summary">Monthly Summary</label>
+                            <textarea id="monthly-summary" placeholder="Provide a summary of your work this month" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="projects-completed">Projects Completed</label>
+                            <textarea id="projects-completed" placeholder="What projects did you complete this month?" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="major-achievements">Major Achievements</label>
+                            <textarea id="major-achievements" placeholder="What were your major achievements this month?" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="challenges">Challenges Faced</label>
+                            <textarea id="challenges" placeholder="What challenges did you encounter and how did you overcome them?" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="skills-developed">Skills Developed</label>
+                            <textarea id="skills-developed" placeholder="What skills did you develop or improve this month?" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="overall-experience">Overall Experience</label>
+                            <textarea id="overall-experience" placeholder="How would you describe your overall experience this month?"></textarea>
+                        </div>
+                        
+                        <div class="form-buttons">
+                            <button type="button" id="cancel-monthly-btn" class="btn-light">Cancel</button>
+                            <button type="button" id="save-monthly-draft-btn" class="btn-light">Save Draft</button>
+                            <button type="button" id="submit-monthly-btn" class="btn-primary">Submit Report</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="action-buttons-container">
+                    <button id="new-monthly-btn" class="btn-primary">New Monthly Report</button>
+                    <button id="download-monthly-btn" class="btn-primary">Download All Reports</button>
+                </div>
             </div>
         </div>
     </main>
     
+    <!-- View Report Modal -->
+    <div id="view-report-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Report Details</h2>
+            <div id="report-details-content"></div>
+            <div id="report-feedback-section" class="hidden">
+                <h3>Feedback</h3>
+                <div id="supervisor-feedback" class="feedback-box"></div>
+                <div id="faculty-feedback" class="feedback-box"></div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Include auth utilities -->
     <script src="scripts/auth.js"></script>
     <script src="scripts/protect-page.js"></script>
-    <script src="scripts/internReport.js"></script>
+    <script src="scripts/internship-report.js"></script>
+    <script src="scripts/weekly-monthly-reports.js"></script>
     <!-- html2pdf library for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </body>
