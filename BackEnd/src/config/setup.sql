@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- Add indexes for better performance if they don't exist
-CREATE INDEX IF NOT EXISTS idx_user_role ON users_tbl(role);
+CREATE INDEX IF NOT EXISTS role ON users_tbl(role);
 CREATE INDEX IF NOT EXISTS idx_intern_user ON interns_tbl(user_id);
 CREATE INDEX IF NOT EXISTS idx_employer_user ON employers_tbl(user_id);
 CREATE INDEX IF NOT EXISTS idx_faculty_user ON faculties_tbl(user_id);

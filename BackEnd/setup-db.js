@@ -23,7 +23,7 @@ async function setupDatabase() {
                 user_id INT PRIMARY KEY AUTO_INCREMENT,
                 email VARCHAR(255) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
-                user_role ENUM('Intern', 'Employer', 'Faculty', 'Admin') NOT NULL,
+                role ENUM('Intern', 'Employer', 'Faculty', 'Admin') NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);

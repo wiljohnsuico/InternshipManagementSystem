@@ -71,7 +71,7 @@ CREATE TABLE `companies_tbl` (
   `address` varchar(255) NOT NULL,
   `company_description` text NOT NULL,
   `available_intern_position` varchar(255) NOT NULL,
-  `skills_qualifications` varchar(255) NOT NULL,
+  `skills` varchar(255) NOT NULL,
   `intern_duration` int(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
@@ -177,8 +177,8 @@ CREATE TABLE `interns_tbl` (
   `year_level` enum('1st Year','2nd Year','3rd Year','4th Year') NOT NULL,
   `section` varchar(10) NOT NULL,
   `dept` enum('College of Computer Studies','College of Engineering','College of Education','College of Accountancy') NOT NULL,
-  `skills_qualifications` varchar(255) NOT NULL,
-  `preferred_intern_fields` varchar(255) NOT NULL,
+  `skills` varchar(255) NOT NULL,
+  `intern_fields` varchar(255) NOT NULL,
   `rsm_cv` blob NOT NULL,
   `date_registered` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `status` enum('Available','Ongoing','Completed') NOT NULL
@@ -241,9 +241,9 @@ CREATE TABLE `reports_tbl` (
 
 CREATE TABLE `users_tbl` (
   `user_id` int(11) NOT NULL,
-  `username` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `user_role` enum('Intern','Employer','Faculty','Admin') NOT NULL
+  `role` enum('Intern','Employer','Faculty','Admin') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --

@@ -1,93 +1,199 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const companyTableBody = document.getElementById("companyTableBody");
-  const editModal = document.getElementById("editModal");
-  const editForm = document.getElementById("editForm");
-  const editFirstName = document.getElementById("editFirstName");
-  const editLastName = document.getElementById("editLastName");
-  const editIndex = document.getElementById("editIndex");
+  const tableBody = document.getElementById("companyTableBody");
+  const addCompanyModal = document.getElementById("addCompanyModal");
+  const addCompanyForm = document.getElementById("addCompanyForm");
 
-  let defaultCompanies = [
-    { name: "Globe Telecom", address: "Taguig City", status: "Active" },
-    { name: "Smart Communications", address: "Makati City", status: "Inactive" },
-    { name: "Accenture", address: "Quezon City", status: "Active" }
-  ];
+  const addCompanyName = document.getElementById("addCompanyName");
+  const addIndustrySector = document.getElementById("addIndustrySector");
+  const addFullName = document.getElementById("addFullName");
+  const addEmail = document.getElementById("addEmail");
+  const addPassword = document.getElementById("addPassword");
+  const addContactNumber = document.getElementById("addContactNumber");
+  const addAddress = document.getElementById("addAddress");
+  const addDescription = document.getElementById("addDescription");
+  const addInternPosition = document.getElementById("addInternPosition");
+  const addSkills = document.getElementById("addSkills");
+  const addInternDuration = document.getElementById("addInternDuration");
 
-  if (!localStorage.getItem("companies")) {
-    localStorage.setItem("companies", JSON.stringify(defaultCompanies));
+  const editCompanyName = document.getElementById("editCompanyName");
+  const editIndustrySector = document.getElementById("editIndustrySector");
+  const editFullName = document.getElementById("editFullName");
+  const editEmail = document.getElementById("editEmail");
+  const editPassword = document.getElementById("editPassword");
+  const editContactNumber = document.getElementById("editContactNumber");
+  const editAddress = document.getElementById("editAddress");
+  const editDescription = document.getElementById("editDescription");
+  const editInternPosition = document.getElementById("editInternPosition");
+  const editSkills = document.getElementById("editSkills");
+  const editInternDuration = document.getElementById("editInternDuration");
+
+  let currentEditId = null;
+
+  // Load companies from the API
+  async function loadCompanies() {
+    try {
+      const res = await fetch("http://localhost:5004/api/companies");
+      const companies = await res.json();
+      tableBody.innerHTML = ""; // Clear table before populating
+
+      companies.forEach((company, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${company.company_name}</td>
+          <td>${company.industry_sector}</td>
+          <td>${company.full_name}</td>
+          <td>${company.email}</td>
+          <td>${company.password}</td>
+          <td>${company.contact_number}</td>
+          <td>${company.address}</td>
+          <td>${company.description}</td>
+          <td>${company.intern_position}</td>
+          <td>${company.skills}</td>
+          <td>${company.intern_duration}</td>
+          <td>
+            <button class="edit-btn" data-id="${company.company_id}">Edit</button>
+            <button class="delete-btn" data-id="${company.company_id}">Delete</button>
+          </td>
+        `;
+        row.querySelector(".edit-btn").addEventListener("click", () => openEditModal(company));
+        row.querySelector(".delete-btn").addEventListener("click", () => deleteCompany(company.company_id));
+        tableBody.appendChild(row);
+      });
+    } catch (err) {
+      console.error("Error loading companies:", err);
+    }
   }
 
-  function loadCompanies() {
-    companyTableBody.innerHTML = "";
-    let companies = JSON.parse(localStorage.getItem("companies")) || [];
-
-    companies.forEach((company, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${company.name}</td>
-        <td>${company.address}</td>
-        <td>${company.status}</td>
-        <td>
-          <button class="edit-btn">Edit</button>
-          <button class="delete-btn">Delete</button>
-          <button class="toggle-btn">${company.status === "Active" ? "Set Inactive" : "Set Active"}</button>
-        </td>
-      `;
-
-      // Edit
-      row.querySelector(".edit-btn").addEventListener("click", () => {
-        openEditModal(index, company);
-      });
-
-      // Delete
-      row.querySelector(".delete-btn").addEventListener("click", () => {
-        if (confirm(`Delete ${company.name}?`)) {
-          const archived = JSON.parse(localStorage.getItem("archivedCompanies")) || [];
-          archived.push(company);
-          localStorage.setItem("archivedCompanies", JSON.stringify(archived));
-          companies.splice(index, 1);
-          localStorage.setItem("companies", JSON.stringify(companies));
-          loadCompanies();
-        }
-      });
-
-      // Toggle Status
-      row.querySelector(".toggle-btn").addEventListener("click", () => {
-        company.status = company.status === "Active" ? "Inactive" : "Active";
-        localStorage.setItem("companies", JSON.stringify(companies));
-        loadCompanies();
-      });
-
-      companyTableBody.appendChild(row);
-    });
-  }
-
-  function openEditModal(index, company) {
-    editIndex.value = index;
-    editFirstName.value = company.name;
-    editLastName.value = company.address;
-    editModal.style.display = "flex";
-  }
-
-  window.closeEditModal = function () {
-    editModal.style.display = "none";
-  };
-
-  editForm.addEventListener("submit", function (e) {
-    e.preventDefault();
-    let companies = JSON.parse(localStorage.getItem("companies")) || [];
-    const index = parseInt(editIndex.value);
-    companies[index].name = editFirstName.value;
-    companies[index].address = editLastName.value;
-    localStorage.setItem("companies", JSON.stringify(companies));
-    closeEditModal();
-    loadCompanies();
+  // Open modal for adding a company
+  document.getElementById("addCompanyButton").addEventListener("click", () => {
+    addCompanyModal.style.display = "flex"; // Show modal
   });
 
-  // Search
+  // Close the add company modal
+  document.getElementById("modalCloseBtn").addEventListener("click", () => {
+    addCompanyModal.style.display = "none";
+    addCompanyForm.reset(); // Clear form fields
+  });
+
+  // Handle Add Company form submission
+  addCompanyForm.addEventListener("submit", async (e) => {
+    e.preventDefault(); // Prevent page reload
+
+    const newCompany = {
+      company_name: addCompanyName.value,
+      industry_sector: addIndustrySector.value,
+      full_name: addFullName.value,
+      contact_number: addContactNumber.value,
+      address: addAddress.value,
+      description: addDescription.value,
+      intern_position: addInternPosition.value,
+      skills: addSkills.value,
+      intern_duration: addInternDuration.value,
+    };
+
+    const newUser = {
+      email: addEmail.value,
+      password: addPassword.value
+    };
+
+    try {
+      // Step 1: Add user to users_tbl
+      const userResponse = await fetch("http://localhost:5004/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newUser)
+      });
+
+      if (userResponse.ok) {
+        // Step 2: Add company to companies_tbl
+        await fetch("http://localhost:5004/api/companies", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(newCompany)
+        });
+
+        loadCompanies(); // Reload the companies list
+        addCompanyModal.style.display = "none"; // Close the modal
+      } else {
+        console.error("Failed to add user");
+      }
+    } catch (err) {
+      console.error("Failed to add company or user:", err);
+    }
+  });
+
+  // Open the edit modal and populate with current company details
+  function openEditModal(company) {
+    editCompanyName.value = company.company_name;
+    editIndustrySector.value = company.industry_sector;
+    editFullName.value = company.full_name;
+    editEmail.value = company.email;
+    editPassword.value = company.password;
+    editContactNumber.value = company.contact_number;
+    editAddress.value = company.address;
+    editDescription.value = company.description;
+    editInternPosition.value = company.intern_position;
+    editSkills.value = company.skills;
+    editInternDuration.value = company.intern_duration;
+    currentEditId = company.company_id;
+    document.getElementById("editCompanyModal").style.display = "flex"; // Show the edit modal
+  }
+
+  // Handle Edit Company form submission
+  document.getElementById("editCompanyForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const updatedCompany = {
+      company_name: editCompanyName.value,
+      industry_sector: editIndustrySector.value,
+      full_name: editFullName.value,
+      contact_number: editContactNumber.value,
+      address: editAddress.value,
+      description: editDescription.value,
+      intern_position: editInternPosition.value,
+      skills: editSkills.value,
+      intern_duration: editInternDuration.value,
+      email: editEmail.value,
+      password: editPassword.value
+    };    
+
+    try {
+      await fetch(`http://localhost:5004/api/companies/${currentEditId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updatedCompany)
+      });
+      loadCompanies(); // Reload the list
+      document.getElementById("editCompanyModal").style.display = "none"; // Close modal
+    } catch (err) {
+      console.error("Failed to update company:", err);
+    }
+  });
+
+  // Delete a company
+  async function deleteCompany(companyId) {
+    if (confirm("Are you sure you want to delete this company?")) {
+      try {
+        await fetch(`http://localhost:5004/api/companies/${companyId}`, {
+          method: "DELETE"
+        });
+        loadCompanies(); // Reload companies after deletion
+      } catch (err) {
+        console.error("Error deleting company:", err);
+      }
+    }
+  }
+
+  // Search functionality
   window.searchTable = function () {
     const input = document.getElementById("searchInput").value.toLowerCase();
-    const tableBody = document.getElementById("companyTableBody");
     const rows = tableBody.getElementsByTagName("tr");
 
     for (let row of rows) {
@@ -132,19 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Load companies on page load
   loadCompanies();
 });
-
-// Dropdown
-window.toggleDropdown = function () {
-  document.getElementById("dropdownMenu").classList.toggle("show");
-};
-
-window.onclick = function (event) {
-  if (!event.target.closest('.admin-text')) {
-    const dropdown = document.getElementById("dropdownMenu");
-    if (dropdown.classList.contains('show')) {
-      dropdown.classList.remove('show');
-    }
-  }
-};

@@ -101,11 +101,11 @@ function loadArchivedInterns() {
     row.innerHTML = `
       <td>${index + 1}</td>
       <td>${data.studentNumber}</td>
-      <td>${data.firstName}</td>
-      <td>${data.lastName}</td>
+      <td>${data.first_name}</td>
+      <td>${data.last_name}</td>
       <td>${data.cdept}</td>
       <td>${data.course}</td>
-      <td>${data.username}</td>
+      <td>${data.email}</td>
       <td>${data.password}</td>
       <td>
         <button class="restore-btn">Restore</button>
@@ -169,9 +169,9 @@ function loadArchivedEmployers() {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${index + 1}</td>
-      <td>${emp.firstName}</td>
-      <td>${emp.lastName}</td>
-      <td>${emp.username}</td>
+      <td>${emp.first_name}</td>
+      <td>${emp.last_name}</td>
+      <td>${emp.email}</td>
       <td>${emp.password}</td>
       <td>${emp.company}</td>
       <td>
@@ -204,9 +204,9 @@ function loadArchivedFaculty() {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${index + 1}</td>
-      <td>${faculty.firstName}</td>
-      <td>${faculty.lastName}</td>
-      <td>${faculty.username}</td>
+      <td>${faculty.first_name}</td>
+      <td>${faculty.last_name}</td>
+      <td>${faculty.email}</td>
       <td>${faculty.password}</td>
       <td>${faculty.department}</td>
       <td>
@@ -242,7 +242,7 @@ function restoreData(data, index, archivedKey, activeKey) {
       ? activeList.some(item => item.studentNumber === data.studentNumber)
       : activeKey === "companies"
       ? activeList.some(item => item.name === data.name)
-      : activeList.some(item => item.username === data.username);
+      : activeList.some(item => item.email === data.email);
 
   if (!isDuplicate) {
     activeList.push(data);

@@ -1,11 +1,27 @@
 const express = require('express');
+const app = express();
+const PORT = 5004;
+const db = require('./config/database');
 const cors = require('cors');
+
+app.get('/test', (req, res) => {
+    console.log('✅ Test route hit!');
+    res.json({ message: 'Test route working!' });
+});
+
+app.listen(PORT, () => {
+    console.log(`✅ Server is running on port ${PORT}`);
+});
+
+/*
+const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const db = require('./config/database');
 const fs = require('fs');
 const util = require('util');
 require('dotenv').config();
+*/
+
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
@@ -18,8 +34,10 @@ const internshipRoutes = require('./routes/internship.routes');
 const jobRoutes = require('./routes/job.routes');
 const reportRoutes = require('./routes/report.routes');
 const announcementRoutes = require('./routes/announcements.routes');
-
-const app = express();
+const facultiesRoutes = require('../../ADMIN/routes/faculties.routes');  // Correct Import path
+const employersRoutes = require('../../ADMIN/routes/employers.routes');  // Add Employers routes
+const companiesRoutes = require('../../ADMIN/routes/companies.routes');  // Add Companies routes
+const adminInternsRoutes = require('../../ADMIN/routes/adminInterns.routes');  // Add admininterns routes
 
 // CORS configuration - Allow development requests from anywhere
 app.use(cors({
@@ -39,13 +57,24 @@ app.options('*', cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+(async () => {
+    try {
+        const [rows] = await db.query('SELECT 1');
+        console.log('✅ Database test query successful:', rows);
+    } catch (err) {
+        console.error('❌ Database test query failed:', err.message);
+    }
+})();
+
+/*
 // Serve static files from the student directory
-// This assumes your student folder is at the project root level
 app.use(express.static(path.join(__dirname, '../../')));
 
 // Set up serving static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+*/
 
+/*
 // Session configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
@@ -56,11 +85,11 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
+*/
 
 // Request logging
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-    // Don't log the entire body for large requests
     if (req.method === 'POST' && req.url.includes('/resume')) {
         console.log('Request body: [Resume data - too large to log]');
     } else {
@@ -69,18 +98,26 @@ app.use((req, res, next) => {
     next();
 });
 
+
 // Routes
 app.use('/api/auth', authRoutes);
+console.log('✅ Auth routes loaded');
 app.use('/api/interns', internRoutes);
 app.use('/api/accomplishments', accomplishmentRoutes);
 app.use('/api/internships', internshipRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/resumes', resumeRoutes);
+app.use('/api/faculties', facultiesRoutes);  // Add faculties routes
+app.use('/api/employers', employersRoutes);  // Add employers routes
+app.use('/api/companies', companiesRoutes);  // Add companies routes
+app.use('/api/admin/interns', adminInternsRoutes);  // Add interns routes
+
 app.use('/api/jobs', jobRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/announcements', announcementRoutes);
 
+/*
 // Test route
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to Internship Management System API' });
@@ -103,7 +140,9 @@ async function setupDatabaseTables() {
     console.error('Error setting up database tables:', error);
   }
 }
+*/
 
+/*
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error details:', {
@@ -121,7 +160,9 @@ app.use((err, req, res, next) => {
         error: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
 });
+*/
 
+/*
 // 404 handler
 app.use((req, res) => {
     console.log(`404 - Route not found: ${req.method} ${req.url}`);
@@ -130,11 +171,16 @@ app.use((req, res) => {
         message: 'Route not found'
     });
 });
+*/
 
+
+/*
 // Port configuration
 const PORT = process.env.PORT || 5004;
 console.log('Using PORT:', PORT);
+*/
 
+/*
 // Start server after short delay to allow DB init
 let server;
 setTimeout(async () => {
@@ -156,7 +202,9 @@ setTimeout(async () => {
         process.exit(1);
     }
 }, 2000);
+*/
 
+/*
 // Graceful shutdown
 process.on('SIGTERM', () => {
     console.log('SIGTERM received. Closing server...');
@@ -167,3 +215,4 @@ process.on('SIGTERM', () => {
         });
     }
 });
+*/

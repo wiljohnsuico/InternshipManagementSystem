@@ -51,9 +51,11 @@
                 <tr>
                     <th>No</th>
                     <th>First Name</th>
+                    <th>Middle Name</th>
                     <th>Last Name</th>
+                    <th>Contact Number</th>
+                    <th>Email</th>
                     <th>Password</th>
-                    <th>Username</th>
                     <th>Company Affiliated</th>
                     <th>Action</th>
                 </tr>
@@ -62,6 +64,39 @@
             </tbody>
         </table>
     </div>
+    
+   <!-- Add Employer Modal -->
+<div id="addModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-btn" id="addModalCloseBtn">&times;</span>
+        <h3>Add Employer</h3>
+        <form id="addForm">
+            <label>First Name:</label>
+            <input type="text" id="addFirstName" required>
+
+            <label>Middle Name:</label>
+            <input type="text" id="addMiddleName" required>
+
+            <label>Last Name:</label>
+            <input type="text" id="addLastName" required>
+
+            <label>Contact Number:</label>
+            <input type="text" id="addContactNumber" placeholder="Contact Number" required />
+
+            <label>Email:</label>
+            <input type="email" id="addEmail" required>
+
+            <label>Password:</label>
+            <input type="password" id="addPassword" required>
+
+            <label>Company Affiliated:</label>
+            <input type="text" id="addCompanyAffiliated" required>
+            
+            <button type="submit">Add Employer</button>
+        </form>
+    </div>
+</div>
+
 
     <!-- Edit Modal -->
     <div id="editModal" class="modal" style="display: none;">
@@ -72,14 +107,20 @@
                 <label>First Name:</label>
                 <input type="text" id="editFirstName" required>
 
+                <label>Middle Name:</label>
+                <input type="text" id="editMiddleName" required>
+
                 <label>Last Name:</label>
                 <input type="text" id="editLastName" required>
 
+                <label>Contact Number:</label>
+                <input type="text" id="editContactNumber" placeholder="Contact Number" required />
+
+                <label>Email:</label>
+                <input type="text" id="editEmail" required>
+
                 <label>Password:</label>
                 <input type="text" id="editPassword" required>
-
-                <label>Username:</label>
-                <input type="text" id="editUsername" required>
 
                 <label>Company Affiliated:</label>
                 <input type="text" id="editCompanyAffiliated" required>
@@ -87,7 +128,7 @@
             </form>
         </div>
     </div>
-
+    <script src="/ADMIN/config.js"></script>
     <script src="/admin/admin-auth.js"></script>
     <script src="emplyr.js"></script>
 </body>

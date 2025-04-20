@@ -136,7 +136,7 @@ async function initializeDatabase() {
                 // Test user 1
                 console.log('Creating test user 1...');
                 await connection.query(
-                    `INSERT INTO users_tbl (user_id, first_name, last_name, email, password, role) 
+                    `INSERT INTO users_tbl (user_id, first_name, last_name, password, role) 
                      VALUES (?, ?, ?, ?, ?, ?)`,
                     [1, 'Test', 'User', 'test@example.com', hashedPassword1, 'Intern']
                 );
@@ -144,7 +144,7 @@ async function initializeDatabase() {
                 
                 // Create corresponding intern profile
                 await connection.query(
-                    `INSERT INTO interns_tbl (user_id, course, skills) 
+                    `INSERT INTO interns_tbl (user_id, course, skills_qualifications) 
                      VALUES (?, ?, ?)`,
                     [1, 'Test Course', '[]']
                 );
@@ -239,7 +239,7 @@ async function initializeDatabase() {
         console.log('Available tables:', finalTables.map(t => Object.values(t)[0]));
         
         // Verify users
-        const [users] = await connection.query('SELECT user_id, email, role FROM users_tbl');
+        const [users] = await connection.query('SELECT user_id, role FROM users_tbl');
         console.log('Available users:', users);
 
         connection.release();

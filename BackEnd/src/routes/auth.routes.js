@@ -14,11 +14,11 @@ router.post('/login', async (req, res) => {
     
     try {
         // Extract login credentials
-        // Note: Frontend might still send 'username' even though we use 'email' in the database
-        const { username, password, email } = req.body;
+        // Note: Frontend might still send 'email' even though we use 'email' in the database
+        const { email, password } = req.body;
         
-        // Use either provided email or username as the email field
-        const loginEmail = email || username;
+        // Use either provided email or email as the email field
+        const loginEmail = email || email;
 
         // Validate input
         if (!loginEmail || !password) {
@@ -31,7 +31,7 @@ router.post('/login', async (req, res) => {
 
         console.log('Attempting database query for email:', loginEmail);
         
-        // Query to find user by email (there's no username field in the database)
+        // Query to find user by email (there's no email field in the database)
         // Use LOWER() for case-insensitive email comparison
         const [users] = await pool.query(
             'SELECT * FROM users_tbl WHERE LOWER(email) = LOWER(?)',
