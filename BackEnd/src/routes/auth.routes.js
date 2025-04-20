@@ -5,9 +5,13 @@ const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 const { validateEmail, validatePassword } = require('../utils/validators');
 
-// Login route
+// Login route - Add detailed logging to debug the login issue
 router.post('/login', async (req, res) => {
-    console.log('Login request received:', req.body);
+    console.log('Login request received:', {
+        ...req.body,
+        password: req.body.password ? '[REDACTED]' : undefined
+    });
+    
     try {
         // Extract login credentials
         // Note: Frontend might still send 'username' even though we use 'email' in the database
@@ -28,14 +32,21 @@ router.post('/login', async (req, res) => {
         console.log('Attempting database query for email:', loginEmail);
         
         // Query to find user by email (there's no username field in the database)
+        // Use LOWER() for case-insensitive email comparison
         const [users] = await pool.query(
-            'SELECT * FROM users_tbl WHERE email = ?',
+            'SELECT * FROM users_tbl WHERE LOWER(email) = LOWER(?)',
             [loginEmail]
         );
         
-        console.log('Database query result:', users.length > 0 ? 'User found' : 'No user found');
+        console.log('Database query result:', users.length > 0 ? {
+            found: true,
+            user_id: users[0].user_id,
+            email: users[0].email,
+            role: users[0].role
+        } : 'No user found');
 
         if (users.length === 0) {
+            console.log('No user found with email:', loginEmail);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
@@ -43,12 +54,26 @@ router.post('/login', async (req, res) => {
         }
 
         const user = users[0];
-        console.log('Found user:', { ...user, password: '[HIDDEN]' });
+        console.log('Found user:', { 
+            user_id: user.user_id,
+            email: user.email,
+            role: user.role,
+            password_length: user.password ? user.password.length : 0
+        });
 
+        // Verify password with detailed logging
+        console.log('Comparing provided password with stored hash');
+        console.log('Stored hash format check:', {
+            starts_with_dollar: user.password.startsWith('$'),
+            contains_bcrypt: user.password.includes('$2'),
+            length: user.password.length
+        });
+        
         const isMatch = await bcrypt.compare(password, user.password);
         console.log('Password verification result:', isMatch ? 'Match' : 'No match');
 
         if (!isMatch) {
+            console.log('Password does not match for user:', user.email);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
@@ -66,7 +91,7 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        console.log('Login successful for user:', user.email);
+        console.log('Login successful for user:', user.email, 'with role:', user.role);
         res.json({
             success: true,
             token,
@@ -140,8 +165,25 @@ router.post('/signup', async (req, res) => {
             console.log('User already exists with email:', email);
             return res.status(400).json({
                 success: false,
-                message: 'User already exists'
+                message: 'User already exists with this email'
             });
+        }
+
+        // Check for duplicate student ID if role is Intern
+        if (role === 'Intern' && student_id) {
+            console.log('Checking for existing student with ID:', student_id);
+            const [existingStudents] = await pool.query(
+                'SELECT * FROM interns_tbl WHERE student_id = ?',
+                [student_id]
+            );
+
+            if (existingStudents.length > 0) {
+                console.log('Student ID already exists:', student_id);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Student ID already exists. Please use a different ID.'
+                });
+            }
         }
 
         console.log('Hashing password');
@@ -203,6 +245,22 @@ router.post('/signup', async (req, res) => {
         } catch (error) {
             console.error('Transaction error:', error);
             await pool.query('ROLLBACK');
+            
+            // Handle specific error cases with more user-friendly messages
+            if (error.code === 'ER_DUP_ENTRY') {
+                if (error.sqlMessage.includes('student_id')) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Student ID already exists. Please use a different ID.'
+                    });
+                } else if (error.sqlMessage.includes('email')) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Email already exists. Please use a different email.'
+                    });
+                }
+            }
+            
             throw error;
         }
     } catch (error) {

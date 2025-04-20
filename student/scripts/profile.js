@@ -571,6 +571,35 @@ function setupResumeModal() {
     const resumeBtn = document.getElementById('resumeBtn');
     const closeBtn = modal.querySelector('.close');
     
+    // Function to format full name consistently with middle initial
+    function formatFullName(data) {
+        if (!data) return "Lastname, Firstname MI";
+        
+        const lastName = data.lastName || data.last_name || (data.basic ? data.basic.lastName : '') || '';
+        const firstName = data.firstName || data.first_name || (data.basic ? data.basic.firstName : '') || '';
+        const middleName = data.middleName || data.middle_name || (data.basic ? data.basic.middleName : '') || '';
+        const suffix = data.suffix || (data.basic ? data.basic.suffix : '') || '';
+        
+        let formattedName = lastName;
+        
+        if (firstName) {
+            formattedName += formattedName ? ', ' + firstName : firstName;
+        }
+        
+        if (middleName) {
+            formattedName += ' ' + middleName.charAt(0).toUpperCase() + '.';
+        }
+        
+        if (suffix) {
+            formattedName += ', ' + suffix;
+        }
+        
+        return formattedName || "Lastname, Firstname MI";
+    }
+    
+    // Make the formatFullName function available globally
+    window.profileFormatFullName = formatFullName;
+    
     // Populate resume modal with data
     if (resumeData) {
         console.log('Populating resume modal with data:', resumeData);
@@ -580,12 +609,11 @@ function setupResumeModal() {
         const contactInfo = modal.querySelector('h2 + p');
         
         if (fullName) {
-            if (resumeData.fullName) {
-                fullName.textContent = resumeData.fullName;
-            } else if (resumeData.basic) {
-                fullName.textContent = `${resumeData.basic.firstName || ''} ${resumeData.basic.lastName || ''}${resumeData.basic.suffix ? ' ' + resumeData.basic.suffix : ''}`;
-            } else if (userData) {
-                fullName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`;
+            // Use the formatFullName function from the HTML file if it's available
+            if (window.formatFullName) {
+                fullName.textContent = window.formatFullName(resumeData);
+            } else {
+                fullName.textContent = formatFullName(resumeData);
             }
         }
         
@@ -754,6 +782,16 @@ function setupResumeModal() {
                         ul.appendChild(li);
                     });
                 }
+            }
+        }
+        
+        // Update signature
+        const resumeSignature = modal.querySelector('#resumeSignature');
+        if (resumeSignature) {
+            if (window.formatFullName) {
+                resumeSignature.textContent = window.formatFullName(resumeData);
+            } else {
+                resumeSignature.textContent = formatFullName(resumeData);
             }
         }
     }

@@ -1,22 +1,476 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles/home-navbar.css">
-    <link rel="stylesheet" href="styles/home.css">
-    <title>HOMEPAGE</title>
-</head>
-<body>
-    <header>
-        <!---NAV BAR-->
-        <div class="nav-bar">
-            <div class="logo">
-                <img src="imgs/qcuims-logo.png" alt="logo">
-            </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-url" content="http://localhost:5004/api">
+        <link rel="stylesheet" href="styles/home-navbar.css">
+        <link rel="stylesheet" href="styles/home.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="./styles/dashboard.css">
+    <link rel="stylesheet" href="./styles/notification.css">
+    <title>QCU Internship Management System</title>
+    <script src="./scripts/dashboard.js" defer></script>
+    <script src="./scripts/notification.js" defer></script>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --primary-hover: #003d82;
+            --secondary-color: #e6f0ff;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --text-color: #333;
+            --gray-color: #6c757d;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fc;
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main {
+            flex: 1;
+            padding: 40px 0;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, var(--primary-color), #007bff);
+            padding: 60px 0;
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .welcome-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .welcome-section p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+        }
+
+        .quick-actions {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        .action-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .card p {
+            color: var(--gray-color);
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Resources Section */
+        .resources-section {
+            max-width: 1200px;
+            margin: 0 auto 50px;
+            padding: 30px 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .resource-item {
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--secondary-color);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .resource-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .resource-item i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .resource-item h4 {
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+
+        .resource-item p {
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            margin-bottom: 10px;
+        }
+
+        /* FAQ Accordion Styles */
+        .faq-section {
+            max-width: 1200px;
+            margin: 0 auto 50px;
+            padding: 0 20px;
+        }
+
+        .accordion {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .accordion-item {
+            border-bottom: 1px solid #eee;
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            padding: 18px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            user-select: none;
+        }
+
+        .accordion-header:hover {
+            background-color: #f5f8ff;
+        }
+
+        .accordion-header i {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-header.active i {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease-out;
+            background-color: #f9fafb;
+        }
+
+        .accordion-content.active {
+            max-height: 500px;
+            padding: 20px;
+        }
+
+        .accordion-content p {
+            margin: 0;
+            line-height: 1.6;
+            color: var(--gray-color);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group input[type="file"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .submit-btn {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #003d82;
+        }
+        
+        /* Loading spinner */
+        .global-loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .loading-spinner i {
+            font-size: 30px;
+            color: #0056b3;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            background-color: #f0f4f8;
+            margin-top: 50px;
+        }
+
+        .footer p {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .action-cards {
+                grid-template-columns: 1fr;
+            }
             
-            <div class="nav-links">
-                <a href="#">Home</a>
+            .welcome-section {
+                padding: 40px 20px;
+            }
+            
+            .welcome-section h1 {
+                font-size: 2rem;
+            }
+
+            .resources-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Error message styles */
+        .error-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--danger-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Profile dropdown styles */
+        .profile-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            z-index: 1000;
+        }
+
+        .profile-content.show {
+            display: block;
+        }
+
+        .profile-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.2s;
+        }
+
+        .profile-content a:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .profile-content a.logout-link {
+            border-top: 1px solid #eee;
+            color: var(--danger-color);
+        }
+    </style>
+    </head>
+    <body>
+        <header>
+            <!---NAV BAR-->
+            <div class="nav-bar">
+                <div class="logo">
+                    <img src="imgs/qcuims-logo.png" alt="logo">
+                </div>
+                
+                <div class="nav-links">
+                <a href="mplhome.html" class="active">Home</a>
 
                 <!-- Add notification dropdown here -->
                 <div class="notifications">
@@ -34,65 +488,216 @@
                 
 
                 <!-- Profile Menu-->
-                <div class="profile">
+                    <div class="profile">
                     <button class="dropdown-profile profile-link">
                         <span class="user-name">Profile</span>
                     </button>
-                    <div class="profile-content">
-                        <a href="mplprofile.html">My Account</a>
-                        <a href="#">Applications</a>
+                        <div class="profile-content">
+                            <a href="mplprofile.html">My Account</a>
+                        <a href="application-tracking.html">Applications</a>
                         <a href="#" class="logout-link">Logout</a>
                     </div>
                 </div>
 
             </div>
-        </div>
+            </div>
 
         <script src="../student/scripts/notification.js"></script>
-    </header>
-    <main>
-        <div class="search-container">
-            <!---SEARCH--->
-            <div class="search-bar">
-                <input type="text" id="search-title" placeholder="Search for company or role..">
-                <input type="text" id="search-location" placeholder="Location">
-                <button type="submit">Search</button>
-            </div>
-        </div>
-
-        <!---FILTER--->        
-        <div class="filter-container">
-            <h2 id="results-text">Showing <span id="result-count">10</span> Results</h2>
-            <div class="filter">
-                <input type="radio" name="salary" id="all" checked> All<br>
-                <input type="radio" name="salary" id="paid"> Paid<br>
-                <input type="radio" name="salary" id="unpaid"> Unpaid<br>
-            </div>
-        </div>
-        
-        <div id="job-listings"></div>
-
-        <!-- POPUP MODAL -->
-        <div id="applyModal" class="modal">
-            <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Application Form</h2>
-            <form id="application-form">
-                <label for="resume">Upload Resume:</label><br>
-                <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required><br><br>
-                
-                <!--Time Availability-->
-                <!--<label for="interview-time">Available Interview Time:</label><br>
-                <input type="datetime-local" id="interview-time" name="interview-time" required><br><br>-->
+        </header>
     
-                <button type="submit">Submit Application</button>
-            </form>
+        <main>
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <h1>Welcome to the Internship Management System</h1>
+            <p>Find, apply, and manage your internship opportunities all in one place</p>
+        </section>
+
+        <!-- Quick Actions Section -->
+        <section class="quick-actions">
+            <h2 class="section-title">Quick Actions</h2>
+            <div class="action-cards">
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Find Internships</h3>
+                    <p>Search for available internship opportunities that match your skills and interests</p>
+                    <a href="jobListings.html" class="btn">Browse Listings</a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3>My Applications</h3>
+                    <p>View the status of your internship applications and track your progress</p>
+                    <a href="application-tracking.html" class="btn">View Applications</a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h3>My Profile</h3>
+                    <p>Update your personal information, skills, and resume to showcase to employers</p>
+                    <a href="mplprofile.html" class="btn">Manage Profile</a>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h3>Internship Reports</h3>
+                    <p>Submit and track your internship reports and progress</p>
+                    <a href="internship-report.html" class="btn">View Reports</a>
+                </div>
             </div>
-        </div>
+        </section>
+        
+        <!-- Resources Section -->
+        <section class="resources-section">
+            <h2 class="section-title">Helpful Resources</h2>
+            <div class="resources-grid">
+                <div class="resource-item">
+                    <i class="fas fa-book"></i>
+                    <h4>Resume Guide</h4>
+                    <p>Tips for creating an effective resume</p>
+                    <a href="resources/resume-guide.html" class="btn">View</a>
+            </div>
+
+                <div class="resource-item">
+                    <i class="fas fa-handshake"></i>
+                    <h4>Interview Tips</h4>
+                    <p>Prepare for your internship interviews</p>
+                    <a href="resources/interview-guide.html" class="btn">View</a>
+                </div>
+                
+                <div class="resource-item">
+                    <i class="fas fa-file-signature"></i>
+                    <h4>Cover Letters</h4>
+                    <p>Guide to writing compelling cover letters</p>
+                    <a href="resources/cover-letters.html" class="btn">View</a>
+                </div>
+                
+                <div class="resource-item">
+                    <i class="fas fa-building"></i>
+                    <h4>Partner Companies</h4>
+                    <p>List of companies offering internships</p>
+                    <a href="resources/partner-companies.html" class="btn">View</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- FAQ Section -->
+        <section class="faq-section">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        How do I apply for an internship?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>To apply for an internship: 1) Update your resume, 2) Browse available positions in the Job Listings page, 3) Click the "Apply" button on the position you're interested in, 4) Fill out the application form and submit your resume and cover letter.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        What should I include in my resume?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Your resume should include: personal information, educational background, relevant skills, projects, any work experience, and extracurricular activities. Make sure to highlight achievements and skills relevant to the internship you're applying for.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        How can I track my application status?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Visit the "My Applications" page to view all your submitted applications. Each application will show its current status (Pending, Under Review, Accepted, or Rejected). You'll receive email notifications when there are updates to your applications.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        Can I apply for multiple internships?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Yes, you can apply for multiple internships simultaneously. However, make sure to tailor your resume and cover letter for each position. Keep track of your applications through the My Applications page.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
+    
+    <footer class="footer">
+        <p>&copy; 2023 QCU Internship Management System. All rights reserved.</p>
+    </footer>
 
     <!-- Include auth utilities -->
     <script src="scripts/auth.js"></script>
-    <script src="scripts/job-listing.js"></script>
-</body>
-</html>
+    <script src="scripts/mplhome.js"></script>
+    
+    <script>
+        // Add logout functionality
+        document.querySelector(".logout-link").addEventListener("click", function(e) {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = "/student/mpl-login.html";
+        });
+        
+        // Hide login button if user is logged in
+        const token = localStorage.getItem("token");
+        if (token) {
+            document.getElementById("openLogin").style.display = "none";
+            
+            // Show username if available
+            const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+            if (userData && userData.firstName) {
+                document.querySelector(".user-name").textContent = userData.firstName;
+            }
+        } else {
+            document.querySelector(".profile").style.display = "none";
+        }
+        
+        // FAQ Accordion functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    // Toggle active class on header
+                    this.classList.toggle('active');
+                    
+                    // Get the content panel
+                    const content = this.nextElementSibling;
+                    
+                    // Toggle active class on content
+                    content.classList.toggle('active');
+                    
+                    // Close other accordion items
+                    accordionHeaders.forEach(otherHeader => {
+                        if (otherHeader !== header) {
+                            otherHeader.classList.remove('active');
+                            otherHeader.nextElementSibling.classList.remove('active');
+                        }
+                    });
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize dashboard
+            initDashboard();
+            
+            // Initialize notification system
+            if (typeof initNotificationSystem === 'function') {
+                initNotificationSystem();
+            }
+        });
+    </script>
+    </body>
+    </html>

@@ -132,5 +132,21 @@ document.addEventListener("DOMContentLoaded", () => {
       loadEmployers();
   });
 
+  // Function to toggle dropdown menu
+  window.toggleDropdown = function() {
+    const dropdownMenu = document.getElementById("dropdownMenu");
+    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+  };
+
+  // Handle logout functionality
+  document.querySelector('.dropdown-menu a').addEventListener('click', function(e) {
+    if (this.textContent === 'Logout') {
+      e.preventDefault();
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      window.location.href = '/admin/admin-login.html';
+    }
+  });
+
   loadEmployers();
 });

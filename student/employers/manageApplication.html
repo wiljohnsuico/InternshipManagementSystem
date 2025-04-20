@@ -38,6 +38,7 @@
                         <th>Position</th>
                         <th>Salary</th>
                         <th>Documents</th>
+                        <th>Requirements</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -52,7 +53,15 @@
                                 <option value="Unpaid" selected>Unpaid</option>
                             </select>
                         </td>
-                        <td>Resume.pdf</td>
+                        <td>
+                            <button class="view-btn" onclick="viewResume(1)">Resume</button>
+                            <button class="view-btn" onclick="viewCoverLetter(1)">Cover Letter</button>
+                        </td>
+                        <td class="requirements-cell">
+                            <span class="requirement-tag">Available: June 15, 2023</span>
+                            <span class="requirement-tag">Can work remotely</span>
+                            <span class="requirement-tag">Full-time</span>
+                        </td>
                         <td class="status-cell">
                             <span class="status-indicator" style="background-color: #60a5fa;"></span>
                             <select class="status-select">
@@ -81,7 +90,15 @@
                                 <option value="Unpaid" selected>Unpaid</option>
                             </select>
                         </td>
-                        <td>Resume.pdf</td>
+                        <td>
+                            <button class="view-btn" onclick="viewResume(2)">Resume</button>
+                            <button class="view-btn" onclick="viewCoverLetter(2)">Cover Letter</button>
+                        </td>
+                        <td class="requirements-cell">
+                            <span class="requirement-tag">Available: June 15, 2023</span>
+                            <span class="requirement-tag">Can work remotely</span>
+                            <span class="requirement-tag">Full-time</span>
+                        </td>
                         <td class="status-cell">
                             <span class="status-indicator" style="background-color: #f59e0b;"></span>
                             <select class="status-select">
@@ -109,7 +126,15 @@
                                 <option value="Unpaid" selected>Unpaid</option>
                             </select>
                         </td>
-                        <td>Resume.pdf</td>
+                        <td>
+                            <button class="view-btn" onclick="viewResume(3)">Resume</button>
+                            <button class="view-btn" onclick="viewCoverLetter(3)">Cover Letter</button>
+                        </td>
+                        <td class="requirements-cell">
+                            <span class="requirement-tag">Available: June 15, 2023</span>
+                            <span class="requirement-tag">Can work remotely</span>
+                            <span class="requirement-tag">Full-time</span>
+                        </td>
                         <td class="status-cell">
                             <span class="status-indicator" style="background-color: #8b5cf6;"></span>
                             <select class="status-select">
@@ -137,7 +162,15 @@
                                 <option value="Unpaid" selected>Unpaid</option>
                             </select>
                         </td>
-                        <td>Resume.pdf</td>
+                        <td>
+                            <button class="view-btn" onclick="viewResume(4)">Resume</button>
+                            <button class="view-btn" onclick="viewCoverLetter(4)">Cover Letter</button>
+                        </td>
+                        <td class="requirements-cell">
+                            <span class="requirement-tag">Available: June 15, 2023</span>
+                            <span class="requirement-tag">Can work remotely</span>
+                            <span class="requirement-tag">Full-time</span>
+                        </td>
                         <td class="status-cell">
                             <span class="status-indicator" style="background-color: #059669;"></span>
                             <select class="status-select">
@@ -253,6 +286,160 @@
             <li><span>Unqualified</span> – does not meet basic requirements.</li>
         </ol>
     </div>
+
+    <!-- Resume Modal -->
+    <div id="resumeModal" class="resume-modal">
+        <div class="resume-content">
+            <span class="close-resume" onclick="closeModal('resumeModal')">&times;</span>
+            <h2>Applicant Resume</h2>
+            <div id="resumeContent"></div>
+        </div>
+    </div>
+
+    <!-- Cover Letter Modal -->
+    <div id="coverLetterModal" class="resume-modal">
+        <div class="resume-content">
+            <span class="close-resume" onclick="closeModal('coverLetterModal')">&times;</span>
+            <h2>Cover Letter</h2>
+            <div id="coverLetterContent"></div>
+        </div>
+    </div>
+
     <script src="/student/scripts/manageApplicants.js"></script>
 </body>
 </html>
+
+<style>
+    /* ... existing styles ... */
+    
+    .requirements-cell {
+        max-width: 200px;
+    }
+    
+    .requirement-tag {
+        display: inline-block;
+        background-color: #e2e8f0;
+        color: #1e293b;
+        border-radius: 4px;
+        padding: 2px 6px;
+        margin: 2px;
+        font-size: 12px;
+    }
+    
+    .view-btn {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 2px;
+        font-size: 12px;
+    }
+    
+    .view-btn:hover {
+        background-color: #2563eb;
+    }
+    
+    /* Resume Modal */
+    .resume-modal {
+        display: none;
+        position: fixed;
+        z-index: 1001;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+        overflow: auto;
+    }
+    
+    .resume-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .close-resume {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    .close-resume:hover {
+        color: black;
+    }
+</style>
+
+<script>
+// ... existing code ...
+
+// View resume modal
+function viewResume(applicantId) {
+    // In a real implementation, you would fetch the resume data from the server
+    document.getElementById('resumeContent').innerHTML = `
+        <h3>Juanna Dela Cruz</h3>
+        <p><strong>Email:</strong> juanna.delacruz@email.com</p>
+        <p><strong>Phone:</strong> +63 912 345 6789</p>
+        <h4>Education</h4>
+        <ul>
+            <li>Bachelor of Science in Finance, Quezon City University (2020-2024)</li>
+        </ul>
+        <h4>Skills</h4>
+        <ul>
+            <li>Financial Analysis</li>
+            <li>Excel Proficiency</li>
+            <li>Data Visualization</li>
+        </ul>
+    `;
+    document.getElementById('resumeModal').style.display = 'block';
+}
+
+// View cover letter modal
+function viewCoverLetter(applicantId) {
+    // In a real implementation, you would fetch the cover letter from the server
+    document.getElementById('coverLetterContent').innerHTML = `
+        <p>Dear Hiring Manager,</p>
+        <p>I am writing to express my interest in the Financial Analyst Intern position at your company. As a finance student at Quezon City University, I am eager to apply my academic knowledge in a practical setting and contribute to your team.</p>
+        <p>My coursework in financial analysis, accounting, and statistics has prepared me well for this role. I am particularly interested in your company because of its reputation for innovation in the financial sector.</p>
+        <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.</p>
+        <p>Sincerely,<br>Juanna Dela Cruz</p>
+    `;
+    document.getElementById('coverLetterModal').style.display = 'block';
+}
+
+// Close modal
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    if (event.target.className === 'resume-modal') {
+        event.target.style.display = 'none';
+    }
+};
+
+// Function to show status info
+function showStatusInfo() {
+    document.getElementById('overlay').style.display = 'block';
+    document.getElementById('status-info').style.display = 'block';
+}
+
+// Function to close status info
+function closeStatusInfo() {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('status-info').style.display = 'none';
+}
+
+// In a real implementation, you would fetch application data from the API
+// and update the table dynamically, showing the actual requirements
+// from the additional_info field in the database
+</script>

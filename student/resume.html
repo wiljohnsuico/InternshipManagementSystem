@@ -24,7 +24,7 @@
                         <a href="mplprofile.html">My Account</a>
                         <a href="resume.html">My Resume</a>
                         <a href="internship-report.html">Internship</a>
-                        <a href="#">Applications</a>
+                        <a href="application-tracking.html">Applications</a>
                         <a href="#" class="logout-link">Logout</a>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                     </div>
                     <div class="form-group">
                         <label>Middle Name</label>
-                        <input type="text" name="last_name">
+                        <input type="text" name="middleName">
                     </div>
                     <div class="form-group">
                         <label>Last Name</label>
@@ -216,6 +216,40 @@
             imageUpload.addEventListener('change', function() {
                 const file = this.files[0];
                 if (file) {
+                    // Check file size (5MB limit)
+                    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+                    if (file.size > MAX_FILE_SIZE) {
+                        // Show warning but still allow upload
+                        const statusMessage = document.getElementById('statusMessage');
+                        statusMessage.textContent = "Warning: Image is larger than 5MB. It will be compressed before saving.";
+                        statusMessage.className = "status-message warning";
+                        
+                        // Add warning style if not exists
+                        if (!document.querySelector('style[data-warning]')) {
+                            const style = document.createElement('style');
+                            style.setAttribute('data-warning', 'true');
+                            style.textContent = `
+                                .status-message.warning {
+                                    background-color: #fff3cd;
+                                    color: #856404;
+                                    border: 1px solid #ffeeba;
+                                    padding: 10px;
+                                    border-radius: 4px;
+                                    margin: 10px 0;
+                                    display: block;
+                                    text-align: center;
+                                }
+                            `;
+                            document.head.appendChild(style);
+                        }
+                        
+                        // Clear warning after 5 seconds
+                        setTimeout(() => {
+                            statusMessage.textContent = '';
+                            statusMessage.className = 'status-message';
+                        }, 5000);
+                    }
+                    
                     const reader = new FileReader();
                     
                     reader.addEventListener('load', function() {
@@ -312,5 +346,21 @@
     <script src="scripts/auth.js"></script>
     <script src="scripts/protect-page.js"></script>
     <script src="scripts/resume.js"></script>
+    
+    <script>
+        // Add explicit logout functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLink = document.querySelector('.logout-link');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('userData');
+                    window.location.href = '/student/mpl-login.html';
+                });
+            }
+        });
+    </script>
 </body>
 </html>

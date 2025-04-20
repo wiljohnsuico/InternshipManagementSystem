@@ -3,13 +3,8 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-console.log('Database configuration:', {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    database: process.env.DB_NAME || 'qcu_ims'
-});
-
-const pool = mysql.createPool({
+// Database configuration
+const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
@@ -17,31 +12,86 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    enableKeepAlive: true,
-    keepAliveInitialDelay: 0
+    // Set a timeout to prevent hanging on connection issues
+    connectTimeout: 10000,
+    // Enable multiple statements for setup scripts
+    multipleStatements: true
+};
+
+console.log('Database configuration:', {
+    host: dbConfig.host,
+    user: dbConfig.user,
+    database: dbConfig.database
 });
 
-// Wrap the pool query to add error handling
-const wrappedPool = {
-    query: async (...args) => {
-        try {
-            const result = await pool.query(...args);
-            return result;
-        } catch (error) {
-            console.error('Database query error:', {
-                query: args[0],
-                params: args[1],
-                error: error.message,
-                stack: error.stack
-            });
-            throw error;
+// Create a pool for connection management
+let pool;
+
+try {
+    pool = mysql.createPool(dbConfig);
+    console.log('Database connection pool created successfully');
+} catch (error) {
+    console.error('Error creating database connection pool:', error);
+    // We'll still allow the server to start, but DB operations will fail
+}
+
+// Test the connection when the module is loaded
+(async function testConnection() {
+    try {
+        if (!pool) {
+            throw new Error('Connection pool not initialized');
         }
-    },
-    beginTransaction: async () => {
-        const conn = await pool.getConnection();
-        await conn.beginTransaction();
-        return conn;
+        
+        // Get a connection from the pool and release it immediately
+        const connection = await pool.getConnection();
+        connection.release();
+        
+        console.log('✅ Database connection successful');
+    } catch (error) {
+        console.error('⚠️ Database connection test failed:', error.message);
+        console.error('❌ Make sure your MySQL server is running');
     }
+})();
+
+// Enhanced query function with better error handling
+const query = async (sql, params) => {
+    try {
+        if (!pool) {
+            throw new Error('Database connection pool not initialized');
+        }
+        
+        const [results] = await pool.query(sql, params);
+        return [results];
+    } catch (error) {
+        console.error('Database query error:', {
+            query: sql,
+            params,
+            error: error.message,
+            stack: error.stack
+        });
+        throw error;
+    }
+};
+
+// Transaction methods
+const beginTransaction = async () => {
+    if (!pool) {
+        throw new Error('Database connection pool not initialized');
+    }
+    
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+    return connection;
+};
+
+const commit = async (connection) => {
+    await connection.commit();
+    connection.release();
+};
+
+const rollback = async (connection) => {
+    await connection.rollback();
+    connection.release();
 };
 
 // Initialize database schema
@@ -221,4 +271,9 @@ pool.on('error', (err) => {
 // Initialize database on startup
 initializeDatabase();
 
-module.exports = wrappedPool; 
+module.exports = {
+    query,
+    beginTransaction,
+    commit,
+    rollback
+}; 

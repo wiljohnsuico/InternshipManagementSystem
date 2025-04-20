@@ -218,29 +218,29 @@
 </head>
 <body>
     <header>
-        <!---NAV BAR-->
-        <div class="nav-bar">
-            <div class="logo">
-                <img src="imgs/qcuims-logo.png" alt="logo">
-            </div>
-            
-            <div class="nav-links">
-                <a href="mplhome.html">Home</a>
+            <!---NAV BAR-->
+            <div class="nav-bar">
+                <div class="logo">
+                    <img src="imgs/qcuims-logo.png" alt="logo">
+                </div>
+                
+                <div class="nav-links">
+                    <a href="mplhome.html">Home</a>
 
-                <div class="profile">
+                    <div class="profile">
                     <button class="dropdown-profile profile-link">
                         <span class="user-name">Profile</span>
                     </button>
-                    <div class="profile-content">
+                        <div class="profile-content">
                         <a href="mplprofile.html">My Account</a>
-                        <a href="resume.html">My Resume</a>
+                            <a href="resume.html">My Resume</a>
                         <a href="internship-report.html">Internship</a>
-                        <a href="#">Applications</a>
+                        <a href="application-tracking.html">Applications</a>
                         <a href="#" class="logout-link">Logout</a>
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
     </header>
 
     <main>
@@ -310,8 +310,8 @@
         <div id="resumeModal" class="modal">
             <div class="modal-content resume-modal">
                 <span class="close">&times;</span>
-                <h2>Full Name</h2>
-                <p>Mobile Number | Email Address</p>
+                <h2 id="resumeFullName">Full Name</h2>
+                <p id="resumeContact">Mobile Number | Email Address</p>
                 
                 <div class="resume-section">
                     <h3>Objectives</h3>
@@ -347,7 +347,10 @@
                     </ul>
                 </div>
                 
-                <div class="resume-signature">Lastname, Firstname MI</div>
+                <div class="resume-section">
+                    <h3>Signature</h3>
+                    <div class="resume-signature" id="resumeSignature">Lastname, Firstname MI</div>
+                </div>
             </div>
         </div>
 
@@ -436,6 +439,276 @@
                     profilePicModal.style.display = 'none';
                 }
             }
+
+            // Function to format name as "Lastname, Firstname MI"
+            function formatFullName(userData) {
+                if (!userData) return "Lastname, Firstname MI";
+                
+                let formattedName = "";
+                
+                // Use the exact fields from the resume form
+                const lastName = userData.lastName || userData.last_name || (userData.basic ? userData.basic.lastName : '') || '';
+                const firstName = userData.firstName || userData.first_name || (userData.basic ? userData.basic.firstName : '') || '';
+                const middleName = userData.middleName || userData.middle_name || (userData.basic ? userData.basic.middleName : '') || '';
+                const suffix = userData.suffix || (userData.basic ? userData.basic.suffix : '') || '';
+                
+                // For resume format: "Lastname, Firstname MI."
+                if (lastName && lastName.trim() !== '') {
+                    formattedName += lastName;
+                }
+                
+                // Add first name
+                if (firstName && firstName.trim() !== '') {
+                    if (formattedName) formattedName += ", ";
+                    formattedName += firstName;
+                }
+                
+                // Add middle initial if available
+                if (middleName && middleName.trim() !== '') {
+                    formattedName += " " + middleName.charAt(0).toUpperCase() + ".";
+                }
+                
+                // Add suffix if available
+                if (suffix && suffix.trim() !== '') {
+                    formattedName += ", " + suffix;
+                }
+                
+                return formattedName || "Lastname, Firstname MI";
+            }
+            
+            // Make formatFullName function globally available
+            window.formatFullName = formatFullName;
+            
+            // Update the resume signature and header when profile is loaded
+            document.addEventListener('DOMContentLoaded', function() {
+                // Try to get resume data first, then fall back to user data
+                const resumeData = JSON.parse(localStorage.getItem('resumeData') || localStorage.getItem('resumeForProfile') || '{}');
+                const userData = JSON.parse(localStorage.getItem('userData') || localStorage.getItem('user') || '{}');
+                
+                const dataToUse = Object.keys(resumeData).length > 0 ? resumeData : userData;
+                
+                if (dataToUse) {
+                    // Update signature
+                    const resumeSignature = document.getElementById('resumeSignature');
+                    if (resumeSignature) {
+                        resumeSignature.textContent = formatFullName(dataToUse);
+                    }
+                    
+                    // Update header with same format
+                    const resumeFullName = document.getElementById('resumeFullName');
+                    if (resumeFullName) {
+                        resumeFullName.textContent = formatFullName(dataToUse);
+                    }
+                    
+                    // Update contact info
+                    const resumeContact = document.getElementById('resumeContact');
+                    if (resumeContact) {
+                        let contactInfo = '';
+                        // Try to get from either basic object or direct fields
+                        const mobile = dataToUse.basic ? dataToUse.basic.mobile : dataToUse.mobile || dataToUse.phone || dataToUse.contact_number;
+                        const email = dataToUse.basic ? dataToUse.basic.email : dataToUse.email;
+                        
+                        if (mobile) contactInfo += mobile;
+                        if (email) {
+                            if (contactInfo) contactInfo += ' | ';
+                            contactInfo += email;
+                        }
+                        resumeContact.textContent = contactInfo || 'Mobile Number | Email Address';
+                    }
+                }
+            });
+            
+            // Update the resume signature and header when modal is opened
+            document.getElementById('resumeBtn').addEventListener('click', function() {
+                // Try to get resume data first, then fall back to user data
+                const resumeData = JSON.parse(localStorage.getItem('resumeData') || localStorage.getItem('resumeForProfile') || '{}');
+                const userData = JSON.parse(localStorage.getItem('userData') || localStorage.getItem('user') || '{}');
+                
+                const dataToUse = Object.keys(resumeData).length > 0 ? resumeData : userData;
+                
+                if (dataToUse) {
+                    // Update signature
+                    const resumeSignature = document.getElementById('resumeSignature');
+                    if (resumeSignature) {
+                        resumeSignature.textContent = formatFullName(dataToUse);
+                    }
+                    
+                    // Update header with same format
+                    const resumeFullName = document.getElementById('resumeFullName');
+                    if (resumeFullName) {
+                        resumeFullName.textContent = formatFullName(dataToUse);
+                    }
+                    
+                    // Update contact info
+                    const resumeContact = document.getElementById('resumeContact');
+                    if (resumeContact) {
+                        let contactInfo = '';
+                        // Try to get from either basic object or direct fields
+                        const mobile = dataToUse.basic ? dataToUse.basic.mobile : dataToUse.mobile || dataToUse.phone || dataToUse.contact_number;
+                        const email = dataToUse.basic ? dataToUse.basic.email : dataToUse.email;
+                        
+                        if (mobile) contactInfo += mobile;
+                        if (email) {
+                            if (contactInfo) contactInfo += ' | ';
+                            contactInfo += email;
+                        }
+                        resumeContact.textContent = contactInfo || 'Mobile Number | Email Address';
+                    }
+                    
+                    // Also update all the other resume sections based on form data
+                    updateResumeContent(dataToUse);
+                }
+                
+                // Display the modal
+                document.getElementById('resumeModal').style.display = "flex";
+            });
+            
+            // Function to update all resume content based on form data
+            function updateResumeContent(data) {
+                const resumeSections = document.querySelectorAll('.resume-section');
+                
+                // Update objectives
+                const objectivesSection = Array.from(resumeSections).find(section => 
+                    section.querySelector('h3')?.textContent.toUpperCase() === 'OBJECTIVES');
+                if (objectivesSection) {
+                    const p = objectivesSection.querySelector('p');
+                    if (p) {
+                        const objectives = data.objectives || (data.basic ? data.basic.objectives : '');
+                        p.textContent = objectives || 'No objectives provided';
+                    }
+                }
+                
+                // Update basic information
+                const basicInfoSection = Array.from(resumeSections).find(section => 
+                    section.querySelector('h3')?.textContent === 'Basic Information');
+                if (basicInfoSection) {
+                    const ul = basicInfoSection.querySelector('ul');
+                    if (ul) {
+                        ul.innerHTML = '';
+                        
+                        // Age
+                        const age = data.age || (data.basic ? data.basic.age : '');
+                        if (age) {
+                            const li = document.createElement('li');
+                            li.textContent = `${age} years old`;
+                            ul.appendChild(li);
+                        }
+                        
+                        // Birthday
+                        const birthday = data.birthday || (data.basic ? data.basic.birthday : '');
+                        if (birthday) {
+                            const li = document.createElement('li');
+                            li.textContent = birthday;
+                            ul.appendChild(li);
+                        }
+                        
+                        // Address
+                        let address = '';
+                        if (data.address) {
+                            address = data.address;
+                        } else if (data.basic && data.basic.address) {
+                            // Try to build from address parts
+                            const addr = data.basic.address;
+                            const street = addr.street || '';
+                            const barangay = addr.barangay || '';
+                            const city = addr.city || '';
+                            const country = addr.country || '';
+                            
+                            address = [street, barangay, city, country].filter(part => part).join(', ');
+                        }
+                        
+                        if (address) {
+                            const li = document.createElement('li');
+                            li.textContent = address;
+                            ul.appendChild(li);
+                        }
+                    }
+                }
+                
+                // Update education
+                const educationSection = Array.from(resumeSections).find(section => 
+                    section.querySelector('h3')?.textContent === 'Education');
+                if (educationSection) {
+                    const p = educationSection.querySelector('p');
+                    if (p) {
+                        let educationHtml = '';
+                        
+                        if (data.education) {
+                            if (typeof data.education === 'string') {
+                                educationHtml = data.education;
+                            } else if (Array.isArray(data.education)) {
+                                educationHtml = data.education.map(edu => 
+                                    `${edu.school || ''}<br>${edu.year || ''}${edu.date ? ' - ' + edu.date : ''}`
+                                ).join('<br><br>');
+                            }
+                        }
+                        
+                        p.innerHTML = educationHtml || 'No education entries';
+                    }
+                }
+                
+                // Update work experience
+                const workSection = Array.from(resumeSections).find(section => 
+                    section.querySelector('h3')?.textContent === 'Work Experience');
+                if (workSection) {
+                    const p = workSection.querySelector('p');
+                    if (p) {
+                        let workHtml = '';
+                        
+                        if (data.work) {
+                            if (typeof data.work === 'string') {
+                                workHtml = data.work;
+                            } else if (Array.isArray(data.work)) {
+                                workHtml = data.work.map(work => 
+                                    `${work.position || ''}<br>${work.company || ''}${work.duration ? ' | ' + work.duration : ''}`
+                                ).join('<br><br>');
+                            }
+                        }
+                        
+                        p.innerHTML = workHtml || 'No work experience added';
+                    }
+                }
+                
+                // Update skills
+                const skillsSection = Array.from(resumeSections).find(section => 
+                    section.querySelector('h3')?.textContent === 'Skills');
+                if (skillsSection) {
+                    const ul = skillsSection.querySelector('ul');
+                    if (ul) {
+                        ul.innerHTML = '';
+                        
+                        const skills = data.skills || [];
+                        const skillsList = Array.isArray(skills) ? skills : 
+                            typeof skills === 'string' ? skills.split(',').map(s => s.trim()) : [];
+                        
+                        if (skillsList.length > 0) {
+                            skillsList.forEach(skill => {
+                                if (skill) {
+                                    const li = document.createElement('li');
+                                    li.textContent = skill;
+                                    ul.appendChild(li);
+                                }
+                            });
+                        } else {
+                            const li = document.createElement('li');
+                            li.textContent = 'No skills added';
+                            ul.appendChild(li);
+                        }
+                    }
+                }
+            }
+            
+            // Close resume modal when clicking X
+            document.querySelector('#resumeModal .close').addEventListener('click', function() {
+                document.getElementById('resumeModal').style.display = 'none';
+            });
+            
+            // Close resume modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target == document.getElementById('resumeModal')) {
+                    document.getElementById('resumeModal').style.display = 'none';
+                }
+            });
         </script>
     </main>
     
@@ -446,6 +719,22 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (!requireAuth()) {
                 return; // This will redirect to login if not authenticated
+            }
+        });
+    </script>
+    <!-- Add this script at the end, right before closing </body> tag -->
+    <script>
+        // Add explicit logout functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLink = document.querySelector('.logout-link');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('userData');
+                    window.location.href = '/student/mpl-login.html';
+                });
             }
         });
     </script>

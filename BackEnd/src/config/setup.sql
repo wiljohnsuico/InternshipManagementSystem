@@ -10,6 +10,10 @@ DROP TABLE IF EXISTS admin_tbl;
 DROP TABLE IF EXISTS users_tbl;
 DROP TABLE IF EXISTS companies_tbl;
 DROP TABLE IF EXISTS resumes;
+DROP TABLE IF EXISTS job_listings;
+DROP TABLE IF EXISTS applications;
+DROP TABLE IF EXISTS announcements;
+DROP TABLE IF EXISTS notifications;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- Create users table if it doesn't exist
@@ -152,6 +156,63 @@ CREATE TABLE IF NOT EXISTS resumes (
     FOREIGN KEY (user_id) REFERENCES users_tbl(user_id) ON DELETE CASCADE
 );
 
+-- Create job listings table if it doesn't exist
+CREATE TABLE IF NOT EXISTS job_listings (
+    listing_id INT PRIMARY KEY AUTO_INCREMENT,
+    company_id INT NOT NULL,
+    job_title VARCHAR(100) NOT NULL,
+    location VARCHAR(100) NOT NULL,
+    skills JSON DEFAULT '[]',
+    description TEXT,
+    requirements TEXT,
+    is_paid BOOLEAN DEFAULT FALSE,
+    status ENUM('Active', 'Filled', 'Closed') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (company_id) REFERENCES companies_tbl(company_id) ON DELETE CASCADE
+);
+
+-- Create applications table if it doesn't exist
+CREATE TABLE IF NOT EXISTS applications (
+    application_id INT AUTO_INCREMENT PRIMARY KEY,
+    listing_id INT NOT NULL,
+    intern_id INT NOT NULL,
+    resume_id INT,
+    cover_letter TEXT,
+    additional_info JSON,
+    file_info JSON,
+    status ENUM('Pending', 'Reviewing', 'Accepted', 'Rejected', 'Withdrawn') NOT NULL DEFAULT 'Pending',
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (listing_id) REFERENCES job_listings(listing_id) ON DELETE CASCADE,
+    FOREIGN KEY (intern_id) REFERENCES interns_tbl(id) ON DELETE CASCADE
+);
+
+-- Create announcements table if it doesn't exist
+CREATE TABLE IF NOT EXISTS announcements (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by INT,
+    FOREIGN KEY (created_by) REFERENCES users_tbl(user_id) ON DELETE SET NULL
+);
+
+-- Create notifications table if it doesn't exist
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(50) DEFAULT 'info',
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read BOOLEAN DEFAULT FALSE,
+    link VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users_tbl(user_id) ON DELETE CASCADE
+);
+
 -- Add indexes for better performance if they don't exist
 CREATE INDEX IF NOT EXISTS idx_user_role ON users_tbl(role);
 CREATE INDEX IF NOT EXISTS idx_intern_user ON interns_tbl(user_id);
@@ -161,3 +222,10 @@ CREATE INDEX IF NOT EXISTS idx_admin_user ON admin_tbl(user_id);
 CREATE INDEX IF NOT EXISTS idx_placement_status ON internship_placements_tbl(placement_status);
 CREATE INDEX IF NOT EXISTS idx_accomplishment_date ON daily_accomplishment_tbl(date);
 CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance_tracking_tbl(date);
+CREATE INDEX IF NOT EXISTS idx_job_listing_status ON job_listings(status);
+CREATE INDEX IF NOT EXISTS idx_job_listing_company ON job_listings(company_id);
+CREATE INDEX IF NOT EXISTS idx_application_status ON applications(status);
+CREATE INDEX IF NOT EXISTS idx_application_intern ON applications(intern_id);
+CREATE INDEX IF NOT EXISTS idx_announcement_date ON announcements(created_at);
+CREATE INDEX IF NOT EXISTS idx_notification_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_read ON notifications(read);

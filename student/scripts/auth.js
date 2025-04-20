@@ -15,8 +15,8 @@ function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     
-    // Redirect to login page
-    window.location.href = 'mpl-login.html';
+    // Redirect to login page using absolute path
+    window.location.href = '/student/mpl-login.html';
 }
 
 // Update UI based on auth state
@@ -49,7 +49,7 @@ function updateAuthUI() {
 // Protect routes that require authentication
 function requireAuth() {
     if (!isLoggedIn()) {
-        window.location.href = 'mpl-login.html';
+        window.location.href = '/student/mpl-login.html';
         return false;
     }
     return true;

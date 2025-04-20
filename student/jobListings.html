@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-url" content="http://localhost:5004/api">
+    <title>Job Listings - QCU IMS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="./styles/job-listings.css">
+    <link rel="stylesheet" href="./styles/notification.css">
+    <script src="./scripts/job-listing.js" defer></script>
+    <script src="./scripts/notification.js" defer></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 0;
+            color: #2c3e50;
+        }
+
+        /* Modern Header Styles */
+        .main-header {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo-container img {
+            height: 40px;
+            margin-right: 15px;
+        }
+        
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #3498db;
+            margin: 0;
+        }
+        
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .main-nav li {
+            margin: 0;
+            position: relative;
+        }
+        
+        .main-nav a {
+            display: block;
+            padding: 25px 20px;
+            text-decoration: none;
+            color: #34495e;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .main-nav a:hover {
+            color: #3498db;
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .main-nav a.active {
+            color: #3498db;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            background-color: transparent;
+            border: none;
+            color: #e74c3c;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 25px 20px;
+            transition: all 0.2s;
+        }
+        
+        .logout-btn i {
+            margin-right: 8px;
+        }
+        
+        .logout-btn:hover {
+            background-color: rgba(231, 76, 60, 0.05);
+        }
+
+        .job-listings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7ff;
+            min-height: calc(100vh - 150px);
+        }
+        
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-bar input, .search-bar select {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .search-bar button {
+            padding: 12px 25px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            min-width: 120px;
+        }
+        
+        .filter-options {
+            display: flex;
+            margin: 20px 0;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-options label {
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .job-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .job-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .job-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        
+        .job-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .company-name {
+            font-size: 18px;
+            color: #0056b3;
+            margin-bottom: 10px;
+        }
+        
+        .job-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .job-details span {
+            display: flex;
+            align-items: center;
+        }
+        
+        .job-details i {
+            margin-right: 8px;
+            color: #0056b3;
+        }
+        
+        .compensation-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 5px 0 15px 0;
+            display: flex;
+            align-items: center;
+            width: fit-content;
+        }
+        
+        .compensation-badge i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        .compensation-badge.paid {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .compensation-badge.unpaid {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .job-description {
+            margin-bottom: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #444;
+            flex-grow: 1;
+        }
+        
+        .job-skills {
+            margin-bottom: 20px;
+        }
+        
+        .job-skills h4 {
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .skill-tag {
+            background-color: #e6f0ff;
+            color: #0056b3;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        
+        .card-actions {
+            margin-top: auto;
+            text-align: right;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #0056b3;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #003d82;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: #0056b3;
+            border: 1px solid #0056b3;
+        }
+        
+        .btn-outline:hover {
+            background-color: #f0f7ff;
+        }
+        
+        .results-count {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .loading-spinner, .no-results {
+            text-align: center;
+            padding: 50px 0;
+            font-size: 18px;
+            color: #666;
+        }
+        
+        .loading-spinner i {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #0056b3;
+        }
+        
+        /* Fixed Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 9999 !important;
+        }
+        
+        .modal-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            z-index: 10000 !important;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-container:focus,
+        .modal-container:active {
+            outline: none;
+        }
+        
+        .modal-close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .modal-title {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .form-group textarea,
+        .form-group input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .submit-btn {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        
+        /* Autocomplete styles */
+        .autocomplete-container {
+            position: relative;
+            flex: 1;
+        }
+        
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #ddd;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: white;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .autocomplete-items div {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        
+        .autocomplete-items div:hover {
+            background-color: #e9f0ff;
+        }
+        
+        .autocomplete-active {
+            background-color: #e9f0ff !important;
+        }
+
+        /* Global Loading Indicator and Notifications */
+        .global-loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .global-loading-indicator .loading-spinner {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .global-loading-indicator .loading-spinner i {
+            font-size: 40px;
+            color: #0056b3;
+            margin-bottom: 15px;
+        }
+
+        .error-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            max-width: 350px;
+        }
+
+        .error-notification .notification-content {
+            display: flex;
+            align-items: center;
+        }
+
+        .error-notification i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        /* Add styles for applied job cards */
+        .job-card.job-applied {
+            border-left: 4px solid #28a745;
+        }
+
+        /* FAQ Section Styles */
+        .faq-section {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .faq-section h3 {
+            color: #0056b3;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .faq-intro {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .faq-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .faq-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            line-height: 1.5;
+            color: #444;
+        }
+
+        .faq-list li:last-child {
+            border-bottom: none;
+        }
+
+        .faq-list li strong {
+            color: #0056b3;
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="imgs/logo.png" alt="QCU Logo">
+                <h1 class="logo-text">QCU Internship Management System</h1>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="mplhome.html">Home</a></li>
+                    <li><a href="resume.html">Resume</a></li>
+                    <li><a href="jobListings.html" class="active">Job Listings</a></li>
+                    <li><a href="application-tracking.html">My Applications</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="job-listings-container">
+        <div class="faq-section">
+            <h3>Frequently Asked Questions</h3>
+            <div class="faq-content">
+                <p class="faq-intro">Welcome to the Job Listings page! Here's a quick guide to help you:</p>
+                <ul class="faq-list">
+                    <li><strong>Searching for Jobs:</strong> Use the search bar to find specific companies or roles. Filter by location and compensation type (paid/unpaid).</li>
+                    <li><strong>Applying for Jobs:</strong> Click the "Apply" button on any job listing. Make sure to prepare your resume and cover letter.</li>
+                    <li><strong>Application Status:</strong> Once you've applied, the button will change to "Applied" and the job card will be highlighted.</li>
+                    <li><strong>Track Applications:</strong> Visit "My Applications" page to track the status of your applications.</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Available Internship Opportunities</h2>
+        
+        <form id="search-form" onsubmit="event.preventDefault(); if(typeof performSearch === 'function') performSearch(); return false;">
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search for company or role..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); if(typeof performSearch === 'function') performSearch(); return false; }">
+                <select id="location-input" style="flex: 1; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); appearance: auto; background-color: white;" onkeydown="if(event.key === 'Enter') { event.preventDefault(); if(typeof performSearch === 'function') performSearch(); return false; }">
+                    <option value="">Select location (optional)</option>
+                    <option value="Quezon City">Quezon City</option>
+                    <option value="Manila">Manila</option>
+                    <option value="Makati">Makati</option>
+                    <option value="Taguig">Taguig</option>
+                    <option value="Pasig">Pasig</option>
+                    <option value="Mandaluyong">Mandaluyong</option>
+                    <option value="Pasay">Pasay</option>
+                    <option value="Parañaque">Parañaque</option>
+                    <option value="Muntinlupa">Muntinlupa</option>
+                    <option value="Las Piñas">Las Piñas</option>
+                    <option value="Marikina">Marikina</option>
+                    <option value="San Juan">San Juan</option>
+                    <option value="Cavite">Cavite</option>
+                    <option value="Davao">Davao</option>
+                </select>
+                <button type="button" id="search-button" onclick="if(typeof performSearch === 'function') performSearch();">Search</button>
+            </div>
+        </form>
+        
+        <div class="filter-options">
+            <div class="results-count">Showing <span id="results-count">10</span> Results</div>
+            
+            <div class="filter-option">
+                <input type="radio" id="all" name="filter" value="all" checked>
+                <label for="all">All</label>
+            </div>
+            
+            <div class="filter-option">
+                <input type="radio" id="paid" name="filter" value="paid">
+                <label for="paid">Paid</label>
+            </div>
+            
+            <div class="filter-option">
+                <input type="radio" id="unpaid" name="filter" value="unpaid">
+                <label for="unpaid">Unpaid</label>
+            </div>
+        </div>
+        
+        <div class="job-cards" id="job-listings">
+            <!-- Job listings will be loaded dynamically -->
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading available internships...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Completely New Modal Implementation -->
+    <div class="modal-overlay" id="modalOverlay" style="z-index: 9999;"></div>
+    <div class="modal-container" id="modalContainer" style="z-index: 10000;">
+        <span class="modal-close" id="modalClose">&times;</span>
+        <h2 class="modal-title" id="modalTitle">Apply for <span id="jobTitleInModal">Position</span></h2>
+        <div class="modal-body">
+            <form id="applicationForm">
+                <!-- Hidden fields for job information -->
+                <input type="hidden" id="listingId" name="listingId">
+                <div class="form-group">
+                    <label for="coverLetter">Cover Letter</label>
+                    <textarea id="coverLetter" name="cover_letter" rows="5" placeholder="Tell the employer why you're a good fit for this position..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resumeFile">Upload Resume/CV</label>
+                    <input type="file" id="resumeFile" name="resume_file" accept=".pdf,.doc,.docx" required>
+                    <small>Accepted formats: PDF, DOC, DOCX (Max 5MB)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="supportingDocs">Additional Documents (Optional)</label>
+                    <input type="file" id="supportingDocs" name="supporting_docs" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+                    <small>You can upload certificates, portfolio, or other relevant documents</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="startDate">Available Start Date</label>
+                    <input type="date" id="startDate" name="start_date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Additional Requirements</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="requirements" value="willing_to_relocate"> Willing to relocate</label>
+                        <label><input type="checkbox" name="requirements" value="can_work_remotely"> Can work remotely</label>
+                        <label><input type="checkbox" name="requirements" value="full_time"> Available full-time</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitApplication">Submit Application</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/protect-page.js"></script>
+    <!-- Add job-listing.js with error handling -->
+    <script>
+        // Function to load a script with fallback
+        function loadScript(src, fallbackSrc, callback) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = callback;
+            script.onerror = function() {
+                console.warn(`Failed to load script: ${src}, trying fallback`);
+                if (fallbackSrc) {
+                    const fallbackScript = document.createElement('script');
+                    fallbackScript.src = fallbackSrc;
+                    fallbackScript.onload = callback;
+                    fallbackScript.onerror = function() {
+                        console.error(`Failed to load fallback script: ${fallbackSrc}`);
+                    };
+                    document.body.appendChild(fallbackScript);
+                }
+            };
+            document.body.appendChild(script);
+        }
+
+        // Load main script then notification system
+        loadScript('scripts/job-listing.js', 'scripts/fallback-job-listing.js', function() {
+            console.log('Job listing script loaded');
+            // Load notification system
+            loadScript('scripts/notification.js', null, function() {
+                console.log('Notification script loaded');
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for scripts to load before initializing
+            setTimeout(function() {
+                // Initialize job listings
+                try {
+                    if (typeof setupSearchFields === 'function') {
+                        setupSearchFields();
+                    }
+                    
+                    if (typeof fetchJobListings === 'function') {
+                        fetchJobListings();
+                    }
+                } catch (error) {
+                    console.error('Error during initialization:', error);
+                    // Show fallback message if both scripts fail
+                    const jobListingsContainer = document.getElementById('job-listings');
+                    if (jobListingsContainer) {
+                        jobListingsContainer.innerHTML = `
+                            <div class="error">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>An error occurred while loading job listings. Please refresh the page.</p>
+                                <button class="btn btn-primary" onclick="location.reload()">Refresh</button>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Initialize notification system if available
+                try {
+                    if (typeof initNotificationSystem === 'function') {
+                        initNotificationSystem();
+                    }
+                } catch (error) {
+                    console.warn('Notification system not available:', error);
+                }
+            }, 500); // Give time for scripts to load
+        });
+    </script>
+</body>
+</html>

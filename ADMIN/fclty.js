@@ -198,5 +198,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Add logout functionality
+    const dropdownLinks = document.querySelectorAll('.dropdown-menu a');
+    dropdownLinks.forEach(link => {
+        if (link.textContent.trim() === 'Logout') {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/admin/admin-login.html';
+            });
+        }
+    });
+
     loadFaculty();
 });
