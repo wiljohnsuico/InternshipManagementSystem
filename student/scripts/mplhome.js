@@ -95,7 +95,7 @@ function handleLogout(event) {
     event.preventDefault();
     localStorage.removeItem('token');
     localStorage.removeItem('userData');
-    window.location.href = 'index.html';
+    window.location.href = 'mpl-login.html';
 }
 
 // Utility Functions

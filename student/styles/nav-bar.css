@@ -160,3 +160,14 @@ a:active, button:active {
 .no-scroll {
   overflow: hidden;
 }
+
+.admin-link {
+  color: #0056ff;
+  font-weight: 500;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.admin-link:hover {
+  color: #0040c8;
+}

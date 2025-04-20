@@ -6,6 +6,19 @@ const notificationState = {
   unreadCount: 0
 };
 
+// Get API URL from meta tag
+function getApiUrl() {
+  try {
+    const metaTag = document.querySelector('meta[name="api-url"]');
+    if (metaTag && metaTag.content && metaTag.content.trim() !== '') {
+      return metaTag.content.endsWith('/') ? metaTag.content.slice(0, -1) : metaTag.content;
+    }
+  } catch (e) {
+    console.warn("Error reading API URL from meta tag:", e);
+  }
+  return 'http://localhost:5004/api'; // Default fallback
+}
+
 // Initialize the notification system
 function initNotificationSystem() {
   console.log("Initializing notification system...");
@@ -13,47 +26,13 @@ function initNotificationSystem() {
   // Create notification icon in nav bar if it doesn't exist
   createNotificationIcon();
   
-  // Load saved notifications from localStorage
+  // Load saved notifications from API
   loadSavedNotifications();
   
   // Set up event listeners
   setupNotificationEvents();
   
-  // Ensure migration of notifications to persistent storage
-  migrateToPersistentStorage();
-  
   console.log("Notification system initialized");
-}
-
-// Migrate notifications to persistent storage to survive logout
-function migrateToPersistentStorage() {
-  try {
-    // Get notifications from both storage types
-    const regularNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-    const persistentNotifications = JSON.parse(localStorage.getItem('persistentNotifications') || '[]');
-    
-    // If we have notifications in regular storage but not in persistent storage
-    if (regularNotifications.length > 0) {
-      console.log(`Migrating ${regularNotifications.length} notifications to persistent storage`);
-      
-      // Create merged array of both sources (avoiding duplicates by ID)
-      const mergedNotifications = [...persistentNotifications];
-      const existingIds = persistentNotifications.map(n => n.id);
-      
-      // Add non-duplicate notifications from regular storage
-      regularNotifications.forEach(notification => {
-        if (!existingIds.includes(notification.id)) {
-          mergedNotifications.push(notification);
-        }
-      });
-      
-      // Save to persistent storage
-      localStorage.setItem('persistentNotifications', JSON.stringify(mergedNotifications));
-      console.log(`Successfully migrated notifications. Total count: ${mergedNotifications.length}`);
-    }
-  } catch (error) {
-    console.error("Error migrating to persistent storage:", error);
-  }
 }
 
 // Create notification icon in navbar
@@ -100,34 +79,46 @@ function createNotificationIcon() {
   }
 }
 
-// Load saved notifications from localStorage
-function loadSavedNotifications() {
+// Load saved notifications from API
+async function loadSavedNotifications() {
   try {
-    // First try to load from persistent storage
-    let savedNotifications = JSON.parse(localStorage.getItem('persistentNotifications') || '[]');
-    let storageSource = 'persistent';
-    
-    // If no persistent notifications found, try the regular storage
-    if (!savedNotifications || savedNotifications.length === 0) {
-      savedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-      storageSource = 'regular';
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('User not logged in, skipping notification load');
+      return;
     }
     
-    if (savedNotifications && Array.isArray(savedNotifications)) {
-      // Convert saved objects back to full notification objects and add to the array
-      notificationState.notifications = savedNotifications.map(saved => {
+    const API_URL = getApiUrl();
+    
+    const response = await fetch(`${API_URL}/notifications`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.success && Array.isArray(data.data)) {
+      // Convert API notifications to our format
+      notificationState.notifications = data.data.map(apiNotif => {
         return {
-          id: saved.id || Date.now(),
-          message: saved.message,
-          type: saved.type || 'info',
-          timestamp: saved.timestamp || Date.now(),
-          read: saved.read || false,
-          link: saved.link || null,
-          persistent: true // Mark all loaded notifications as persistent
+          id: apiNotif.id,
+          message: apiNotif.message,
+          type: apiNotif.type || 'info',
+          timestamp: apiNotif.timestamp,
+          read: apiNotif.read === 1 || apiNotif.read === true,
+          link: apiNotif.link || null
         };
       });
       
-      console.log(`Loaded ${notificationState.notifications.length} saved notifications from ${storageSource} storage`);
+      console.log(`Loaded ${notificationState.notifications.length} notifications from API`);
       
       // Update unread count
       notificationState.unreadCount = notificationState.notifications.filter(n => !n.read).length;
@@ -135,13 +126,51 @@ function loadSavedNotifications() {
       // Update UI
       updateNotificationBadge();
       renderNotifications();
-      
-      // Always save to persistent storage to ensure future availability
-      saveNotifications();
     }
   } catch (e) {
-    console.error('Error loading notifications from localStorage:', e);
-    notificationState.notifications = [];
+    console.error('Error loading notifications from API:', e);
+    
+    // Fall back to localStorage if API fails
+    try {
+      // First try to load from persistent storage
+      let savedNotifications = JSON.parse(localStorage.getItem('persistentNotifications') || '[]');
+      let storageSource = 'persistent';
+      
+      // If no persistent notifications found, try the regular storage
+      if (!savedNotifications || savedNotifications.length === 0) {
+        savedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+        storageSource = 'regular';
+      }
+      
+      if (savedNotifications && Array.isArray(savedNotifications)) {
+        // Convert saved objects back to full notification objects and add to the array
+        notificationState.notifications = savedNotifications.map(saved => {
+          return {
+            id: saved.id || Date.now(),
+            message: saved.message,
+            type: saved.type || 'info',
+            timestamp: saved.timestamp || Date.now(),
+            read: saved.read || false,
+            link: saved.link || null
+          };
+        });
+        
+        console.log(`Loaded ${notificationState.notifications.length} saved notifications from ${storageSource} storage (fallback)`);
+        
+        // Update unread count
+        notificationState.unreadCount = notificationState.notifications.filter(n => !n.read).length;
+        
+        // Update UI
+        updateNotificationBadge();
+        renderNotifications();
+        
+        // Try to sync with API
+        saveNotifications();
+      }
+    } catch (error) {
+      console.error('Error loading notifications from localStorage fallback:', error);
+      notificationState.notifications = [];
+    }
   }
 }
 
@@ -251,7 +280,7 @@ function updateNotificationBadge() {
 }
 
 // Add a new notification
-function addNotification(message, type = 'info', autoDismiss = false, dismissTime = 5000) {
+async function addNotification(message, type = 'info', autoDismiss = false, dismissTime = 5000) {
   // Create notification object
   const notification = {
     id: Date.now(),
@@ -259,7 +288,7 @@ function addNotification(message, type = 'info', autoDismiss = false, dismissTim
     type: type,
     timestamp: new Date().toISOString(),
     read: false,
-    persistent: true // Make all notifications persistent by default
+    link: null
   };
   
   // Add to notifications array
@@ -272,8 +301,8 @@ function addNotification(message, type = 'info', autoDismiss = false, dismissTim
   updateNotificationBadge();
   renderNotifications();
   
-  // Save to localStorage
-  saveNotifications();
+  // Save to API
+  await saveNotifications();
   
   // Show toast notification
   showToast(message, type, autoDismiss, dismissTime);
@@ -301,41 +330,37 @@ function showToast(message, type = 'info', autoDismiss = true, dismissTime = 500
   toast.innerHTML = `
     <div class="toast-content">
       <i class="fas ${icon}"></i>
-      <span>${message}</span>
+      <div class="toast-message">${message}</div>
     </div>
     <button class="toast-close">
       <i class="fas fa-times"></i>
     </button>
   `;
   
-  // Add to container
+  // Add to toast container
   toastContainer.appendChild(toast);
   
-  // Show animation
-  setTimeout(() => toast.classList.add('show'), 10);
-  
-  // Set auto-dismiss
-  let dismissTimeout;
+  // Auto dismiss
   if (autoDismiss) {
-    dismissTimeout = setTimeout(() => {
+    setTimeout(() => {
       dismissToast(toast);
     }, dismissTime);
   }
   
-  // Close button functionality
-  const closeButton = toast.querySelector('.toast-close');
-  closeButton.addEventListener('click', () => {
-    if (dismissTimeout) clearTimeout(dismissTimeout);
-    dismissToast(toast);
-  });
+  // Add close button functionality
+  const closeBtn = toast.querySelector('.toast-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function() {
+      dismissToast(toast);
+    });
+  }
+  
+  return toast;
 }
 
 // Dismiss toast notification
 function dismissToast(toast) {
-  toast.classList.remove('show');
-  toast.classList.add('hide');
-  
-  // Remove from DOM after animation
+  toast.classList.add('dismissing');
   setTimeout(() => {
     if (toast.parentNode) {
       toast.parentNode.removeChild(toast);
@@ -343,14 +368,13 @@ function dismissToast(toast) {
   }, 300);
 }
 
-// Get icon based on notification type
+// Get icon class based on notification type
 function getIconForType(type) {
   switch (type) {
     case 'success': return 'fa-check-circle';
     case 'error': return 'fa-exclamation-circle';
     case 'warning': return 'fa-exclamation-triangle';
-    case 'info': 
-    default: return 'fa-info-circle';
+    default: return 'fa-info-circle'; // info
   }
 }
 
@@ -411,31 +435,28 @@ function renderNotifications() {
   });
 }
 
-// Format timestamp for display
+// Format timestamp to relative time (e.g. "5 minutes ago")
 function formatTimestamp(timestamp) {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHours = Math.floor(diffMin / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  
-  if (diffSec < 60) {
-    return 'Just now';
-  } else if (diffMin < 60) {
-    return `${diffMin} minute${diffMin !== 1 ? 's' : ''} ago`;
-  } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-  } else if (diffDays < 7) {
-    return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-  } else {
+  try {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000); // difference in seconds
+    
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
+    
+    // For older dates, show the actual date
     return date.toLocaleDateString();
+  } catch (e) {
+    console.error('Error formatting timestamp:', e);
+    return 'Unknown time';
   }
 }
 
 // Mark notification as read
-function markNotificationAsRead(id) {
+async function markNotificationAsRead(id) {
   const notification = notificationState.notifications.find(n => n.id === id);
   if (notification && !notification.read) {
     notification.read = true;
@@ -445,13 +466,47 @@ function markNotificationAsRead(id) {
     updateNotificationBadge();
     renderNotifications();
     
-    // Save to localStorage
-    saveNotifications();
+    // Update on API
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('User not logged in, storing change in localStorage only');
+        
+        // Fallback to localStorage
+        saveNotificationsToLocalStorage();
+        return;
+      }
+      
+      const API_URL = getApiUrl();
+      
+      const response = await fetch(`${API_URL}/notifications/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      // Also update localStorage as fallback
+      saveNotificationsToLocalStorage();
+    } catch (error) {
+      console.error('Error marking notification as read on API:', error);
+      
+      // Fallback to localStorage
+      saveNotificationsToLocalStorage();
+    }
   }
 }
 
 // Mark all notifications as read
-function markAllNotificationsAsRead() {
+async function markAllNotificationsAsRead() {
+  // Only proceed if there are unread notifications
+  if (notificationState.unreadCount === 0) return;
+  
   notificationState.notifications.forEach(notification => {
     notification.read = true;
   });
@@ -462,12 +517,43 @@ function markAllNotificationsAsRead() {
   updateNotificationBadge();
   renderNotifications();
   
-  // Save to localStorage
-  saveNotifications();
+  // Update on API
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.warn('User not logged in, storing change in localStorage only');
+      
+      // Fallback to localStorage
+      saveNotificationsToLocalStorage();
+      return;
+    }
+    
+    const API_URL = getApiUrl();
+    
+    const response = await fetch(`${API_URL}/notifications/read-all`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    // Also update localStorage as fallback
+    saveNotificationsToLocalStorage();
+  } catch (error) {
+    console.error('Error marking all notifications as read on API:', error);
+    
+    // Fallback to localStorage
+    saveNotificationsToLocalStorage();
+  }
 }
 
 // Remove a notification
-function removeNotification(id) {
+async function removeNotification(id) {
   const index = notificationState.notifications.findIndex(n => n.id === id);
   if (index !== -1) {
     // Check if unread before removing
@@ -482,13 +568,101 @@ function removeNotification(id) {
     updateNotificationBadge();
     renderNotifications();
     
-    // Save to localStorage
-    saveNotifications();
+    // Remove from API
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('User not logged in, storing change in localStorage only');
+        
+        // Fallback to localStorage
+        saveNotificationsToLocalStorage();
+        return;
+      }
+      
+      const API_URL = getApiUrl();
+      
+      const response = await fetch(`${API_URL}/notifications/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      // Also update localStorage as fallback
+      saveNotificationsToLocalStorage();
+    } catch (error) {
+      console.error('Error removing notification from API:', error);
+      
+      // Fallback to localStorage
+      saveNotificationsToLocalStorage();
+    }
   }
 }
 
-// Save notifications to localStorage
-function saveNotifications() {
+// Save notifications to API and localStorage
+async function saveNotifications() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.warn('User not logged in, storing notifications in localStorage only');
+      
+      // Fallback to localStorage
+      saveNotificationsToLocalStorage();
+      return;
+    }
+    
+    // Add each unsynced notification to the API
+    for (const notification of notificationState.notifications) {
+      // Skip if the notification has a numeric ID (already in the database)
+      if (typeof notification.id === 'number' && notification.id < 9999999999) {
+        continue;
+      }
+      
+      const API_URL = getApiUrl();
+      
+      const response = await fetch(`${API_URL}/notifications`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: notification.message,
+          type: notification.type,
+          link: notification.link
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update the local notification with the database ID
+        notification.id = data.data.id;
+      }
+    }
+    
+    // Also save to localStorage as fallback
+    saveNotificationsToLocalStorage();
+    
+    console.log(`Saved ${notificationState.notifications.length} notifications to API and localStorage`);
+  } catch (e) {
+    console.error('Error saving notifications to API:', e);
+    
+    // Fallback to localStorage
+    saveNotificationsToLocalStorage();
+  }
+}
+
+// Save notifications to localStorage as fallback
+function saveNotificationsToLocalStorage() {
   try {
     const notificationsToSave = notificationState.notifications.map(notification => {
       // Create a simplified version for storage
@@ -498,8 +672,7 @@ function saveNotifications() {
         type: notification.type,
         timestamp: notification.timestamp,
         read: notification.read,
-        link: notification.link || null,
-        persistent: notification.persistent || true // Default to persistent
+        link: notification.link || null
       };
     });
     
@@ -509,14 +682,17 @@ function saveNotifications() {
     // Also continue saving to regular key for backward compatibility
     localStorage.setItem('notifications', JSON.stringify(notificationsToSave));
     
-    console.log(`Saved ${notificationsToSave.length} notifications to persistent storage`);
+    console.log(`Saved ${notificationsToSave.length} notifications to localStorage (fallback)`);
   } catch (e) {
     console.error('Error saving notifications to localStorage:', e);
   }
 }
 
 // Clear all notifications
-function clearAllNotifications() {
+async function clearAllNotifications() {
+  // Only proceed if there are notifications to clear
+  if (notificationState.notifications.length === 0) return;
+  
   notificationState.notifications = [];
   notificationState.unreadCount = 0;
   
@@ -524,8 +700,38 @@ function clearAllNotifications() {
   updateNotificationBadge();
   renderNotifications();
   
-  // Save to localStorage
-  saveNotifications();
+  // Clear from API
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.warn('User not logged in, clearing from localStorage only');
+      
+      // Fallback to localStorage
+      saveNotificationsToLocalStorage();
+      return;
+    }
+    
+    const API_URL = getApiUrl();
+    
+    const response = await fetch(`${API_URL}/notifications`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    // Also clear localStorage
+    saveNotificationsToLocalStorage();
+  } catch (error) {
+    console.error('Error clearing notifications from API:', error);
+    
+    // Fallback to localStorage
+    saveNotificationsToLocalStorage();
+  }
 }
 
 // Helper functions for common notification types

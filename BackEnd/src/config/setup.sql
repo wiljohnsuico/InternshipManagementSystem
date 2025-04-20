@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS resumes;
 DROP TABLE IF EXISTS job_listings;
 DROP TABLE IF EXISTS applications;
 DROP TABLE IF EXISTS announcements;
+DROP TABLE IF EXISTS notifications;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- Create users table if it doesn't exist
@@ -198,6 +199,20 @@ CREATE TABLE IF NOT EXISTS announcements (
     FOREIGN KEY (created_by) REFERENCES users_tbl(user_id) ON DELETE SET NULL
 );
 
+-- Create notifications table if it doesn't exist
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(50) DEFAULT 'info',
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read BOOLEAN DEFAULT FALSE,
+    link VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users_tbl(user_id) ON DELETE CASCADE
+);
+
 -- Add indexes for better performance if they don't exist
 CREATE INDEX IF NOT EXISTS idx_user_role ON users_tbl(role);
 CREATE INDEX IF NOT EXISTS idx_intern_user ON interns_tbl(user_id);
@@ -212,3 +227,5 @@ CREATE INDEX IF NOT EXISTS idx_job_listing_company ON job_listings(company_id);
 CREATE INDEX IF NOT EXISTS idx_application_status ON applications(status);
 CREATE INDEX IF NOT EXISTS idx_application_intern ON applications(intern_id);
 CREATE INDEX IF NOT EXISTS idx_announcement_date ON announcements(created_at);
+CREATE INDEX IF NOT EXISTS idx_notification_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_read ON notifications(read);

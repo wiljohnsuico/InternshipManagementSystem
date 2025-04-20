@@ -312,5 +312,21 @@
     <script src="scripts/weekly-monthly-reports.js"></script>
     <!-- html2pdf library for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+        // Add explicit logout functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLink = document.querySelector('.logout-link');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('userData');
+                    window.location.href = '/student/mpl-login.html';
+                });
+            }
+        });
+    </script>
 </body>
 </html>

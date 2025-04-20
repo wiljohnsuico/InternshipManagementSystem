@@ -346,5 +346,21 @@
     <script src="scripts/auth.js"></script>
     <script src="scripts/protect-page.js"></script>
     <script src="scripts/resume.js"></script>
+    
+    <script>
+        // Add explicit logout functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLink = document.querySelector('.logout-link');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('userData');
+                    window.location.href = '/student/mpl-login.html';
+                });
+            }
+        });
+    </script>
 </body>
 </html>
