@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Test</h1>
+    <button id="testApi">Test API</button>
+    <pre id="result"></pre>
+
+    <script>
+        document.getElementById('testApi').addEventListener('click', function() {
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = 'Fetching data...';
+            
+            fetch('http://localhost:5004/api/status')
+                .then(response => {
+                    resultElement.textContent += '\nStatus: ' + response.status;
+                    return response.json();
+                })
+                .then(data => {
+                    resultElement.textContent += '\nData: ' + JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    resultElement.textContent += '\nError: ' + error.message;
+                });
+                
+            // Also test applications endpoint
+            fetch('http://localhost:5004/api/applications')
+                .then(response => {
+                    resultElement.textContent += '\n\nApplications Status: ' + response.status;
+                    return response.json();
+                })
+                .then(data => {
+                    resultElement.textContent += '\nApplications Data: ' + JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    resultElement.textContent += '\nApplications Error: ' + error.message;
+                });
+        });
+    </script>
+</body>
+</html> 

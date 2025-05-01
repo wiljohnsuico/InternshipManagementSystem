@@ -4,8 +4,8 @@
   "description": "Frontend for Internship Management System",
   "main": "frontend-server.js",
   "scripts": {
-    "start": "node frontend-server.js",
-    "dev": "nodemon frontend-server.js"
+    "start": "set PORT=3000 && node frontend-server.js",
+    "dev": "set PORT=3000 && nodemon frontend-server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

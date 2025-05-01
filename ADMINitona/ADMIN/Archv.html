@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Company Information</title>
+    <title>Archive List</title>
     <link rel="stylesheet" href="Archv.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-   
     <div class="nav-bar">
         <img src="img/QCU IMS (2 x 1.9 in).svg" alt="Logo" class="logo">
         <div class="nav-links">
@@ -18,27 +16,25 @@
             <a href="Cmpny.html">Company</a>
             <a href="Emplyr.html">Employer</a>
             <a href="fclty.html">Faculty</a>
-            <a href="">Archive</a>
-                <div class="user-icon">
-                    <img src="img/cat-svgrepo-com.svg" alt="User Icon">
+            <a href="Archv.html">Archive</a>
+            <div class="user-icon">
+                <img src="img/cat-svgrepo-com.svg" alt="User Icon">
+            </div>
+            <div class="admin-text">
+                <span>Admin <i class="fa-solid fa-angle-down"></i></span>
+                <div class="dropdown-menu">
+                    <a href="#">Logout</a>
                 </div>
-                <div class="admin-text">
-                    <span>Admin <i class="fa-solid fa-angle-down"></i></span>
-                    <div class="dropdown-menu">
-                        <a href="#">Logout</a>
-                    </div>
-                </div>
+            </div>
         </div>
     </div>
-</body>
-</html>
 
-        <div class="header">
+    <div class="header">
         <h2>Archive List</h2>
-        </div>
+    </div>
 
-        <div class="mid-top">
-            <div class="search-filter-wrapper">
+    <div class="mid-top">
+        <div class="search-filter-wrapper">
             <div class="search">
                 <input type="text" id="searchInput" placeholder="Search...">
                 <button onclick="searchTable()">Search</button>
@@ -52,87 +48,87 @@
               <option value="employer">Employer</option>
               <option value="faculty">Faculty</option>
             </select>
-          </div>
         </div>
-      </div>
+    </div>
 
-        <!-- Moved this block BELOW the search -->
-        <div class="intern-container" id="interncont">
-            <table>
-                <thead>
-                    <tr>
-                      <th>No</th>
-                      <th>Student No.</th>
-                      <th>First Name</th>
-                      <th>Last Name</th>
-                      <th>College Department</th>
-                      <th>Course</th>
-                      <th>Username</th> <!-- Added Username Column -->
-                      <th>Password</th> <!-- Added Password Column -->
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                <tbody id="archiveTableBody">
-                    <!-- Rows will be inserted by JS -->
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="company-container" id="compcont">
-            <table>
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Company Name</th>
-                        <th>Company Address</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="companyTableBody">
-                    <!-- Rows will be inserted by JS -->
-                </tbody>
-            </table>
-        </div>
+    <!-- Intern Archive Table -->
+    <div class="intern-container" id="interncont">
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Student No.</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>College Department</th>
+                    <th>Course</th>
+                    <th>Email</th>
+                    <th>Verification Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="archiveTableBody">
+                <!-- Rows will be inserted by JS -->
+            </tbody>
+        </table>
+    </div>
 
+    <!-- Company Archive Table -->
+    <div class="company-container" id="compcont">
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Company Name</th>
+                    <th>Company Address</th>
+                    <th>Industry</th>
+                    <th>Website</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="companyTableBody">
+                <!-- Rows will be inserted by JS -->
+            </tbody>
+        </table>
+    </div>
 
-        <!-- Archived Employers Table -->
-<div id="empcont" class="table-container" style="display: none;">
-    <table class="table-">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>Company Affiliated</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="employerTableBody">
-        </tbody>
-    </table>
-</div>
+    <!-- Archived Employers Table -->
+    <div id="empcont" class="table-container" style="display: none;">
+        <table class="table-">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Company Affiliated</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="employerTableBody">
+                <!-- Rows will be inserted by JS -->
+            </tbody>
+        </table>
+    </div>
 
-<div id="facultcont" class="table-container" style="display: none;">
-    <table>
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>Department</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="facultyTableBody"></tbody>
-    </table>
-</div>
-        
-<script src="/admin/admin-auth.js"></script>
-<script src="Archv.js"></script>
+    <!-- Archived Faculty Table -->
+    <div id="facultcont" class="table-container" style="display: none;">
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="facultyTableBody"></tbody>
+        </table>
+    </div>
 
+    <script src="/admin/admin-auth.js"></script>
+    <script src="Archv.js"></script>
 </body>
 </html>

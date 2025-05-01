@@ -166,6 +166,8 @@ CREATE TABLE IF NOT EXISTS job_listings (
     description TEXT,
     requirements TEXT,
     is_paid BOOLEAN DEFAULT FALSE,
+    positions INT DEFAULT 1,
+    deadline DATE,
     status ENUM('Active', 'Filled', 'Closed') DEFAULT 'Active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

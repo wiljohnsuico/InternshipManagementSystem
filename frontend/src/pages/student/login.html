@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/nav-bar.css">
+    <link rel="stylesheet" href="styles/landing.css">
+    <title>LANDING PAGE</title>
+</head>
+<body>
+    <header>
+        <!---NAV BAR-->
+        <div class="nav-bar">
+            <div class="logo">
+                <img src="imgs/qcuims-logo.png" alt="logo">
+            </div>
+
+            <div class="nav-links">
+                <a href="mplhome.html">Home</a>
+                <button type="" id="openLogin" class="openLogin">Login</button>
+                
+            </div>
+        </div>
+
+
+        <!-- Login Modal -->
+        <div id="loginModal" class="modal-overlay">
+            <div class="modal-content">
+                <span class="modal-close" id="closeLogin">&times;</span>
+                <h2>Login</h2>
+                <form>
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter Email Address" required>
+
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter Password" required>
+
+                    <button type="submit" class="modal-button">Login</button>
+                    <p>Don't have an account? <a href="#" id="signup-now">Sign up now</a></p>
+                    <p>Administrator? <a href="/admin/admin-login.html" class="admin-link">Go to Admin Login</a></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Signup Modal -->
+        <div id="signupModal" class="modal-overlay">
+            <div class="modal-content">
+                <span class="modal-close" id="closeSignup">&times;</span>
+                <h2>Sign up</h2>
+                <form>
+                    <label for="firstName">Firstname</label>
+                    <input type="text" id="firstName" placeholder="Enter Firstname" required>
+
+                    <label for="lastName">Lastname</label>
+                    <input type="text" id="lastName" placeholder="Enter Lastname" required>
+
+                    <label for="studentId">Student ID</label>
+                    <input type="text" id="studentId" placeholder="E.g. 25-1900" required>
+
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" placeholder="Enter Active Email Address" required>
+
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Enter Password" required>
+                    
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Re-enter Password" required>
+
+                    <button type="submit" class="modal-button">Sign up</button>
+                </form>
+            </div>
+        </div>
+
+        <script src="scripts/login-signup.js"></script>
+    </header>
+
+    <main>
+
+        <div class="div1">
+            <h1>Web Based Internship Management System</h1>
+            <p>Streamline Your Intership Search &#8212; A Smarter, Hassle&#8211;Free Way to Connect with Opportunities</p>
+        </div>
+
+        <div class="search-container">
+            <div class="search-bar">
+                <input type="text" placeholder="Search for company or role..">
+                <select name="locations" id="locations">
+                    <option value="">Location</option>
+                    <option value="#">#</option>
+                    <option value="#">#</option>
+                    <option value="#">#</option>
+                    <option value="#">#</option>
+                </select>
+                <button type="submit">Search</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-content">
+                <h3>About the QCUIMS</h3>
+                <p>Lorem ipsum odor amet, consectetuer adipiscing elit. Imperdiet ullamcorper vestibulum penatibus nullam lectus posuere. 
+                Sapien aliquet sociosqu purus diam porttitor torquent. Lorem ipsum odor amet, consectetuer adipiscing elit. Imperdiet ullamcorper vestibulum penatibus nullam lectus posuere. 
+                Sapien aliquet sociosqu purus diam porttitor torquent.</p>
+
+
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -28,7 +28,7 @@ app.get('*', (req, res) => {
     }
 });
 
-const PORT = 3500;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Frontend server running at http://localhost:${PORT}`);
     console.log(`Access the student login at http://localhost:${PORT}/student/mpl-login.html`);

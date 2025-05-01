@@ -146,6 +146,237 @@ const beginTransaction = async () => await db.beginTransaction();
 const commit = async () => await db.commit();
 const rollback = async () => await db.rollback();
 
+// NEW ENDPOINT: Get application details by ID
+router.get('/:applicationId', async (req, res) => {
+    try {
+        const { applicationId } = req.params;
+        // In development mode, we'll skip authentication for testing
+        const userId = req.user?.user_id || 1;
+
+        console.log(`Getting application details for application ID ${applicationId}`);
+
+        // First make sure the application exists
+        const [appCheck] = await db.query(
+            'SELECT application_id FROM applications WHERE application_id = ?',
+            [applicationId]
+        );
+
+        if (appCheck.length === 0) {
+            console.log(`Application ID ${applicationId} not found in database`);
+            return res.status(404).json({
+                success: false,
+                message: 'Application not found'
+            });
+        }
+
+        // Get user role information if user is authenticated
+        let isAdmin = false;
+        let isIntern = false;
+        let isEmployer = false;
+        let internId = null;
+        let companyId = null;
+        
+        if (req.user) {
+            isAdmin = req.user.role === 'Admin';
+            
+            // Check if user is an intern
+            try {
+                const [interns] = await db.query(
+                    'SELECT id as intern_id FROM interns_tbl WHERE user_id = ?',
+                    [userId]
+                );
+                isIntern = interns.length > 0;
+                if (isIntern) {
+                    internId = interns[0].intern_id;
+                }
+            } catch (err) {
+                console.error('Error checking intern status:', err);
+            }
+
+            // Check if user is an employer
+            try {
+                const [employers] = await db.query(
+                    'SELECT id as employer_id, company_id FROM employers_tbl WHERE user_id = ?',
+                    [userId]
+                );
+                isEmployer = employers.length > 0;
+                if (isEmployer) {
+                    companyId = employers[0].company_id;
+                }
+            } catch (err) {
+                console.error('Error checking employer status:', err);
+            }
+        } else {
+            console.log('Development mode: No user authentication required for application details');
+        }
+
+        // Get the application details with a more explicit query that includes all necessary job details
+        try {
+            const [applications] = await db.query(`
+                SELECT 
+                    a.application_id, a.listing_id, a.intern_id, a.status, 
+                    a.cover_letter, a.file_info, a.additional_info, a.applied_at, a.updated_at,
+                    j.job_title, j.description, j.requirements, j.location, j.is_paid, j.skills as job_skills,
+                    j.status as job_status,
+                    c.company_name, c.industry_sector, c.company_id, c.company_description,
+                    i.first_name, i.last_name, i.skills, i.school, i.course,
+                    u.email, u.mobile_number
+                FROM 
+                    applications a
+                JOIN 
+                    job_listings j ON a.listing_id = j.listing_id
+                JOIN 
+                    companies_tbl c ON j.company_id = c.company_id
+                JOIN 
+                    interns_tbl i ON a.intern_id = i.id
+                JOIN 
+                    users_tbl u ON i.user_id = u.user_id
+                WHERE 
+                    a.application_id = ?
+            `, [applicationId]);
+
+            if (applications.length === 0) {
+                console.log(`Application ID ${applicationId} join query returned no results`);
+                return res.status(404).json({
+                    success: false,
+                    message: 'Application details not found'
+                });
+            }
+
+            const application = applications[0];
+
+            // In development mode, skip authorization checks
+            if (req.user) {
+                // Check authorization - interns can only see their own applications
+                if (isIntern && internId !== application.intern_id) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'You are not authorized to view this application'
+                    });
+                }
+                // Employers can only see applications for their companies
+                if (isEmployer && companyId !== application.company_id) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'You are not authorized to view this application'
+                    });
+                }
+                // If not admin, intern or employer, deny access
+                if (!isAdmin && !isIntern && !isEmployer) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Unauthorized access'
+                    });
+                }
+            } else {
+                console.log('Development mode: Skipping application authorization checks');
+            }
+
+            // Parse JSON fields with better error handling
+            try {
+                if (application.skills) {
+                    try {
+                        application.skills = JSON.parse(application.skills);
+                    } catch (e) {
+                        console.error('Error parsing skills JSON:', e);
+                        application.skills = [];
+                    }
+                } else {
+                    application.skills = [];
+                }
+                
+                if (application.job_skills) {
+                    try {
+                        application.job_skills = JSON.parse(application.job_skills);
+                    } catch (e) {
+                        console.error('Error parsing job_skills JSON:', e);
+                        application.job_skills = [];
+                    }
+                } else {
+                    application.job_skills = [];
+                }
+                
+                if (application.file_info) {
+                    try {
+                        application.file_info = JSON.parse(application.file_info);
+                    } catch (e) {
+                        console.error('Error parsing file_info JSON:', e);
+                        application.file_info = {};
+                    }
+                } else {
+                    application.file_info = {};
+                }
+                
+                if (application.additional_info) {
+                    try {
+                        application.additional_info = JSON.parse(application.additional_info);
+                    } catch (e) {
+                        console.error('Error parsing additional_info JSON:', e);
+                        application.additional_info = {};
+                    }
+                } else {
+                    application.additional_info = {};
+                }
+            } catch (e) {
+                console.error('Error handling JSON fields:', e);
+                // Continue with default values if parsing fails
+            }
+
+            // Add some helpful metadata for the frontend
+            application.status_info = {
+                is_pending: application.status === 'Pending',
+                is_reviewing: application.status === 'Reviewing',
+                is_accepted: application.status === 'Accepted',
+                is_rejected: application.status === 'Rejected',
+                is_withdrawn: application.status === 'Withdrawn',
+                last_updated: application.updated_at,
+                status_display: application.status,
+                action_required: isIntern && application.status === 'Accepted' ? 'Please contact the employer to confirm your start date.' : null,
+                message: getStatusMessage(application.status)
+            };
+
+            // Return the application details
+            console.log(`Successfully retrieved application details for ID ${applicationId}`);
+            return res.json({
+                success: true,
+                application
+            });
+        } catch (queryError) {
+            console.error('Error in application details query:', queryError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching application details from database',
+                error: queryError.message
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching application details:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching application details',
+            error: error.message
+        });
+    }
+});
+
+// Helper function to get status messages
+function getStatusMessage(status) {
+    switch (status) {
+        case 'Pending':
+            return 'Your application is currently pending review by the employer.';
+        case 'Reviewing':
+            return 'Your application is currently being reviewed by the employer.';
+        case 'Accepted':
+            return 'Congratulations! Your application has been accepted. Please check your email for further instructions.';
+        case 'Rejected':
+            return 'We regret to inform you that your application was not selected for this position.';
+        case 'Withdrawn':
+            return 'You have withdrawn this application.';
+        default:
+            return 'Application status unknown.';
+    }
+}
+
 // Get all applications for a specific intern (student view)
 router.get('/my-applications', authenticateToken, async (req, res) => {
     try {
@@ -305,9 +536,9 @@ router.post('/:listingId', authenticateToken, upload.fields([
             });
         }
         
-        // Get intern_id from interns_tbl using user_id
+        // Get intern_id from interns_tbl using user_id and also check verification status
         const [interns] = await db.query(
-            'SELECT id as intern_id FROM interns_tbl WHERE user_id = ?',
+            'SELECT id as intern_id, verification_status FROM interns_tbl WHERE user_id = ?',
             [userId],
             connection
         );
@@ -322,6 +553,26 @@ router.post('/:listingId', authenticateToken, upload.fields([
         }
         
         const internId = interns[0].intern_id;
+        const verificationStatus = interns[0].verification_status;
+        
+        // Check if the intern is verified/accepted by admin
+        if (verificationStatus === 'Rejected') {
+            await db.rollback(connection);
+            cleanupTempFiles(req.files);
+            return res.status(403).json({
+                success: false,
+                message: 'Your account verification has been rejected. You cannot apply for internships. Please contact an administrator for assistance.',
+                status: 'Rejected'
+            });
+        } else if (verificationStatus !== 'Accepted') {
+            await db.rollback(connection);
+            cleanupTempFiles(req.files);
+            return res.status(403).json({
+                success: false,
+                message: 'Your account has not been approved by an administrator yet. Please wait for approval before applying for jobs.',
+                status: verificationStatus
+            });
+        }
         
         // Check if the job listing is active
         const [listings] = await db.query(
@@ -799,15 +1050,16 @@ router.post('/cleanup/:listingId', authenticateToken, async (req, res) => {
     }
 });
 
-// Check if user can apply for a job
-router.get('/can-apply/:listingId', authenticateToken, async (req, res) => {
+// Get whether the user can apply for a job (intern only)
+router.get('/:listingId/can-apply', authenticateToken, async (req, res) => {
     try {
-        const { listingId } = req.params;
+        const listingId = req.params.listingId;
+        const userId = req.user.user_id;
         
-        // Get intern_id from interns_tbl using user_id
+        // Check if the user is an intern with a complete profile
         const [interns] = await db.query(
-            'SELECT id as intern_id FROM interns_tbl WHERE user_id = ?',
-            [req.user.user_id]
+            'SELECT id as intern_id, verification_status FROM interns_tbl WHERE user_id = ?',
+            [userId]
         );
         
         if (interns.length === 0) {
@@ -819,6 +1071,24 @@ router.get('/can-apply/:listingId', authenticateToken, async (req, res) => {
         }
         
         const internId = interns[0].intern_id;
+        const verificationStatus = interns[0].verification_status;
+        
+        // Check if the intern is verified/approved
+        if (verificationStatus === 'Rejected') {
+            return res.status(200).json({
+                canApply: false,
+                reason: 'rejected',
+                message: 'Your account verification has been rejected. You cannot apply for internships. Please contact an administrator for assistance.',
+                status: 'Rejected'
+            });
+        } else if (verificationStatus !== 'Accepted') {
+            return res.status(200).json({
+                canApply: false,
+                reason: 'not_approved',
+                message: 'Your account has not been approved by an administrator yet. Please wait for approval before applying for jobs.',
+                status: verificationStatus
+            });
+        }
         
         // Check if the job listing exists and is active
         const [listings] = await db.query(
@@ -951,6 +1221,82 @@ router.post('/:applicationId/cancel', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error canceling application',
+            error: error.message
+        });
+    }
+});
+
+// Get all applications for the employer's company
+router.get('/employer', authenticateToken, authorizeRoles(['Employer']), async (req, res) => {
+    try {
+        console.log('Fetching employer applications for user:', req.user.user_id);
+        
+        // Get company_id from employer information
+        const [employer] = await db.query(
+            'SELECT company_id FROM employers_tbl WHERE user_id = ?',
+            [req.user.user_id]
+        );
+        
+        if (employer.length === 0 || !employer[0].company_id) {
+            console.log('No company associated with this employer:', req.user.user_id);
+            return res.status(400).json({
+                success: false,
+                message: 'No company associated with this employer'
+            });
+        }
+        
+        const company_id = employer[0].company_id;
+        console.log('Found company_id:', company_id);
+        
+        // Get all applications for job listings of this company
+        const [applications] = await db.query(`
+            SELECT a.*, j.job_title, j.location, j.is_paid,
+                   c.company_name, c.industry_sector,
+                   u.first_name, u.last_name, u.email
+            FROM applications a
+            JOIN job_listings j ON a.listing_id = j.listing_id
+            JOIN companies_tbl c ON j.company_id = c.company_id
+            JOIN interns_tbl i ON a.intern_id = i.id
+            JOIN users_tbl u ON i.user_id = u.user_id
+            WHERE j.company_id = ?
+            ORDER BY a.applied_at DESC
+        `, [company_id]);
+        
+        console.log(`Found ${applications.length} applications for company ${company_id}`);
+        
+        // Process applications to include student information
+        const processedApplications = applications.map(app => ({
+            application_id: app.application_id,
+            listing_id: app.listing_id,
+            intern_id: app.intern_id,
+            status: app.status,
+            applied_at: app.applied_at,
+            updated_at: app.updated_at,
+            cover_letter: app.cover_letter,
+            file_info: typeof app.file_info === 'string' ? JSON.parse(app.file_info) : app.file_info,
+            additional_info: typeof app.additional_info === 'string' ? JSON.parse(app.additional_info) : app.additional_info,
+            job_title: app.job_title,
+            location: app.location,
+            is_paid: app.is_paid,
+            company_name: app.company_name,
+            industry_sector: app.industry_sector,
+            student: {
+                first_name: app.first_name,
+                last_name: app.last_name,
+                email: app.email
+            }
+        }));
+        
+        res.json({
+            success: true,
+            count: processedApplications.length,
+            applications: processedApplications
+        });
+    } catch (error) {
+        console.error('Error fetching employer applications:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching employer applications',
             error: error.message
         });
     }

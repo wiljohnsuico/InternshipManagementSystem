@@ -45,7 +45,7 @@ rl.question('Enter admin email (or press Enter for default admin@qcuims.com): ',
           if (code === 0) {
             console.log("\n=== Admin Account Created Successfully ===");
             console.log("You can now log in using the provided credentials at");
-            console.log("http://localhost:3500/admin/admin-login.html");
+            console.log("http://localhost:5004/admin/admin-login.html");
           } else {
             console.log("\n=== Failed to Create Admin Account ===");
             console.log("Please check the error messages above and try again.");

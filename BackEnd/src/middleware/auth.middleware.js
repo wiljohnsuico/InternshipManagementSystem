@@ -5,6 +5,16 @@ require('dotenv').config();
 // Authentication middleware
 const authMiddleware = async (req, res, next) => {
     try {
+        // TEMPORARY: FOR DEVELOPMENT ONLY - REMOVE IN PRODUCTION
+        // Bypass authentication for testing
+        console.log('DEVELOPMENT MODE: Bypassing authentication');
+        req.user = {
+            user_id: 1,
+            role: 'Admin',
+            email: 'admin@test.com'
+        };
+        return next();
+
         // Get token from header
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {

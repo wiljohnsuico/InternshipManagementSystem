@@ -5,6 +5,7 @@ const path = require('path');
 const db = require('./config/database');
 const fs = require('fs');
 const util = require('util');
+const fileUpload = require('express-fileupload');
 require('dotenv').config();
 
 // Import routes
@@ -18,12 +19,19 @@ const internshipRoutes = require('./routes/internship.routes');
 const jobRoutes = require('./routes/job.routes');
 const reportRoutes = require('./routes/report.routes');
 const announcementRoutes = require('./routes/announcements.routes');
+const adminRoutes = require('./routes/admin.routes');
+const notificationRoutes = require('./routes/notification.routes');
+const statusRoutes = require('./routes/status');
+const employerRoutes = require('./routes/employer.routes');
+
+// Import migration scripts
+const runAdminMigration = require('./config/run-admin-migration');
 
 const app = express();
 
 // CORS configuration - Allow development requests from anywhere
 app.use(cors({
-    origin: true,  // Allow requests from any origin
+    origin: ['http://localhost:3000', 'http://localhost:5000', 'http://localhost:5004', 'http://127.0.0.1:5500'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     exposedHeaders: ['Content-Length', 'X-Total-Count'],
@@ -32,12 +40,40 @@ app.use(cors({
     optionsSuccessStatus: 204
 }));
 
+// Log CORS issues
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    console.log(`Request from origin: ${origin || 'unknown'}`);
+    
+    // Add CORS headers manually to ensure they're present
+    if (origin) {
+        res.header('Access-Control-Allow-Origin', origin);
+    } else {
+        res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    next();
+});
+
 // Add OPTIONS handler for preflight requests
 app.options('*', cors());
 
 // Parse JSON request bodies with increased limit for file uploads
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// File upload middleware
+app.use(fileUpload({
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max file size
+  abortOnLimit: true,
+  createParentPath: true,
+  useTempFiles: true,
+  tempFileDir: '/tmp/',
+  debug: true // Set to true for debugging
+}));
 
 // Serve static files from the student directory
 // This assumes your student folder is at the project root level
@@ -80,10 +116,32 @@ app.use('/api/resumes', resumeRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/status', statusRoutes);
+app.use('/api/employers', employerRoutes);
 
 // Test route
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to Internship Management System API' });
+});
+
+// Add health check endpoint
+app.get('/api/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        message: 'Server is running',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// API Status route for server discovery (no auth required)
+app.get('/api/status', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'API server is running',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Run table setup scripts
@@ -99,6 +157,18 @@ async function setupDatabaseTables() {
       await db.query(reportTablesSQL);
       console.log('Successfully executed report_tables.sql script');
     }
+    
+    // Read and execute notification tables script
+    const notificationTablesPath = path.join(__dirname, 'config', 'notification_tables.sql');
+    if (fs.existsSync(notificationTablesPath)) {
+      console.log('Executing notification_tables.sql script...');
+      const notificationTablesSQL = fs.readFileSync(notificationTablesPath, 'utf8');
+      await db.query(notificationTablesSQL);
+      console.log('Successfully executed notification_tables.sql script');
+    }
+    
+    // Run admin migration script
+    await runAdminMigration();
   } catch (error) {
     console.error('Error setting up database tables:', error);
   }
@@ -132,38 +202,65 @@ app.use((req, res) => {
 });
 
 // Port configuration
-const PORT = process.env.PORT || 5004;
-console.log('Using PORT:', PORT);
+const DEFAULT_PORT = 5004;
 
-// Start server after short delay to allow DB init
-let server;
-setTimeout(async () => {
+// Function to start the server on a given port
+async function startServer(port) {
     try {
         // Set up database tables first
         await setupDatabaseTables();
         
-        server = app.listen(PORT, () => {
-            console.log(`✅ Backend server is running on port ${PORT}`);
-        }).on('error', (err) => {
-            console.error('❌ Server failed to start:', err);
-            if (err.code === 'EADDRINUSE') {
-                console.error(`Port ${PORT} is already in use.`);
-            }
-            process.exit(1);
+        console.log(`Attempting to start server on port ${port}...`);
+        return new Promise((resolve, reject) => {
+            const serverInstance = app.listen(port, () => {
+                console.log(`✅ Backend server is running on port ${port}`);
+                resolve(serverInstance);
+            }).on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    console.error(`Port ${port} is already in use.`);
+                    reject(new Error(`Port ${port} already in use`));
+                } else {
+                    console.error('❌ Server failed to start:', err);
+                    reject(err);
+                }
+            });
         });
     } catch (error) {
         console.error('Error during server startup:', error);
-        process.exit(1);
+        throw error;
     }
-}, 2000);
+}
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Closing server...');
-    if (server) {
-        server.close(() => {
-            console.log('Server closed.');
-            process.exit(0);
+// Export the setup function and server initialization
+// This allows the user to manually start the server
+module.exports = {
+    app,
+    setupDatabaseTables,
+    startServer,
+    DEFAULT_PORT
+};
+
+// Only start the server if this file is run directly (not required/imported)
+if (require.main === module) {
+    // Start server after short delay to allow DB init
+    setTimeout(async () => {
+            try {
+            console.log(`Starting server on port ${DEFAULT_PORT}...`);
+            const server = await startServer(DEFAULT_PORT);
+        
+        // Graceful shutdown
+        process.on('SIGTERM', () => {
+            console.log('SIGTERM received. Closing server...');
+            if (server) {
+                server.close(() => {
+                    console.log('Server closed.');
+                    process.exit(0);
+                });
+            }
         });
-    }
-});
+        } catch (error) {
+            console.error('Fatal error during server startup:', error);
+            process.exit(1);
+        }
+    }, 2000);
+}

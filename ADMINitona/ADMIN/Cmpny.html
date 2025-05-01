@@ -58,7 +58,8 @@
                             <th>No</th>
                             <th>Company Name</th>
                             <th>Company Address</th>
-                            <th>Status</th>
+                            <th>Industry</th>
+                            <th>Website</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -67,21 +68,68 @@
                 </table>
             </div>
             
-
-
-                <!-- Edit Modal -->
+            <!-- Edit Modal -->
             <div id="editModal" class="modal" style="display: none;">
                 <div class="modal-content">
-                <span class="close-btn" onclick="closeEditModal()">&times;</span>
-                <h3>Edit Company</h3>
-                <form id="editForm">
-                    <input type="hidden" id="editIndex">
-                    <label>Company Name:</label>
-                    <input type="text" id="editFirstName" required>
-                    <label>Company Address:</label>
-                    <input type="text" id="editLastName" required>
-                    <button type="submit">Save Changes</button>
-                </form>
+                    <div class="modal-header">
+                        <h3>EDIT COMPANY</h3>
+                        <span class="close-btn" onclick="closeEditModal()">&times;</span>
+                    </div>
+                    <form id="editForm">
+                        <input type="hidden" id="editIndex">
+                        <div class="form-group">
+                            <label for="editFirstName">Company Name:</label>
+                            <input type="text" id="editFirstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLastName">Company Address:</label>
+                            <input type="text" id="editLastName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editIndustry">Industry:</label>
+                            <input type="text" id="editIndustry">
+                        </div>
+                        <div class="form-group">
+                            <label for="editWebsite">Website:</label>
+                            <input type="text" id="editWebsite">
+                        </div>
+                        <div class="form-buttons">
+                            <button type="button" onclick="closeEditModal()" class="cancel-btn">Cancel</button>
+                            <button type="submit" class="save-btn">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Add Company Modal -->
+            <div id="addCompanyModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>ADD COMPANY</h3>
+                        <span class="close-btn" onclick="closeAddModal()">&times;</span>
+                    </div>
+                    <form id="addCompanyForm">
+                        <div class="form-group">
+                            <label for="companyName">Company Name:</label>
+                            <input type="text" id="companyName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyAddress">Company Address:</label>
+                            <input type="text" id="companyAddress">
+                        </div>
+                        <div class="form-group">
+                            <label for="companyIndustry">Industry:</label>
+                            <input type="text" id="companyIndustry">
+                        </div>
+                        <div class="form-group">
+                            <label for="companyWebsite">Website:</label>
+                            <input type="text" id="companyWebsite">
+                        </div>
+                        <div class="form-buttons">
+                            <button type="button" onclick="closeAddModal()" class="cancel-btn">Cancel</button>
+                            <button type="submit" class="save-btn">Add Company</button>
+                        </div>
+                    </form>
                 </div>
             </div>
             

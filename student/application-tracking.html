@@ -7,6 +7,7 @@
     <title>My Applications - QCU IMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="./styles/notification.css">
+    <link rel="stylesheet" href="./styles/application-details.css">
     <script src="./scripts/notification.js" defer></script>
     <style>
         body {
@@ -119,11 +120,39 @@
             margin-bottom: 30px;
         }
         
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
         .page-title {
             color: #2c3e50;
             margin-bottom: 10px;
             font-size: 28px;
             font-weight: 600;
+        }
+        
+        #refreshBtn {
+            background-color: transparent;
+            border: 1px solid #3498db;
+            color: #3498db;
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        #refreshBtn:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        #refreshBtn i {
+            font-size: 14px;
         }
         
         .page-description {
@@ -188,6 +217,24 @@
         .location-info i {
             margin-right: 8px;
             color: #3498db;
+        }
+        
+        /* Paid internship badge */
+        .paid-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e7f8f0;
+            color: #27ae60;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        
+        .paid-badge i {
+            margin-right: 5px;
+            font-size: 11px;
         }
         
         .card-body {
@@ -299,6 +346,115 @@
             cursor: not-allowed;
         }
         
+        /* Action buttons styles */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid #e1e5e8;
+            background-color: #f5f8fa;
+            color: #34495e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            background-color: #edf2f7;
+            transform: translateY(-2px);
+        }
+        
+        .preview-btn:hover {
+            color: #3498db;
+            border-color: #3498db;
+        }
+        
+        .edit-btn:hover {
+            color: #f39c12;
+            border-color: #f39c12;
+        }
+        
+        .delete-btn:hover {
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+        
+        .action-btn i {
+            font-size: 16px;
+        }
+        
+        /* Form styles for application editing */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            color: #2c3e50;
+            background-color: #fff;
+            transition: border-color 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .form-control:disabled, 
+        .form-control[readonly] {
+            background-color: #f5f8fa;
+            color: #7f8c8d;
+            cursor: not-allowed;
+        }
+        
+        select.form-control {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2334495e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+        
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 30px;
+        }
+        
+        .edit-application-form {
+            margin-top: 10px;
+        }
+        
         /* Loading and empty states */
         .empty-state {
             background-color: white;
@@ -306,8 +462,9 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             padding: 40px;
             text-align: center;
-            margin: 30px 0;
+            margin: 30px auto;
             border: 1px solid #ecf0f1;
+            max-width: 650px;
         }
         
         .empty-state i {
@@ -317,25 +474,57 @@
         }
         
         .empty-state h3 {
-            font-size: 20px;
+            font-size: 22px;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         
         .empty-state p {
             color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .empty-state .empty-state-image {
+            max-width: 120px;
+            height: auto;
             margin-bottom: 20px;
         }
         
-        .loading-spinner {
+        .empty-state .btn {
+            padding: 10px 24px;
+            font-size: 16px;
+        }
+        
+        /* Error states */
+        .error-state {
+            background-color: #fff8f8;
+            border: 1px solid #fadbd8;
+        }
+        
+        .error-state i {
+            color: #e74c3c;
+        }
+        
+        .loading-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
             text-align: center;
-            padding: 50px 0;
         }
         
-        .loading-spinner i {
-            font-size: 50px;
+        .loading-indicator i {
+            font-size: 40px;
             color: #3498db;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .loading-indicator p {
+            font-size: 18px;
+            color: #7f8c8d;
         }
         
         /* Modal Styles */
@@ -537,6 +726,85 @@
             font-weight: 900;
             color: #3498db;
         }
+        
+        /* Auth Error Banner */
+        .auth-error-banner {
+            background-color: #fff8f8;
+            border: 1px solid #fadbd8;
+            border-left: 4px solid #e74c3c;
+            border-radius: 6px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .auth-error-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .auth-error-content i {
+            color: #e74c3c;
+            font-size: 18px;
+            margin-right: 12px;
+        }
+        
+        .auth-error-banner .btn {
+            margin-left: 15px;
+            white-space: nowrap;
+        }
+        
+        .close-banner {
+            background: none;
+            border: none;
+            color: #95a5a6;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 0 0 15px;
+        }
+        
+        /* Server Status Banner */
+        .server-status-banner {
+            background-color: #fff8f8;
+            border: 1px solid #fadbd8;
+            border-radius: 6px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .status-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .status-content i {
+            color: #e74c3c;
+            font-size: 18px;
+            margin-right: 12px;
+        }
+        
+        .status-content .btn {
+            margin-left: 15px;
+            white-space: nowrap;
+        }
+        
+        .close-banner {
+            background: none;
+            border: none;
+            color: #95a5a6;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 0 0 15px;
+        }
     </style>
 </head>
 <body>
@@ -558,14 +826,39 @@
     </header>
 
     <div class="applications-container">
+        <!-- Auth Error Banner -->
+        <div id="authErrorBanner" class="auth-error-banner" style="display: none;">
+            <div class="auth-error-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="authErrorMessage">Authentication error</span>
+            </div>
+            <button id="loginRedirectBtn" class="btn btn-primary">Log in</button>
+            <button class="close-banner">&times;</button>
+        </div>
+        
+        <!-- Server Status Banner -->
+        <div id="serverStatusBanner" class="server-status-banner" style="display: none;">
+            <div class="status-content">
+                <i class="fas fa-server"></i>
+                <span id="serverStatusMessage">Using demo data - server not available</span>
+            </div>
+            <button id="refreshServerBtn" class="btn btn-outline">Retry</button>
+            <button class="close-banner">&times;</button>
+        </div>
+        
         <div class="page-header">
-            <h1 class="page-title">My Applications</h1>
+            <div class="header-top">
+                <h1 class="page-title">My Applications</h1>
+                <button id="refreshBtn" class="btn btn-outline" title="Refresh applications">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
             <p class="page-description">Track the status of your internship applications</p>
         </div>
         
         <div id="application-list" class="application-cards">
             <!-- Applications will be loaded dynamically here -->
-            <div class="loading-spinner">
+            <div class="loading-indicator">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Loading your applications...</p>
             </div>
@@ -584,7 +877,7 @@
     <div id="applicationModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Application Details</h2>
+                <h2 class="modal-title">Details</h2>
                 <button class="close">&times;</button>
             </div>
             <div class="modal-body">
@@ -603,10 +896,10 @@
                 <button class="close">&times;</button>
             </div>
             <div class="modal-body">
-                <p id="confirmationText">Are you sure you want to cancel this application? This action cannot be undone.</p>
+                <p id="confirmationText" class="confirm-message">Are you sure you want to cancel this application? This action cannot be undone.</p>
                 <div class="confirm-actions">
-                    <button class="btn btn-outline confirm-cancel">Cancel</button>
-                    <button class="btn btn-primary confirm-delete" id="confirmDeleteBtn">Cancel Application</button>
+                    <button class="btn btn-outline close-modal-btn">Cancel</button>
+                    <button class="btn btn-primary" id="confirmCancelBtn">Withdraw Application</button>
                 </div>
             </div>
         </div>
@@ -617,12 +910,129 @@
     <script src="scripts/applications.js"></script>
     
     <script>
-        // Remove logout functionality since the button has been removed
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize notification system
             if (typeof initNotificationSystem === 'function') {
                 initNotificationSystem();
             }
+            
+            // Check if the user is authenticated
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (!token) {
+                // Show auth error banner
+                const authErrorBanner = document.getElementById('authErrorBanner');
+                const authErrorMessage = document.getElementById('authErrorMessage');
+                if (authErrorBanner && authErrorMessage) {
+                    authErrorMessage.textContent = 'Please log in to view your applications';
+                    authErrorBanner.style.display = 'flex';
+                }
+            }
+            
+            // Add event listener to login redirect button
+            const loginRedirectBtn = document.getElementById('loginRedirectBtn');
+            if (loginRedirectBtn) {
+                loginRedirectBtn.addEventListener('click', function() {
+                    window.location.href = 'mpl-login.html';
+                });
+            }
+            
+            // Add event listener to all close banner buttons
+            const closeBannerBtns = document.querySelectorAll('.close-banner');
+            if (closeBannerBtns) {
+                closeBannerBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const banner = this.closest('.auth-error-banner, .server-status-banner');
+                        if (banner) {
+                            banner.style.display = 'none';
+                        }
+                    });
+                });
+            }
+            
+            // Add event listener to refresh server button
+            const refreshServerBtn = document.getElementById('refreshServerBtn');
+            if (refreshServerBtn) {
+                refreshServerBtn.addEventListener('click', function() {
+                    // Try to reconnect to server
+                    checkServerStatus();
+                    
+                    // Force reload applications
+                    if (typeof loadApplications === 'function') {
+                        loadApplications(true);
+                    }
+                });
+            }
+            
+            // Add a direct event listener to the confirm button as a backup
+            const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+            if (confirmCancelBtn) {
+                confirmCancelBtn.addEventListener('click', function() {
+                    console.log('Confirm button clicked directly from HTML');
+                    
+                    if (window.currentApplicationId) {
+                        console.log(`Confirming cancellation of application ${window.currentApplicationId}`);
+                        if (typeof cancelApplication === 'function') {
+                            cancelApplication(window.currentApplicationId);
+                        } else {
+                            console.error('cancelApplication function not found');
+                        }
+                    } else {
+                        console.error('No application ID available for cancellation');
+                        if (typeof showErrorNotification === 'function') {
+                            showErrorNotification('Error: Application information is missing');
+                        }
+                        if (typeof hideCancelConfirmation === 'function') {
+                            hideCancelConfirmation();
+                        }
+                    }
+                });
+            } else {
+                console.error('Confirm cancel button not found in the DOM');
+            }
+            
+            // Check server status
+            checkServerStatus();
+            
+            // Function to check server status
+            function checkServerStatus() {
+                const serverStatusBanner = document.getElementById('serverStatusBanner');
+                const serverStatusMessage = document.getElementById('serverStatusMessage');
+                
+                if (typeof getApiUrl === 'function') {
+                    fetch(getApiUrl() + '/status')
+                        .then(response => {
+                            if (response.ok) {
+                                console.log('API is available');
+                                // Hide server status banner if it's visible
+                                if (serverStatusBanner) {
+                                    serverStatusBanner.style.display = 'none';
+                                }
+                            } else {
+                                // Show server error banner
+                                console.warn('API returned an error:', response.status);
+                                if (serverStatusBanner && serverStatusMessage) {
+                                    serverStatusMessage.textContent = `Server error (${response.status}) - Using demo data`;
+                                    serverStatusBanner.style.display = 'flex';
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.warn('API is not available:', error.message);
+                            
+                            // Show server error banner
+                            if (serverStatusBanner && serverStatusMessage) {
+                                serverStatusMessage.textContent = 'Server unavailable - Using demo data';
+                                serverStatusBanner.style.display = 'flex';
+                            }
+                        });
+                }
+            }
+            
+            // Log DOM elements for debugging
+            console.log('DOM loaded, checking critical elements:');
+            console.log('confirmCancelBtn:', document.getElementById('confirmCancelBtn'));
+            console.log('confirmModal:', document.getElementById('confirmModal'));
+            console.log('applicationModal:', document.getElementById('applicationModal'));
         });
     </script>
 </body>

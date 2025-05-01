@@ -1,0 +1,58 @@
+/* Navbar override styles */
+.navbar, .nav-bar {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  z-index: 100 !important;
+}
+
+.navbar-container, .nav-links, .nav-container {
+  width: 100% !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 0 15px !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure proper page structure */
+.main-container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+}
+
+.page-wrapper {
+  width: 95% !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 1rem 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.profile-container {
+  width: 100% !important;
+  margin-top: 1rem !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Fix issues with positioning */
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+  position: relative !important;
+}
+
+html {
+  overflow-x: hidden !important;
+  width: 100% !important;
+} 

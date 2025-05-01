@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-url" content="http://localhost:5004/api">
+    <title>Application Detail - Employer Portal</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/student/styles/home-navbar.css">
+    <link rel="stylesheet" href="/student/styles/employer-dashboard.css">
+    
+    <!-- Scripts -->
+    <script src="/student/scripts/database-connector.js"></script>
+    <script src="/student/scripts/employer-applications-connector.js"></script>
+    <script src="/student/scripts/application-detail.js" defer></script>
+</head>
+<body>
+    <header>
+        <!---NAV BAR--->
+        <div class="nav-bar">
+            <div class="logo">
+                <img src="/student/imgs/qcuims-logo.png" alt="logo">
+                <span class="portal-name">Employer Portal</span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/student/employers/dashboard.html">Dashboard</a>
+                <a href="/student/employers/job-postings.html">Job Postings</a>
+                <a href="/student/employers/applications.html" class="active">Applications</a>
+                <a href="/student/employers/profile.html">Company Profile</a>
+                <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mt-4">
+        <!-- Error Alert -->
+        <div id="errorAlert" class="alert alert-danger d-none" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="errorMessage">Error loading application details</span>
+        </div>
+        
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="/student/employers/applications.html" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Applications
+            </a>
+        </div>
+        
+        <!-- Application Details -->
+        <div class="card">
+            <div class="card-header">
+                <h2 id="applicantName">Loading...</h2>
+                <p id="applicationDate" class="text-muted mb-0">Loading...</p>
+            </div>
+            
+            <div class="card-body">
+                <!-- Tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active tab-btn" data-tab="details">
+                            <i class="fas fa-user"></i> Details
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link tab-btn" data-tab="resume">
+                            <i class="fas fa-file-alt"></i> Resume
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link tab-btn" data-tab="notes">
+                            <i class="fas fa-sticky-note"></i> Notes & Status
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content mt-3">
+                    <!-- Details Tab -->
+                    <div id="detailsTab" class="tab-pane active">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>Applicant Information</h4>
+                                <table class="table">
+                                    <tr>
+                                        <th>Student ID:</th>
+                                        <td id="studentId">Loading...</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email:</th>
+                                        <td id="applicantEmail">Loading...</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Phone:</th>
+                                        <td id="applicantPhone">Loading...</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Position:</th>
+                                        <td id="positionApplied">Loading...</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status:</th>
+                                        <td><span id="applicationStatus" class="status-badge">Loading...</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h4>Cover Letter</h4>
+                                <div id="coverLetterText" class="cover-letter-box">
+                                    Loading...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resume Tab -->
+                    <div id="resumeTab" class="tab-pane">
+                        <div class="resume-actions mb-3">
+                            <a id="downloadResumeBtn" class="btn btn-primary disabled" target="_blank">
+                                <i class="fas fa-download"></i> Download Resume
+                            </a>
+                            <a id="viewFullResumeBtn" class="btn btn-secondary disabled" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> View Full Resume
+                            </a>
+                        </div>
+                        
+                        <div id="resumePreview" class="resume-preview-box">
+                            <div class="loading-resume">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading resume preview...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes & Status Tab -->
+                    <div id="notesTab" class="tab-pane">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>Update Status</h4>
+                                <div class="status-buttons">
+                                    <button class="status-btn" data-status="Pending">Pending</button>
+                                    <button class="status-btn" data-status="Reviewed">Reviewed</button>
+                                    <button class="status-btn" data-status="Shortlisted">Shortlisted</button>
+                                    <button class="status-btn" data-status="Interviewed">Interviewed</button>
+                                    <button class="status-btn" data-status="Accepted">Accepted</button>
+                                    <button class="status-btn" data-status="Rejected">Rejected</button>
+                                </div>
+                                
+                                <h4 class="mt-4">Activity Log</h4>
+                                <ul id="activityLog" class="activity-list">
+                                    <li class="activity-item">
+                                        <span class="activity-date">Loading...</span>
+                                        <span class="activity-action">Loading activity log...</span>
+                                        <span class="activity-user">System</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h4>Notes</h4>
+                                <textarea id="applicationNotes" class="form-control" rows="6" 
+                                    placeholder="Add private notes about this applicant..."></textarea>
+                                <button id="saveNotesBtn" class="btn btn-primary mt-2">
+                                    <i class="fas fa-save"></i> Save Notes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <div class="action-buttons">
+                    <button id="rejectBtn" class="btn btn-danger">
+                        <i class="fas fa-times-circle"></i> Reject
+                    </button>
+                    <button id="scheduleInterviewBtn" class="btn btn-secondary">
+                        <i class="fas fa-calendar-alt"></i> Schedule Interview
+                    </button>
+                    <button id="acceptBtn" class="btn btn-success">
+                        <i class="fas fa-check-circle"></i> Accept
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"></script>
+</body>
+</html> 

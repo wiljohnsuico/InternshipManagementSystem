@@ -416,6 +416,7 @@ async function fetchUserApplications(forceRefresh = false) {
                 
                 if (serverData.success && Array.isArray(serverData.applications)) {
                     console.log(`Successfully fetched ${serverData.applications.length} applications from server`);
+                    console.log('Sample application data structure:', serverData.applications.length > 0 ? serverData.applications[0] : 'No applications found');
                     
                     // Save fetch timestamp
                     localStorage.setItem('applicationsLastFetched', Date.now().toString());
@@ -510,7 +511,9 @@ function processApplicationData(data) {
         // Extract application IDs for faster lookups
         const appliedJobsFromServer = data.applications
             .filter(app => app.status?.toLowerCase() !== 'withdrawn')
-            .map(app => String(app.job_id || app.listing_id));
+            .map(app => String(app.listing_id));
+        
+        console.log('Applied jobs from server:', appliedJobsFromServer);
         
         // Store server-confirmed applications
         localStorage.setItem('appliedJobsFromServer', JSON.stringify(appliedJobsFromServer));
@@ -1504,6 +1507,25 @@ function displayJobListings(listings) {
         const jobId = listing.id || listing.listing_id;
         const jobTitle = listing.job_title || listing.title || "Job Position";
         
+        // Get company name - check all possible fields
+        let companyName = listing.company_name || listing.companyName || "Company";
+        
+        // If we have an employer ID but no company name, try to find it
+        if (companyName === "Company" && (listing.employer_id || listing.employerId)) {
+            // Try to get from employer profile cache
+            try {
+                const cachedProfileStr = localStorage.getItem('employerProfileCache');
+                if (cachedProfileStr) {
+                    const cachedProfile = JSON.parse(cachedProfileStr);
+                    if (cachedProfile.employerData && cachedProfile.employerData.name) {
+                        companyName = cachedProfile.employerData.name;
+                    }
+                }
+            } catch (e) {
+                console.error("Error getting company name from cache:", e);
+            }
+        }
+        
         // Create job card element
         const card = document.createElement("div");
         card.className = "job-card";
@@ -1550,7 +1572,7 @@ function displayJobListings(listings) {
         // Create HTML content - use template strings for better performance
         card.innerHTML = `
             <h3 class="job-title">${safeJobTitle}</h3>
-            <div class="company-name">${listing.company_name || "Company"}</div>
+            <div class="company-name">${companyName}</div>
             <div class="job-details">
                 <span><i class="fas fa-map-marker-alt"></i> ${listing.location || "Location not specified"}</span>
                 <span><i class="fas fa-clock"></i> ${listing.duration || "Duration not specified"}</span>
@@ -1595,129 +1617,129 @@ function displayJobListings(listings) {
     document.dispatchEvent(new CustomEvent('job-listings-loaded'));
 }
 
-// Function to open the application modal when Apply Now is clicked
+// Function to open the application modal
 function openApplicationModal(jobIdOrEvent, jobTitle) {
-    try {
-        let jobId;
-        let event;
-        
-        // Check if first parameter is an event or jobId
-        if (jobIdOrEvent && typeof jobIdOrEvent === 'object' && jobIdOrEvent.preventDefault) {
-            // It's an event
-            event = jobIdOrEvent;
-            event.preventDefault();
-            
-            // Get job id from button data attribute
-            const button = event.currentTarget;
-            jobId = button.getAttribute('data-job-id');
-            
-            // Try to get job title from data attribute
-            if (!jobTitle) {
-                jobTitle = button.getAttribute('data-title');
-            }
-            
-            // If still no job title, try to find it in the DOM
-            if (!jobTitle) {
-                try {
-                    const jobCard = button.closest('.job-card');
-                    if (jobCard) {
-                        const titleElement = jobCard.querySelector('.job-title');
-                        if (titleElement) {
-                            jobTitle = titleElement.textContent.trim();
-                        }
-                    }
-                } catch (e) {
-                    console.warn('Could not extract job title from DOM:', e);
+    // Check if we have a real job ID
+    let jobId;
+    if (typeof jobIdOrEvent === 'object' && jobIdOrEvent.currentTarget) {
+        // It's an event
+        jobId = jobIdOrEvent.currentTarget.getAttribute('data-job-id');
+        jobTitle = jobIdOrEvent.currentTarget.getAttribute('data-title') || 'this position';
+    } else {
+        // It's a direct job ID
+        jobId = jobIdOrEvent;
+    }
+    
+    if (!jobId) {
+        console.error("No job ID provided to openApplicationModal");
+        alert("Error: Cannot identify the job. Please try again.");
+        return;
+    }
+    
+    console.log(`Opening application modal for job ID: ${jobId}, title: ${jobTitle}`);
+    
+    // First check if the user can apply
+    const apiBaseUrl = getApiUrl();
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    
+    // Show loading indicator
+    if (window.notification && typeof window.notification.info === 'function') {
+        window.notification.info('Checking application eligibility...', true);
+    }
+    
+    // Check verification status before showing the modal
+    fetch(`${apiBaseUrl}/applications/${jobId}/can-apply`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.canApply === false) {
+            // Handle different reasons why user can't apply
+            if (data.reason === 'rejected') {
+                // Show a specific message for rejected interns
+                alert('Your account verification has been rejected. You cannot apply for internships. Please contact an administrator for assistance.');
+                return;
+            } else if (data.reason === 'not_approved') {
+                // Show a specific message for not approved interns
+                const status = data.status || 'Pending';
+                let statusMessage = '';
+                
+                if (status === 'Pending') {
+                    statusMessage = 'Your account is currently pending approval.';
+                } else if (status === 'Rejected') {
+                    statusMessage = 'Your account verification was rejected.';
                 }
+                
+                alert(`You cannot apply for jobs yet. ${statusMessage} Please contact an administrator for assistance.`);
+                return;
+            } else if (data.reason === 'already_applied') {
+                alert("You have already applied for this position.");
+                return;
+            } else if (data.reason === 'job_not_found') {
+                alert("This job listing is no longer active.");
+                return;
+            } else {
+                // Generic message for other reasons
+                alert(data.message || "You cannot apply for this position at this time.");
+                return;
             }
-        } else {
-            // It's a direct jobId
-            jobId = jobIdOrEvent;
         }
         
-        if (!jobId) {
-            console.error('No job ID found for application modal');
-            alert('Error: Could not identify the job. Please try again.');
-            return;
-        }
-        
-        console.log(`Opening application modal for job ${jobId}${jobTitle ? ': ' + jobTitle : ''}`);
-        
-        // Get the modal elements
-        const modalOverlay = document.getElementById('modalOverlay');
+        // If we get here, user can apply - show the modal
+        const modal = document.getElementById('modalOverlay');
         const modalContainer = document.getElementById('modalContainer');
         
-        if (!modalOverlay || !modalContainer) {
-            console.error('Modal elements not found in the DOM');
-            alert('Error: Application form not available. Please try again later.');
+        if (!modal || !modalContainer) {
+            console.error("Modal elements not found");
+            alert("Error: Application form could not be loaded.");
             return;
         }
         
-        // Set job title in modal if element exists
-        const jobTitleElement = document.getElementById('jobTitleInModal');
-        if (jobTitleElement) {
-            jobTitleElement.textContent = jobTitle || 'Position';
+        // Set the job title in the modal
+        const jobTitleInModal = document.getElementById('jobTitleInModal');
+        if (jobTitleInModal) {
+            jobTitleInModal.textContent = jobTitle;
         }
         
-        // Set job ID in hidden field - this is CRITICAL
-        const jobIdField = document.getElementById('listingId') || 
-                          document.getElementById('jobIdField');
+        // Set the listing ID in the hidden field
+        const listingIdField = document.getElementById('listingId');
+        if (listingIdField) {
+            listingIdField.value = jobId;
+        }
         
-        if (jobIdField) {
-            console.log(`Setting job ID field (${jobIdField.id}) to ${jobId}`);
-            jobIdField.value = jobId;
-        } else {
-            console.error('Job ID field not found in modal - creating one');
+        // Reset form if it exists
+        const form = document.getElementById('applicationForm');
+        if (form) {
+            form.reset();
             
-            // If no field exists, create one
-            const form = document.getElementById('applicationForm');
-            if (form) {
-                const hiddenField = document.createElement('input');
-                hiddenField.type = 'hidden';
-                hiddenField.id = 'listingId';
-                hiddenField.name = 'listingId';
-                hiddenField.value = jobId;
-                form.appendChild(hiddenField);
-                console.log(`Created new hidden field for job ID: ${jobId}`);
-            }
-        }
-        
-        // Reset the form if it exists
-        const applicationForm = document.getElementById('applicationForm');
-        if (applicationForm) {
-            applicationForm.reset();
-        }
-        
-        // Setup start date with default value (2 weeks from now)
-        const startDateField = document.getElementById('startDate');
-        if (startDateField) {
-            const twoWeeksFromNow = new Date();
-            twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
-            startDateField.value = twoWeeksFromNow.toISOString().split('T')[0];
+            // Make sure we have the submit handler attached
+            setupApplicationForm(form, jobId);
         }
         
         // Show the modal
-        modalOverlay.style.display = 'block';
-        if (modalContainer) {
-            modalContainer.style.display = 'block';
-        }
+        modal.style.display = 'block';
+        modalContainer.style.display = 'block';
         
-        // Setup close button functionality
-        const closeBtn = document.querySelector('.modal-close');
+        // Add close button functionality
+        const closeBtn = document.getElementById('modalClose');
         if (closeBtn) {
-            closeBtn.onclick = function() {
-                closeApplicationModal();
-            };
+            closeBtn.onclick = closeApplicationModal;
         }
         
-        // Setup form if it's not already set up
-        setupApplicationForm(applicationForm, jobId);
-        
-        console.log('Application modal opened successfully');
-    } catch (error) {
-        console.error('Error opening application modal:', error);
-        alert('Error opening application form. Please try again.');
-    }
+        // Allow clicking outside the modal to close it
+        modal.onclick = function(e) {
+            if (e.target === modal) {
+                closeApplicationModal();
+            }
+        };
+    })
+    .catch(error => {
+        console.error("Error checking application eligibility:", error);
+        alert("Error: Could not verify your eligibility to apply. Please try again later.");
+    });
 }
 
 // Function to close the application modal
@@ -2304,5 +2326,225 @@ function markJobAsWithdrawn(jobId) {
     } catch (error) {
         console.error("Error marking job as withdrawn:", error);
         return false;
+    }
+}
+
+// When document is ready
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Document loaded - initializing job listings page');
+    
+    // Initialize API URL
+    initApiUrl();
+    
+    // Check intern verification status and show appropriate notification
+    await checkVerificationStatus();
+    
+    // Check if this is the job listings page
+    if (document.querySelector('.job-listings-container') || 
+        document.getElementById('job-listings') ||
+        document.querySelector('.job-cards')) {
+        console.log('This is a job listings page - setting up functionality');
+        
+        // Set up full page functionality
+        initJobListingsPage();
+        
+        // Set up search fields
+        setupSearchFields();
+        
+        // Set up pulling to refresh
+        let touchStartY = 0;
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].clientY;
+        });
+        
+        document.addEventListener('touchend', function(e) {
+            const touchEndY = e.changedTouches[0].clientY;
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            
+            // If user has pulled down at least 100px from top
+            if (scrollTop === 0 && touchEndY - touchStartY > 100) {
+                refreshJobListings();
+                
+                // Show refreshing indicator
+                if (window.notification && typeof window.notification.info === 'function') {
+                    window.notification.info('Refreshing job listings...', true);
+                }
+            }
+        });
+    } else {
+        // Not the job listings page - setup minimal requirements
+        console.log('Not a job listings page - setting up minimum requirements');
+        
+        // Setup search fields if available
+        if (typeof setupSearchFields === 'function') {
+            setupSearchFields();
+        }
+    }
+    
+    // Setup logout button
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            // Preserve specific localStorage items that should persist after logout
+            const keysToPreserve = [
+                // Notification keys
+                'persistentNotifications',
+                'notifications',
+                // Application state keys
+                'withdrawnJobsMap',
+                'completedWithdrawals',
+                'appliedJobs',
+                'appliedJobsFromServer',
+                'cachedApplications',
+                'applicationIdMap',
+                'cachedJobListings',
+                'jobListingsLastFetched',
+                'locallyStoredApplications'
+            ];
+            
+            // Save values before clearing localStorage
+            const preservedValues = {};
+            keysToPreserve.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    preservedValues[key] = value;
+                }
+            });
+            
+            // Copy notifications from regular storage to persistent storage to ensure they survive
+            try {
+                const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+                if (notifications.length > 0) {
+                    localStorage.setItem('persistentNotifications', JSON.stringify(notifications));
+                    console.log('Backed up notifications to persistent storage before logout');
+                }
+            } catch (e) {
+                console.error('Error backing up notifications:', e);
+            }
+            
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Restore preserved values
+            Object.keys(preservedValues).forEach(key => {
+                localStorage.setItem(key, preservedValues[key]);
+            });
+            
+            console.log('Preserved the following localStorage keys:', Object.keys(preservedValues));
+            
+            // Redirect to login page
+            window.location.href = '../index.html';
+        });
+    }
+    
+    // Set up a mutation observer to check for dynamically added job listings
+    const jobListingsContainer = document.getElementById('job-listings');
+    if (jobListingsContainer) {
+        const observer = new MutationObserver(function(mutations) {
+            console.log('Job listings changed - updating applied state');
+            updateAppliedJobsUI();
+        });
+        
+        observer.observe(jobListingsContainer, { childList: true, subtree: true });
+    }
+    
+    // Set up listener for application-submitted events
+    document.addEventListener('application-submitted', function(e) {
+        if (e.detail && e.detail.jobId) {
+            console.log('Caught application-submitted event for job:', e.detail.jobId);
+            forceUpdateApplyButtons(e.detail.jobId);
+        }
+    });
+});
+
+// Check verification status of the current intern
+async function checkVerificationStatus() {
+    try {
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        if (!token) {
+            console.log('No authentication token found, cannot check verification status');
+            return;
+        }
+        
+        const apiBaseUrl = getApiUrl();
+        
+        // Make a request to get intern's verification status
+        // Using a generic job ID (1) just to utilize the existing endpoint
+        const response = await fetch(`${apiBaseUrl}/applications/1/can-apply`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        console.log('Verification status check response:', data);
+        
+        // Add banner based on verification status
+        if (data.reason === 'rejected') {
+            // Intern account is rejected
+            addStatusBanner('Rejected');
+        } else if (data.reason === 'not_approved') {
+            // Intern account is not approved/pending
+            const status = data.status || 'Pending';
+            addStatusBanner(status);
+        } else if (data.reason === 'intern_not_found') {
+            // No intern profile
+            addStatusBanner('profile_missing');
+        }
+    } catch (error) {
+        console.error('Error checking verification status:', error);
+    }
+}
+
+// Add status banner to the page
+function addStatusBanner(status) {
+    // Remove any existing banner
+    const existingBanner = document.querySelector('.status-banner');
+    if (existingBanner) {
+        existingBanner.remove();
+    }
+    
+    let bannerClass = '';
+    let bannerText = '';
+    
+    if (status === 'Pending') {
+        bannerClass = 'pending';
+        bannerText = 'Your account is pending verification. You cannot apply for internships until your account is approved.';
+    } else if (status === 'Rejected') {
+        bannerClass = 'rejected';
+        bannerText = 'Your account verification has been rejected. Please contact an administrator for assistance.';
+    } else if (status === 'profile_missing') {
+        bannerClass = 'missing';
+        bannerText = 'Your intern profile is incomplete. Please complete your profile before applying for internships.';
+    }
+    
+    if (bannerText) {
+        const banner = document.createElement('div');
+        banner.className = `status-banner ${bannerClass}`;
+        banner.innerHTML = `<p>${bannerText}</p>`;
+        
+        // Insert at the top of the main content
+        const mainContent = document.querySelector('main') || document.body;
+        mainContent.insertBefore(banner, mainContent.firstChild);
+        
+        // Add some basic styling if not defined in CSS
+        banner.style.padding = '10px 15px';
+        banner.style.margin = '0 0 20px 0';
+        banner.style.borderRadius = '4px';
+        
+        if (bannerClass === 'pending') {
+            banner.style.backgroundColor = '#fff3cd';
+            banner.style.color = '#856404';
+            banner.style.border = '1px solid #ffeeba';
+        } else if (bannerClass === 'rejected') {
+            banner.style.backgroundColor = '#f8d7da';
+            banner.style.color = '#721c24';
+            banner.style.border = '1px solid #f5c6cb';
+        } else if (bannerClass === 'missing') {
+            banner.style.backgroundColor = '#d1ecf1';
+            banner.style.color = '#0c5460';
+            banner.style.border = '1px solid #bee5eb';
+        }
     }
 }

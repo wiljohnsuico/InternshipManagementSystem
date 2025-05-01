@@ -1,0 +1,136 @@
+.container {
+    padding: 30px;
+  }
+  
+  .welcome-text {
+    color: #1e3a8a;
+    font-size: 22px;
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+  
+  .stats-container {
+    display: flex;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin: 0 20px;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .stat-box {
+    flex: 1;
+    text-align: center;
+    padding: 20px 15px;
+  }
+  
+  .stat-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  
+  .stat-number {
+    font-size: 30px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  hr {
+    border: none;
+    height: 1px;
+    background: transparent;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Only shadow below */
+    margin: 30px 0;
+  }
+
+.stats-container {
+  display: flex;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin: 0 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.stat-box {
+  flex: 1;
+  text-align: center;
+  padding: 20px 15px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.stat-number {
+  font-size: 30px;
+  font-weight: bold;
+  color: #333;
+}
+
+
+/* Table Styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+th, td {
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+th {
+  background-color: #1e3a8a;
+  color: white;
+}
+
+/* Empty State */
+#internship-table-body tr td[colspan="5"] {
+  text-align: center;
+  padding: 20px;
+}
+
+#internship-table-body tr td[colspan="5"] a {
+  color: #1e3a8a;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+#internship-table-body tr td[colspan="5"] a:hover {
+  text-decoration: underline;
+}
+
+.availability-message {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+/*Delete Button*/
+
+.delete-btn {
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+  background-color: #c53030;
+}
+
+table th:last-child,
+table td:last-child {
+  width: 100px;
+  text-align: center;
+}

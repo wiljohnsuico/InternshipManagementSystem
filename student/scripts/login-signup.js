@@ -76,24 +76,54 @@ document.addEventListener("DOMContentLoaded", function () {
         loginForm.addEventListener("submit", async function(e) {
             e.preventDefault();
             
+            const loginEmailInput = document.getElementById('loginEmail');
+            const loginPasswordInput = document.getElementById('loginPassword');
+            
+            if (!loginEmailInput || !loginPasswordInput) {
+                alert('Login form inputs not found. Please try again.');
+                return;
+            }
+            
+            // Display a loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Logging in...';
+            }
+            
             const loginData = {
-                email: document.getElementById('loginEmail').value,
-                password: document.getElementById('loginPassword').value
+                email: loginEmailInput.value,
+                password: loginPasswordInput.value
             };
 
             try {
+                console.log('Attempting login for email:', loginData.email);
+                
                 const response = await fetch('http://localhost:5004/api/auth/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(loginData)
                 });
 
+                console.log('Login response status:', response.status);
+                
+                if (!response.ok) {
+                    if (response.status === 0 || response.status === 404) {
+                        throw new Error('Network error: API server might be down or unreachable');
+                    }
+                    
+                    // Try to parse error response
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `Login failed with status code ${response.status}`);
+                }
+
                 const data = await response.json();
                 console.log('Login response:', { ...data, token: data.token ? '[HIDDEN]' : null });
 
-                if (response.ok && data.success) {
+                if (data.success) {
                     // Store token and user data
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify({
@@ -113,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             window.location.href = 'mplhome.html';
                             break;
                         case 'Employer':
-                            window.location.href = 'mplhome.html';
+                            window.location.href = '/student/employers/dashboard.html';
                             break;
                         case 'Faculty':
                             window.location.href = 'mplhome.html';
@@ -125,11 +155,23 @@ document.addEventListener("DOMContentLoaded", function () {
                             alert('Unknown user role');
                     }
                 } else {
-                    alert(data.message || 'Login failed');
+                    alert(data.message || 'Login failed for unknown reason');
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                alert('Error during login. Please try again.');
+                
+                // More descriptive error messages based on error type
+                if (error.message.includes('Network error')) {
+                    alert('Unable to connect to the server. Please check if the backend is running and try again.');
+                } else {
+                    alert('Error during login: ' + error.message);
+                }
+            } finally {
+                // Reset button state
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Login';
+                }
             }
         });
     }

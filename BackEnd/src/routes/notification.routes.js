@@ -50,7 +50,7 @@ router.post('/', authenticateToken, async (req, res) => {
         }
         
         const [result] = await db.query(
-            'INSERT INTO notifications (user_id, message, type, link) VALUES (?, ?, ?, ?)',
+            'INSERT INTO notifications (user_id, message, type, link, timestamp) VALUES (?, ?, ?, ?, NOW())',
             [userId, message, type || 'info', link || null]
         );
         

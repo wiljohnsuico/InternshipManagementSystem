@@ -12,14 +12,72 @@ const cancelEntryBtn = document.getElementById('cancel-entry-btn');
 const accomplishmentInput = document.getElementById('accomplishment-input');
 const downloadReportBtn = document.getElementById('download-report-btn');
 
-// API endpoints
-const API_BASE_URL = 'http://localhost:5004/api';
-const ATTENDANCE_ENDPOINT = `${API_BASE_URL}/accomplishments/attendance`;
-const ACCOMPLISHMENT_ENDPOINT = `${API_BASE_URL}/accomplishments/daily`;
-const GET_ATTENDANCE_ENDPOINT = `${API_BASE_URL}/accomplishments/attendance/intern`;
-const GET_ACCOMPLISHMENT_ENDPOINT = `${API_BASE_URL}/accomplishments/intern`;
-const INTERNSHIPS_ENDPOINT = `${API_BASE_URL}/internships`;
-const ACTIVE_INTERNSHIP_ENDPOINT = `${API_BASE_URL}/internships/active`;
+// API configuration
+const TEST_PORTS = [5004, 5041, 5043, 50040, 50041, 50042, 50043, 3000];
+let API_BASE_URL = null;
+
+// Define endpoints (these will be populated after API_BASE_URL is determined)
+let ATTENDANCE_ENDPOINT;
+let ACCOMPLISHMENT_ENDPOINT;
+let GET_ATTENDANCE_ENDPOINT;
+let GET_ACCOMPLISHMENT_ENDPOINT;
+let INTERNSHIPS_ENDPOINT;
+let ACTIVE_INTERNSHIP_ENDPOINT;
+
+// Server discovery
+async function checkServerAvailability(port) {
+    try {
+        console.log(`Testing server availability on port ${port}...`);
+        const testUrl = `http://localhost:${port}/api/status`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1000);
+        
+        const response = await fetch(testUrl, {
+            method: 'GET',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        return response.ok;
+    } catch (error) {
+        // Don't log abort errors as they are expected during discovery
+        if (error.name !== 'AbortError') {
+            console.log(`Port ${port} test failed:`, error.message);
+        }
+        return false;
+    }
+}
+
+// Find available API server
+async function getApiUrl() {
+    // Try each port in sequence
+    for (const port of TEST_PORTS) {
+        const isAvailable = await checkServerAvailability(port);
+        if (isAvailable) {
+            console.log(`Server found on port ${port}`);
+            return `http://localhost:${port}/api`;
+        }
+    }
+    
+    // Default fallback
+    console.log('No server found, using default port 5004');
+    return 'http://localhost:5004/api';
+}
+
+// Initialize API endpoints
+async function initializeApiEndpoints() {
+    if (!API_BASE_URL) {
+        API_BASE_URL = await getApiUrl();
+        console.log('Using API base URL:', API_BASE_URL);
+    }
+    
+    ATTENDANCE_ENDPOINT = `${API_BASE_URL}/accomplishments/attendance`;
+    ACCOMPLISHMENT_ENDPOINT = `${API_BASE_URL}/accomplishments/daily`;
+    GET_ATTENDANCE_ENDPOINT = `${API_BASE_URL}/accomplishments/attendance/intern`;
+    GET_ACCOMPLISHMENT_ENDPOINT = `${API_BASE_URL}/accomplishments/intern`;
+    INTERNSHIPS_ENDPOINT = `${API_BASE_URL}/internships`;
+    ACTIVE_INTERNSHIP_ENDPOINT = `${API_BASE_URL}/internships/active`;
+}
 
 // Internship status
 let hasActiveInternship = false;
@@ -34,34 +92,121 @@ function getUserId() {
     return user ? user.user_id : null;
 }
 
-// API helper function
+// API helper function with retry mechanism
 async function fetchAPI(url, method = 'GET', data = null) {
-    const options = {
-        method,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`
-        }
-    };
-
-    if (data && (method === 'POST' || method === 'PUT')) {
-        options.body = JSON.stringify(data);
+    // Check if API_BASE_URL is initialized
+    if (!API_BASE_URL) {
+        await initializeApiEndpoints();
     }
-
-    try {
-        const response = await fetch(url, options);
-        const result = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(result.message || 'API request failed');
-        }
-        
-        return result;
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
+    
+    // Ensure URL is using the current API base URL
+    if (url.includes('http://localhost')) {
+        // Replace the base URL with the current one
+        const path = url.split('/api')[1];
+        url = `${API_BASE_URL}${path}`;
     }
+    
+    console.log(`Making ${method} request to: ${url}`);
+    
+    const MAX_RETRIES = 3;
+    let retries = 0;
+    
+    while (retries < MAX_RETRIES) {
+        try {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getAuthToken()}`
+                }
+            };
+
+            if (data && (method === 'POST' || method === 'PUT')) {
+                options.body = JSON.stringify(data);
+            }
+            
+            // Add timeout to avoid hanging requests
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+            options.signal = controller.signal;
+
+            const response = await fetch(url, options);
+            clearTimeout(timeoutId);
+            
+            console.log(`Response status:`, response.status);
+            
+            // Handle non-OK responses
+            if (!response.ok) {
+                // Try to get error details from response
+                let errorMessage;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || `API request failed with status ${response.status}`;
+                } catch (e) {
+                    errorMessage = `API request failed with status ${response.status}`;
+                }
+                throw new Error(errorMessage);
+            }
+            
+            // Parse JSON response
+            try {
+                const responseText = await response.text();
+                const result = responseText ? JSON.parse(responseText) : {};
+                return result;
+            } catch (e) {
+                console.error('Error parsing JSON response:', e);
+                throw new Error('Invalid JSON response from server');
+            }
+        } catch (error) {
+            console.error(`API Error (attempt ${retries + 1}):`, error);
+            retries++;
+            
+            // If this is not the last retry, wait before trying again
+            if (retries < MAX_RETRIES) {
+                console.log(`Retrying in ${retries * 1000}ms...`);
+                await new Promise(resolve => setTimeout(resolve, retries * 1000));
+            } else {
+                // Last retry failed, check if it's a network error
+                if (error.name === 'AbortError') {
+                    showNotification('Request timed out. Please check your network connection.', 'error');
+                } else if (!navigator.onLine) {
+                    showNotification('You appear to be offline. Please check your internet connection.', 'error');
+                } else {
+                    showNotification(`Error: ${error.message}`, 'error');
+                }
+                throw error;
+            }
+        }
+    }
+    
+    throw new Error('Maximum retry attempts exceeded');
 }
+
+// Initialize when the document is loaded
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Initialize API endpoints first
+        await initializeApiEndpoints();
+        
+        // Then continue with normal initialization
+        initializeDateTimeDisplay();
+        await checkActiveInternship();
+        await checkTodayStatus();
+        await renderAttendanceLogs();
+        await renderAccomplishments();
+        
+        // Set up event listeners
+        if (timeInBtn) timeInBtn.addEventListener('click', handleTimeIn);
+        if (timeOutBtn) timeOutBtn.addEventListener('click', handleTimeOut);
+        if (newEntryBtn) newEntryBtn.addEventListener('click', toggleEntryForm);
+        if (cancelEntryBtn) cancelEntryBtn.addEventListener('click', toggleEntryForm);
+        if (addEntryBtn) addEntryBtn.addEventListener('click', addAccomplishment);
+        if (downloadReportBtn) downloadReportBtn.addEventListener('click', generatePDFReport);
+    } catch (error) {
+        console.error('Initialization error:', error);
+        showNotification('Failed to initialize: ' + error.message, 'error');
+    }
+});
 
 // Check if user has an active internship
 async function checkActiveInternship() {
@@ -969,56 +1114,3 @@ function generateClientSidePDF() {
         showNotification('Failed to generate report. Please try again.', 'error');
     }
 }
-
-// Initialize protections
-document.addEventListener('DOMContentLoaded', async () => {
-    // Protect page - redirect if not logged in
-    if (!getAuthToken() || !getUserId()) {
-        window.location.href = '/student/mpl-login.html';
-        return;
-    }
-    
-    // Initialize the date and time display
-    initializeDateTimeDisplay();
-    
-    // Check for active internship first
-    await checkActiveInternship();
-    
-    // Load attendance and accomplishment data
-    await renderAttendanceLogs();
-    await renderAccomplishments();
-    
-    // Update button states based on today's attendance
-    if (hasActiveInternship) {
-        await checkTodayStatus();
-    } else {
-        disableTimeTracking();
-    }
-    
-    // Event listeners
-    timeInBtn.addEventListener('click', handleTimeIn);
-    timeOutBtn.addEventListener('click', handleTimeOut);
-    newEntryBtn.addEventListener('click', toggleEntryForm);
-    addEntryBtn.addEventListener('click', addAccomplishment);
-    cancelEntryBtn.addEventListener('click', toggleEntryForm);
-    
-    // Add download button if not present in the HTML
-    if (!downloadReportBtn) {
-        const container = document.querySelector('.container');
-        const downloadBtn = document.createElement('button');
-        downloadBtn.id = 'download-report-btn';
-        downloadBtn.className = 'btn-primary';
-        downloadBtn.style.marginLeft = '10px';
-        downloadBtn.textContent = 'Download Report';
-        
-        // Find the new entry button and add download button next to it
-        const newEntryBtnParent = newEntryBtn.parentNode;
-        newEntryBtnParent.appendChild(downloadBtn);
-        
-        // Set the global reference
-        window.downloadReportBtn = downloadBtn;
-    }
-    
-    // Add event listener for download button
-    (downloadReportBtn || window.downloadReportBtn).addEventListener('click', generateClientSidePDF);
-});

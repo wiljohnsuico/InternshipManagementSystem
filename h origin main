@@ -1,0 +1,17 @@
+[33mcommit 6ec2bcefaa100dc7313d5be95248097446a03d18[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: renzei:p <justincabang@gmail.com>
+Date:   Sun Apr 20 17:30:02 2025 +0800
+
+    Enhance notification system: Implement persistent notifications with database support and remove logout buttons from application-tracking and job-listings pages to preserve notifications
+
+[33mcommit 5d85cbb215aa853dc90abb633234818ca524e0af[m
+Author: renzei:p <justincabang@gmail.com>
+Date:   Sat Apr 19 23:50:23 2025 +0800
+
+    Finalized Students
+
+[33mcommit 3e9414d219dce5858b30486990ee333990824127[m
+Author: renzei:p <justincabang@gmail.com>
+Date:   Wed Apr 16 19:49:52 2025 +0800
+
+    Fixed merge conflicts and removed stash conflict markers

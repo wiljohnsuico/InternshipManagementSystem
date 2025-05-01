@@ -1,0 +1,41 @@
+@echo on
+echo ========================================================
+echo Starting backend server - DO NOT CLOSE THIS WINDOW
+echo ========================================================
+echo.
+
+echo Testing database connection...
+node -e "try { require('./src/config/database'); console.log('Database check passed'); } catch(e) { console.error('Database error:', e.message); process.exit(1); }"
+
+if %ERRORLEVEL% NEQ 0 (
+  echo.
+  echo Database connection failed! Please ensure MySQL is running.
+  echo.
+  echo TROUBLESHOOTING:
+  echo 1. Check if MySQL is running and accessible
+  echo 2. Verify database credentials in .env file
+  echo 3. Make sure the database exists and is properly configured
+  echo.
+  echo Press any key to exit...
+  pause
+  exit /b 1
+)
+
+echo.
+echo Starting backend server...
+echo Press Ctrl+C to stop the server
+echo.
+
+rem Start with increased logging
+set NODE_ENV=development
+set DEBUG=express:*
+node start-server.js
+
+echo.
+echo If the server stopped unexpectedly, check for these common issues:
+echo 1. Port 5004 might already be in use
+echo 2. MySQL connection issues
+echo 3. Missing node modules (try npm install)
+echo.
+echo Press any key to exit...
+pause 

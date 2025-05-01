@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Company Information</title>
+    <title>Employer Information</title>
     <link rel="stylesheet" href="emplyr.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
@@ -41,7 +41,7 @@
         </div>
     
         <div class="add-comp">
-            <button id="addCompany">Add Employer</button>
+            <button id="addEmployer">Add Employer</button>
         </div>
     </div>
 
@@ -52,38 +52,81 @@
                     <th>No</th>
                     <th>First Name</th>
                     <th>Last Name</th>
-                    <th>Password</th>
-                    <th>Username</th>
+                    <th>Email</th>
                     <th>Company Affiliated</th>
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody id="companyTableBody">
+            <tbody id="employerTableBody">
             </tbody>
         </table>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- Edit Employer Modal -->
     <div id="editModal" class="modal" style="display: none;">
         <div class="modal-content">
-            <span class="close-btn" id="modalCloseBtn">&times;</span>
-            <h3>Edit Employer</h3>
+            <div class="modal-header">
+                <h3>EDIT EMPLOYER</h3>
+                <span class="close-btn" onclick="closeEditModal()">&times;</span>
+            </div>
             <form id="editForm">
-                <label>First Name:</label>
-                <input type="text" id="editFirstName" required>
+                <input type="hidden" id="editIndex">
+                <div class="form-group">
+                    <label for="editFirstName">First Name:</label>
+                    <input type="text" id="editFirstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editLastName">Last Name:</label>
+                    <input type="text" id="editLastName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email:</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCompanyAffiliated">Company Affiliated:</label>
+                    <input type="text" id="editCompanyAffiliated" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" onclick="closeEditModal()" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="save-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                <label>Last Name:</label>
-                <input type="text" id="editLastName" required>
-
-                <label>Password:</label>
-                <input type="text" id="editPassword" required>
-
-                <label>Username:</label>
-                <input type="text" id="editUsername" required>
-
-                <label>Company Affiliated:</label>
-                <input type="text" id="editCompanyAffiliated" required>
-                <button type="submit">Save Changes</button>
+    <!-- Add Employer Modal -->
+    <div id="addEmployerModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ADD EMPLOYER</h3>
+                <span class="close-btn" onclick="closeAddModal()">&times;</span>
+            </div>
+            <form id="addEmployerForm">
+                <div class="form-group">
+                    <label for="employerFirstName">First Name:</label>
+                    <input type="text" id="employerFirstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="employerLastName">Last Name:</label>
+                    <input type="text" id="employerLastName" required>
+                </div>
+                <div class="form-group">
+                    <label for="employerEmail">Email:</label>
+                    <input type="email" id="employerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="employerPassword">Password:</label>
+                    <input type="password" id="employerPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="employerCompany">Company Affiliated:</label>
+                    <input type="text" id="employerCompany" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" onclick="closeAddModal()" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="save-btn">Add Employer</button>
+                </div>
             </form>
         </div>
     </div>

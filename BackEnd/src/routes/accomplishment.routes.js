@@ -5,6 +5,15 @@ const { authMiddleware, roleMiddleware } = require('../middleware/auth.middlewar
 const path = require('path');
 const fs = require('fs');
 
+// Status endpoint for server discovery (no auth required)
+router.get('/status', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Accomplishment API is running',
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Submit daily accomplishment (Intern only)
 router.post('/daily', authMiddleware, roleMiddleware(['Intern']), async (req, res) => {
     try {

@@ -61,6 +61,19 @@ router.post('/login', async (req, res) => {
             password_length: user.password ? user.password.length : 0
         });
 
+        // Basic validation to ensure password is in correct format
+        if (!user.password || typeof user.password !== 'string' || user.password.length < 5) {
+            console.error('Invalid password hash in database:', {
+                password_exists: !!user.password,
+                password_type: typeof user.password,
+                password_length: user.password ? user.password.length : 0
+            });
+            return res.status(500).json({
+                success: false,
+                message: 'Server error during login. Invalid password format in database.'
+            });
+        }
+
         // Verify password with detailed logging
         console.log('Comparing provided password with stored hash');
         console.log('Stored hash format check:', {
@@ -69,8 +82,18 @@ router.post('/login', async (req, res) => {
             length: user.password.length
         });
         
-        const isMatch = await bcrypt.compare(password, user.password);
+        // Use try-catch around bcrypt.compare to handle potential errors
+        let isMatch;
+        try {
+            isMatch = await bcrypt.compare(password, user.password);
         console.log('Password verification result:', isMatch ? 'Match' : 'No match');
+        } catch (bcryptError) {
+            console.error('Bcrypt error during password verification:', bcryptError);
+            return res.status(500).json({
+                success: false,
+                message: 'Server error during password verification'
+            });
+        }
 
         if (!isMatch) {
             console.log('Password does not match for user:', user.email);
@@ -273,6 +296,64 @@ router.post('/signup', async (req, res) => {
             success: false,
             message: 'Server error during signup',
             error: error.message
+        });
+    }
+});
+
+// Token verification endpoint
+router.get('/verify', async (req, res) => {
+    console.log('Token verification request received');
+    try {
+        // Get token from header
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            console.log('No token provided in verification request');
+            return res.status(401).json({
+                success: false,
+                message: 'No token provided'
+            });
+        }
+
+        const token = authHeader.split(' ')[1];
+        console.log('Verifying token');
+
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        console.log('Token verified successfully, user info:', decoded);
+
+        // Verify that user exists in database
+        const [users] = await pool.query(
+            'SELECT * FROM users_tbl WHERE user_id = ?',
+            [decoded.user_id]
+        );
+
+        if (users.length === 0) {
+            console.log('User not found for decoded token');
+            return res.status(401).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const user = users[0];
+        
+        // Return success with user info
+        return res.json({
+            success: true,
+            message: 'Token is valid',
+            user: {
+                user_id: user.user_id,
+                role: user.role,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name
+            }
+        });
+    } catch (error) {
+        console.error('Token verification error:', error);
+        return res.status(401).json({
+            success: false,
+            message: 'Invalid token'
         });
     }
 });

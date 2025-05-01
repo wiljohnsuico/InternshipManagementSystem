@@ -61,7 +61,9 @@ async function seedJobListings() {
                 skills: ['JavaScript', 'Python'],
                 description: 'Join our engineering team to develop innovative solutions.',
                 requirements: 'Knowledge of web technologies and programming languages.',
-                is_paid: true
+                is_paid: true,
+                positions: 3,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 30))
             },
             {
                 company: 'Facebook',
@@ -70,7 +72,9 @@ async function seedJobListings() {
                 skills: ['Marketing', 'SEO'],
                 description: 'Help our marketing team create engaging campaigns.',
                 requirements: 'Interest in digital marketing and social media.',
-                is_paid: false
+                is_paid: false,
+                positions: 2,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 45))
             },
             {
                 company: 'Adobe',
@@ -79,7 +83,9 @@ async function seedJobListings() {
                 skills: ['Photoshop', 'Illustrator'],
                 description: 'Create visually stunning designs for our products.',
                 requirements: 'Proficiency in Adobe Creative Suite.',
-                is_paid: true
+                is_paid: true,
+                positions: 1,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 60))
             },
             {
                 company: 'Deloitte',
@@ -88,7 +94,9 @@ async function seedJobListings() {
                 skills: ['Accounting', 'Tax'],
                 description: 'Assist with tax compliance and planning.',
                 requirements: 'Accounting knowledge and attention to detail.',
-                is_paid: true
+                is_paid: true,
+                positions: 4,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 15))
             },
             {
                 company: 'BuzzFeed',
@@ -97,7 +105,9 @@ async function seedJobListings() {
                 skills: ['Writing', 'SEO'],
                 description: 'Create engaging content for our website.',
                 requirements: 'Strong writing skills and creativity.',
-                is_paid: false
+                is_paid: false,
+                positions: 2,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 20))
             },
             {
                 company: 'Microsoft',
@@ -106,7 +116,9 @@ async function seedJobListings() {
                 skills: ['HTML', 'CSS', 'JavaScript'],
                 description: 'Develop and maintain web applications.',
                 requirements: 'Experience with front-end technologies.',
-                is_paid: true
+                is_paid: true,
+                positions: 3,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 40))
             },
             {
                 company: 'Amazon',
@@ -115,7 +127,9 @@ async function seedJobListings() {
                 skills: ['Agile', 'Scrum'],
                 description: 'Lead projects from conception to completion.',
                 requirements: 'Project management experience and leadership skills.',
-                is_paid: true
+                is_paid: true,
+                positions: 1,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 25))
             },
             {
                 company: 'Netflix',
@@ -124,7 +138,9 @@ async function seedJobListings() {
                 skills: ['Recruitment'],
                 description: 'Support the HR team in recruitment and onboarding.',
                 requirements: 'Interest in human resources and people management.',
-                is_paid: false
+                is_paid: false,
+                positions: 2,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 30))
             },
             {
                 company: 'Ubisoft',
@@ -133,7 +149,9 @@ async function seedJobListings() {
                 skills: ['Unity', 'C#'],
                 description: 'Contribute to the development of exciting games.',
                 requirements: 'Knowledge of game development and programming.',
-                is_paid: true
+                is_paid: true,
+                positions: 5,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 60))
             },
             {
                 company: 'IBM',
@@ -142,7 +160,9 @@ async function seedJobListings() {
                 skills: ['Excel', 'Data Analysis'],
                 description: 'Assist with operational processes and data analysis.',
                 requirements: 'Analytical skills and attention to detail.',
-                is_paid: false
+                is_paid: false,
+                positions: 3,
+                deadline: new Date(new Date().setDate(new Date().getDate() + 15))
             }
         ];
 
@@ -172,8 +192,8 @@ async function seedJobListings() {
             // Insert job listing
             await connection.query(
                 `INSERT INTO job_listings 
-                (company_id, job_title, location, skills, description, requirements, is_paid, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'Active')`,
+                (company_id, job_title, location, skills, description, requirements, is_paid, positions, deadline, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')`,
                 [
                     company.company_id,
                     job.title,
@@ -181,7 +201,9 @@ async function seedJobListings() {
                     JSON.stringify(job.skills),
                     job.description,
                     job.requirements,
-                    job.is_paid ? 1 : 0
+                    job.is_paid ? 1 : 0,
+                    job.positions || 1,
+                    job.deadline || null
                 ]
             );
             

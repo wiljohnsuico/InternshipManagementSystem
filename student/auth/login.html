@@ -1,0 +1,49 @@
+<!-- Add these elements somewhere in the login form container -->
+<div id="connection-status" class="alert alert-warning" style="display: none; margin-top: 10px;">
+    Checking API server connection...
+</div>
+
+<div id="server-error" class="alert alert-danger" style="display: none; margin-top: 10px;">
+    Cannot connect to the server. Please make sure the backend is running.
+    <button id="retry-connection" class="btn btn-sm btn-outline-primary mt-2">Retry Connection</button>
+</div>
+
+<!-- Add this script at the end of the page, before the closing body tag -->
+<script>
+    // Check API server connection
+    function checkServerConnection() {
+        document.getElementById('connection-status').style.display = 'block';
+        document.getElementById('server-error').style.display = 'none';
+        
+        fetch('http://localhost:5004/api/status')
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('connection-status').style.display = 'none';
+                    document.getElementById('server-error').style.display = 'none';
+                    console.log('API server is running');
+                    return true;
+                } else {
+                    throw new Error('API server returned an error');
+                }
+            })
+            .catch(error => {
+                console.error('API server connection error:', error);
+                document.getElementById('connection-status').style.display = 'none';
+                document.getElementById('server-error').style.display = 'block';
+                return false;
+            });
+    }
+
+    // Run the connection check when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        checkServerConnection();
+        
+        // Add event listener to retry button
+        const retryButton = document.getElementById('retry-connection');
+        if (retryButton) {
+            retryButton.addEventListener('click', function() {
+                checkServerConnection();
+            });
+        }
+    });
+</script> 

@@ -150,7 +150,9 @@ router.post('/', authenticateToken, authorizeRoles(['Employer', 'Admin']), async
     requirements, 
     location,
     skills,
-    is_paid
+    is_paid,
+    deadline,
+    positions
   } = req.body;
 
   // Validate required fields
@@ -189,8 +191,10 @@ router.post('/', authenticateToken, authorizeRoles(['Employer', 'Admin']), async
         location,
         skills,
         is_paid,
+        deadline,
+        positions,
         status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active')
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')
     `;
     
     const [result] = await db.query(query, [
@@ -200,7 +204,9 @@ router.post('/', authenticateToken, authorizeRoles(['Employer', 'Admin']), async
       requirements,
       location,
       skillsJson,
-      is_paid ? 1 : 0
+      is_paid ? 1 : 0,
+      deadline || null,
+      positions || 1
     ]);
     
     res.status(201).json({
@@ -231,7 +237,9 @@ router.put('/:id', authenticateToken, authorizeRoles(['Employer', 'Admin']), asy
     location,
     skills,
     is_paid,
-    status
+    status,
+    deadline,
+    positions
   } = req.body;
 
   try {
@@ -290,6 +298,16 @@ router.put('/:id', authenticateToken, authorizeRoles(['Employer', 'Admin']), asy
     if (is_paid !== undefined) {
       updates.push('is_paid = ?');
       updateParams.push(is_paid ? 1 : 0);
+    }
+    
+    if (deadline) {
+      updates.push('deadline = ?');
+      updateParams.push(deadline);
+    }
+    
+    if (positions) {
+      updates.push('positions = ?');
+      updateParams.push(positions);
     }
     
     if (status && ['Active', 'Filled', 'Closed'].includes(status)) {

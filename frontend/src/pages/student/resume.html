@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/home-navbar.css">
+    <link rel="stylesheet" href="styles/resume.css">
+    <title>RESUME</title>
+</head>
+<body>
+    <header>
+        <!---NAV BAR-->
+        <div class="nav-bar">
+            <div class="logo">
+                <img src="imgs/qcuims-logo.png" alt="logo">
+            </div>
+            
+            <div class="nav-links">
+                <a href="mplhome.html">Home</a>
+
+                <div class="profile">
+                    <button class="dropdown-profile">Profile</button>
+                    <div class="profile-content">
+                        <a href="mplprofile.html">My Account</a>
+                        <a href="resume.html">My Resume</a>
+                        <a href="internship-report.html">Internship</a>
+                        <a href="application-tracking.html">Applications</a>
+                        <a href="#" class="logout-link">Logout</a>
+                    </div>
+                </div>
+
+                <button id="openLogin" class="openLogin login-button">Login</button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <form class="container" id="resume-form" enctype="multipart/form-data">
+            <h1>Build a Resume</h1>
+            
+            <div class="section">
+                <div class="section-title">Basic</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="firstName">
+                    </div>
+                    <div class="form-group">
+                        <label>Middle Name</label>
+                        <input type="text" name="middleName">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" name="lastName">
+                    </div>
+                    <div class="form-group">
+                        <label>Suffix</label>
+                        <input type="text" name="suffix">
+                    </div>
+                    <div class="form-group">
+                        <label>Birthday</label>
+                        <input type="date" name="birthday">
+                    </div>
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" name="age">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mobile #</label>
+                        <input type="text" name="mobile">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" name="email">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Address</label>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>House No., Street</label>
+                        <input type="text" name="street">
+                    </div>
+                    <div class="form-group">
+                        <label>Barangay</label>
+                        <input type="text" name="barangay">
+                    </div>
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" name="city">
+                    </div>
+                    <div class="form-group">
+                        <label>Country</label>
+                        <input type="text" name="country">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Objectives</div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <textarea name="objectives" rows="3" placeholder="Briefly describe your career objectives and goals..."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Education</div>
+                
+                <div class="form-row">
+                    <div style="width: 35px;"></div>
+                    <div class="form-group">
+                        <label>School</label>
+                    </div>
+                    <div class="form-group">
+                        <label>Year</label>
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <label>Date</label>
+                    </div>
+                    <div style="width: 35px;"></div>
+                </div>
+                
+                <div class="education-entries">
+                    <div class="education-entry">
+                        <div class="education-number">1</div>
+                        <div class="form-group">
+                            <input type="text" name="school">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="year">
+                        </div>
+                        <div class="form-group" style="flex: 0.5;">
+                            <input type="text" name="date">
+                        </div>
+                        <button class="delete-btn" onclick="deleteEducationEntry(this)">×</button>
+                    </div>
+                </div>
+                
+                <div class="form-row" style="margin-top: 10px;">
+                    <button class="add-btn" id="add-education">+</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Work Experience</div>
+                
+                <div class="form-row">
+                    <div style="width: 35px;"></div>
+                    <div class="form-group">
+                        <label>Position</label>
+                    </div>
+                    <div class="form-group">
+                        <label>Company</label>
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <label>Duration</label>
+                    </div>
+                    <div style="width: 35px;"></div>
+                </div>
+                
+                <div class="work-entries">
+                    <div class="work-entry">
+                        <div class="work-number">1</div>
+                        <div class="form-group">
+                            <input type="text" name="position">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="company">
+                        </div>
+                        <div class="form-group" style="flex: 0.5;">
+                            <input type="text" name="duration">
+                        </div>
+                        <button class="delete-btn" onclick="deleteWorkEntry(this)">×</button>
+                    </div>
+                </div>
+                
+                <div class="form-row" style="margin-top: 10px;">
+                    <button class="add-btn" id="add-work">+</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Skills</div>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <textarea class="skills-box" name="skills" placeholder="Enter skills separated by commas (e.g., JavaScript, HTML, CSS)"></textarea>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Upload Image</label>
+                        <div class="upload-box">
+                            <input type="file" id="image-upload" name="image" accept="image/*">
+                            <span class="placeholder-text">Click to upload</span>
+                            <img id="preview-image" src="" alt="Preview">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="statusMessage" class="status-message"></div>
+            <button type="submit" class="submit-btn">Save</button>
+        </form>
+    
+        <script>
+            // Image upload preview functionality
+            const imageUpload = document.getElementById('image-upload');
+            const previewImage = document.getElementById('preview-image');
+            const placeholderText = document.querySelector('.placeholder-text');
+            
+            imageUpload.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    // Check file size (5MB limit)
+                    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+                    if (file.size > MAX_FILE_SIZE) {
+                        // Show warning but still allow upload
+                        const statusMessage = document.getElementById('statusMessage');
+                        statusMessage.textContent = "Warning: Image is larger than 5MB. It will be compressed before saving.";
+                        statusMessage.className = "status-message warning";
+                        
+                        // Add warning style if not exists
+                        if (!document.querySelector('style[data-warning]')) {
+                            const style = document.createElement('style');
+                            style.setAttribute('data-warning', 'true');
+                            style.textContent = `
+                                .status-message.warning {
+                                    background-color: #fff3cd;
+                                    color: #856404;
+                                    border: 1px solid #ffeeba;
+                                    padding: 10px;
+                                    border-radius: 4px;
+                                    margin: 10px 0;
+                                    display: block;
+                                    text-align: center;
+                                }
+                            `;
+                            document.head.appendChild(style);
+                        }
+                        
+                        // Clear warning after 5 seconds
+                        setTimeout(() => {
+                            statusMessage.textContent = '';
+                            statusMessage.className = 'status-message';
+                        }, 5000);
+                    }
+                    
+                    const reader = new FileReader();
+                    
+                    reader.addEventListener('load', function() {
+                        previewImage.src = reader.result;
+                        previewImage.style.display = 'block';
+                        placeholderText.style.display = 'none';
+                    });
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+    
+            // Add education entry functionality
+            document.getElementById('add-education').addEventListener('click', function(e) {
+                e.preventDefault();
+                const educationEntries = document.querySelector('.education-entries');
+                const entries = document.querySelectorAll('.education-entry').length;
+                
+                const newEntry = document.createElement('div');
+                newEntry.className = 'education-entry';
+                
+                newEntry.innerHTML = `
+                    <div class="education-number">${entries + 1}</div>
+                    <div class="form-group">
+                        <input type="text" name="school">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="year">
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <input type="text" name="date">
+                    </div>
+                    <button class="delete-btn" onclick="deleteEducationEntry(this)">×</button>
+                `;
+                
+                educationEntries.appendChild(newEntry);
+            });
+
+            // Delete education entry functionality
+            function deleteEducationEntry(button) {
+                const entry = button.parentElement;
+                const educationEntries = document.querySelector('.education-entries');
+                educationEntries.removeChild(entry);
+                
+                // Update numbering for remaining entries
+                const remainingEntries = document.querySelectorAll('.education-entry');
+                remainingEntries.forEach((entry, index) => {
+                    entry.querySelector('.education-number').textContent = index + 1;
+                });
+            }
+            
+            // Add work experience entry functionality
+            document.getElementById('add-work').addEventListener('click', function(e) {
+                e.preventDefault();
+                const workEntries = document.querySelector('.work-entries');
+                const entries = document.querySelectorAll('.work-entry').length;
+                
+                const newEntry = document.createElement('div');
+                newEntry.className = 'work-entry';
+                
+                newEntry.innerHTML = `
+                    <div class="work-number">${entries + 1}</div>
+                    <div class="form-group">
+                        <input type="text" name="position">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="company">
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <input type="text" name="duration">
+                    </div>
+                    <button class="delete-btn" onclick="deleteWorkEntry(this)">×</button>
+                `;
+                
+                workEntries.appendChild(newEntry);
+            });
+
+            // Delete work entry functionality
+            function deleteWorkEntry(button) {
+                const entry = button.parentElement;
+                const workEntries = document.querySelector('.work-entries');
+                workEntries.removeChild(entry);
+                
+                // Update numbering for remaining entries
+                const remainingEntries = document.querySelectorAll('.work-entry');
+                remainingEntries.forEach((entry, index) => {
+                    entry.querySelector('.work-number').textContent = index + 1;
+                });
+            }
+        </script>
+    </main>
+
+    <!-- Include auth utilities -->
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/protect-page.js"></script>
+    <script src="scripts/resume.js"></script>
+    
+    <script>
+        // Add explicit logout functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLink = document.querySelector('.logout-link');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('userData');
+                    window.location.href = '/student/mpl-login.html';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

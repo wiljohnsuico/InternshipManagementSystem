@@ -316,4 +316,118 @@
   .toast {
     width: 100%;
   }
+}
+
+/* Global Notification Styles */
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    max-width: 400px;
+    min-width: 300px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 15px;
+    z-index: 9999;
+    display: none;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+}
+
+.notification-icon {
+    margin-right: 12px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-message {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #aaa;
+    margin-left: 10px;
+    padding: 0;
+    line-height: 1;
+}
+
+.notification-close:hover {
+    color: #555;
+}
+
+/* Notification types */
+.notification.success {
+    border-left: 4px solid #2ecc71;
+}
+
+.notification.success .notification-icon::before {
+    content: "\f00c";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: #2ecc71;
+}
+
+.notification.error {
+    border-left: 4px solid #e74c3c;
+}
+
+.notification.error .notification-icon::before {
+    content: "\f071";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: #e74c3c;
+}
+
+.notification.info {
+    border-left: 4px solid #3498db;
+}
+
+.notification.info .notification-icon::before {
+    content: "\f05a";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: #3498db;
+}
+
+.notification.warning {
+    border-left: 4px solid #f39c12;
+}
+
+.notification.warning .notification-icon::before {
+    content: "\f071";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: #f39c12;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .notification {
+        max-width: 100%;
+        width: calc(100% - 40px);
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        margin: 0 auto;
+    }
 } 

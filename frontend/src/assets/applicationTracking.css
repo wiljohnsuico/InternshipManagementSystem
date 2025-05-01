@@ -1,0 +1,67 @@
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+.job-table {
+    width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th {
+    background-color: #f9fafb;
+    text-align: left;
+    padding: 12px 15px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #4b5563;
+}
+tr:last-child td {
+    border-bottom: none;
+}
+.status {
+    font-weight: 500;
+}
+.status-applied {
+    color: #3b82f6;
+}
+.status-interview {
+    color: #f59e0b;
+}
+.status-rejected {
+    color: #ef4444;
+}
+tr:hover {
+    background-color: #f9fafb;
+}
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #6b7280;
+}
+.error-message {
+    color: #ef4444;
+    text-align: center;
+    padding: 20px;
+}
+.no-applications {
+    text-align: center;
+    padding: 30px;
+    color: #6b7280;
+}

@@ -11,6 +11,7 @@ const jobRoutes = require('./job.routes');
 const resumeRoutes = require('./resume.routes');
 const appRoutes = require('./application.routes');
 const notificationRoutes = require('./notification.routes');
+const employerRoutes = require('./employer.routes');
 
 // Define API routes
 router.use('/auth', authRoutes);
@@ -22,5 +23,6 @@ router.use('/jobs', jobRoutes);
 router.use('/resumes', resumeRoutes);
 router.use('/applications', appRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/employers', employerRoutes);
 
 module.exports = router; 

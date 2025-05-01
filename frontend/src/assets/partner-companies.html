@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Companies - QCU IMS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../styles/resources.css">
+    <style>
+        .company-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 1rem;
+        }
+        
+        .company-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .company-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .company-logo {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+        }
+        
+        .company-info h3 {
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+        
+        .company-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .tag {
+            background: var(--light-bg);
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+        
+        .search-filter {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        #company-search {
+            width: 100%;
+            max-width: 500px;
+            padding: 0.75rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 25px;
+            font-size: 1rem;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="../imgs/logo.png" alt="QCU Logo">
+                <h1 class="logo-text">QCU Internship Management System</h1>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="../mplhome.html">Home</a></li>
+                    <li><a href="../resume.html">Resume</a></li>
+                    <li><a href="../jobListings.html">Job Listings</a></li>
+                    <li><a href="../application-tracking.html">My Applications</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="resource-content">
+        <h1>Partner Companies</h1>
+        
+        <section class="guide-section">
+            <div class="search-filter">
+                <input type="text" id="company-search" placeholder="Search companies by name, industry, or location...">
+            </div>
+            
+            <div class="company-grid">
+                <div class="company-card">
+                    <img src="../imgs/company-logos/accenture.png" alt="Accenture Logo" class="company-logo">
+                    <div class="company-info">
+                        <h3>Accenture</h3>
+                        <p>Global professional services company providing a range of services in strategy, consulting, digital, technology, and operations.</p>
+                        <div class="company-tags">
+                            <span class="tag">Technology</span>
+                            <span class="tag">Consulting</span>
+                            <span class="tag">Digital</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="company-card">
+                    <img src="../imgs/company-logos/ibm.png" alt="IBM Logo" class="company-logo">
+                    <div class="company-info">
+                        <h3>IBM Philippines</h3>
+                        <p>Leading provider of IT solutions, cloud computing, artificial intelligence, and cognitive computing technologies.</p>
+                        <div class="company-tags">
+                            <span class="tag">IT Solutions</span>
+                            <span class="tag">Cloud Computing</span>
+                            <span class="tag">AI</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="company-card">
+                    <img src="../imgs/company-logos/globe.png" alt="Globe Telecom Logo" class="company-logo">
+                    <div class="company-info">
+                        <h3>Globe Telecom</h3>
+                        <p>Major telecommunications company providing mobile, fixed line, and broadband services.</p>
+                        <div class="company-tags">
+                            <span class="tag">Telecommunications</span>
+                            <span class="tag">Digital Solutions</span>
+                            <span class="tag">Innovation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="company-card">
+                    <img src="../imgs/company-logos/smart.png" alt="Smart Communications Logo" class="company-logo">
+                    <div class="company-info">
+                        <h3>Smart Communications</h3>
+                        <p>Leading wireless services provider offering mobile, internet, and digital services.</p>
+                        <div class="company-tags">
+                            <span class="tag">Telecommunications</span>
+                            <span class="tag">Mobile Technology</span>
+                            <span class="tag">Digital Services</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="guide-section">
+            <h2>Becoming a Partner Company</h2>
+            <div class="content-box">
+                <div class="tip-grid">
+                    <div class="tip-item">
+                        <i class="fas fa-handshake"></i>
+                        <h3>Partnership Benefits</h3>
+                        <p>Access to talented pool of interns, collaboration opportunities, and community engagement</p>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-file-contract"></i>
+                        <h3>Requirements</h3>
+                        <p>Valid business registration, internship program structure, and mentor availability</p>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-clipboard-check"></i>
+                        <h3>Application Process</h3>
+                        <p>Submit partnership request, documentation review, and agreement signing</p>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-users"></i>
+                        <h3>Support</h3>
+                        <p>Dedicated partnership coordinator and regular communication channels</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 QCU Internship Management System. All rights reserved.</p>
+    </footer>
+    <script src="../scripts/resources.js"></script>
+</body>
+</html> 

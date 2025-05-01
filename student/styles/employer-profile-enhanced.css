@@ -1,0 +1,800 @@
+/* Enhanced Employer Profile Styles */
+:root {
+  --primary-color: #2563eb;
+  --primary-light: #eff6ff;
+  --primary-dark: #1e40af;
+  --secondary-color: #64748b;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --info-color: #3b82f6;
+  --dark-color: #1e293b;
+  --light-color: #f1f5f9;
+  --white-color: #ffffff;
+  --border-color: #e2e8f0;
+  --border-radius: 0.5rem;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --transition: all 0.3s ease;
+}
+
+/* Global box-sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  background: linear-gradient(130deg, #89acf7 4%, #DFE9FF 25%, #E7ECF5 44%, #82a8f6 94%);
+  background-attachment: fixed;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  position: relative;
+}
+
+/* Main container for entire page */
+.main-container {
+  width: 100%;
+}
+
+/* Reset any external navbar styles that might affect layout */
+#navbar-placeholder, 
+#navbar-placeholder > *,
+.navbar,
+.nav-bar {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Page Wrapper for width constraint */
+.page-wrapper {
+  width: 95%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+/* Profile Container Styling */
+.profile-container {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-top: 1rem;
+  position: relative;
+}
+
+.page-header {
+  background: linear-gradient(120deg, #2563eb, #1e40af);
+  color: white;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  position: relative;
+  z-index: 5;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 5;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-edit:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-refresh, .btn-back {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-refresh:hover, .btn-back:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--light-color);
+  color: var(--dark-color);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--border-color);
+}
+
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Loading and Error States */
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background-color: white;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  z-index: 2;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--primary-light);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: white;
+  color: var(--danger-color);
+  gap: 1rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  z-index: 2;
+}
+
+.error-message i {
+  font-size: 2rem;
+}
+
+.btn-retry {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+/* Profile Content Area */
+.profile-content {
+  padding: 2rem;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-header {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.logo-container {
+  flex-shrink: 0;
+}
+
+.company-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  object-fit: contain;
+  background-color: var(--light-color);
+  padding: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.company-headline {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.company-name {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--dark-color);
+  margin: 0 0 0.5rem 0;
+}
+
+.company-industry {
+  color: var(--secondary-color);
+  font-size: 1.1rem;
+  margin: 0 0 1rem 0;
+}
+
+.company-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--secondary-color);
+  font-size: 0.95rem;
+}
+
+/* Profile Sections */
+.profile-sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  width: 100%;
+}
+
+.profile-section {
+  margin-bottom: 2rem;
+  background-color: #f9fbff;
+  border-radius: 6px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.section-title {
+  margin-top: 0;
+  color: #1a56db;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title i {
+  color: #3b82f6;
+}
+
+.section-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 1rem;
+}
+
+/* Make grid containers responsive */
+.company-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  padding: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: var(--secondary-color);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.detail-value {
+  color: var(--dark-color);
+  word-break: break-word;
+}
+
+.company-description {
+  line-height: 1.6;
+  color: var(--dark-color);
+  white-space: pre-line;
+}
+
+/* Statistics Section */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.stat-card {
+  background-color: var(--primary-light);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: var(--transition);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon i {
+  color: white;
+  font-size: 1.25rem;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0 0 0.25rem 0;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--secondary-color);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Contacts Container */
+.contacts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.contact-card {
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.contact-card:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--primary-color);
+}
+
+.contact-card.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary-color);
+  font-style: italic;
+  grid-column: 1 / -1;
+  min-height: 100px;
+  cursor: default;
+}
+
+/* Job Listings */
+.job-listings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.job-card {
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  transition: var(--transition);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.job-card.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary-color);
+  font-style: italic;
+  grid-column: 1 / -1;
+  min-height: 100px;
+}
+
+/* Modal Styling */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 10vh auto;
+  padding: 0;
+  border-radius: var(--border-radius);
+  width: 90%;
+  max-width: 500px;
+  box-shadow: var(--shadow-lg);
+  animation: modal-fade-in 0.3s ease forwards;
+}
+
+.modal-content.large-modal {
+  max-width: 700px;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.close-modal {
+  color: var(--secondary-color);
+  float: right;
+  font-size: 1.75rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-modal:hover {
+  color: var(--dark-color);
+}
+
+.modal-title {
+  padding: 1.25rem 1.5rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--dark-color);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.contact-detail {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.contact-detail:last-child {
+  border-bottom: none;
+}
+
+.contact-detail i {
+  width: 36px;
+  height: 36px;
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* Form Styling */
+.form-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1.25rem 0;
+  color: var(--dark-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-subtitle i {
+  color: var(--primary-color);
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-row {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-group.half {
+  flex: 1;
+  min-width: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--dark-color);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-control.invalid {
+  border-color: var(--danger-color);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.form-control-file {
+  padding: 0.5rem 0;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-help {
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+  margin-top: 0.375rem;
+}
+
+.btn-modal {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-modal:hover {
+  transform: translateY(-1px);
+}
+
+/* Debug info - ensure it's properly styled */
+#debugInfo {
+  width: 100%;
+  margin-top: 20px;
+  box-sizing: border-box;
+}
+
+/* Stats, contacts, and jobs grid layout */
+.stats-container,
+.contacts-container,
+.job-listings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card,
+.contact-card,
+.job-card {
+  width: 100%;
+}
+
+/* Media Queries */
+@media (max-width: 992px) {
+  .job-listings,
+  .stats-container,
+  .contacts-container {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .page-wrapper {
+    width: 95%;
+    padding: 1rem 0;
+  }
+  
+  .page-header {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .profile-content {
+    padding: 1.5rem;
+  }
+  
+  .profile-header {
+    gap: 1.5rem;
+  }
+  
+  .company-name, .company-industry {
+    text-align: center;
+  }
+  
+  .company-location {
+    justify-content: center;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .stats-container, 
+  .contacts-container,
+  .job-listings {
+    grid-template-columns: 1fr;
+  }
+  
+  .company-details {
+    flex-direction: column;
+  }
+  
+  .detail-item.full-width {
+    margin-left: 0;
+  }
+  
+  .action-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .action-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .modal-content {
+    width: 95%;
+  }
+  
+  .company-name {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-wrapper {
+    width: 100%;
+    padding: 0;
+  }
+  
+  .profile-section {
+    padding: 1rem;
+  }
+} 

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="api-url" content="http://localhost:5004/api/admin" />
+  <title>Attendance Tracking</title>
+  <link rel="stylesheet" href="AttendanceTracking.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+  <div class="nav-bar">
+    <img src="img/QCU IMS (2 x 1.9 in).svg" alt="Logo" class="logo"/>
+    <div class="nav-links">
+      <a href="Intrn.html">Intern</a>
+      <a href="AttendanceTracking.html" class="active">Attendance</a>
+      <a href="Cmpny.html">Company</a>
+      <a href="Emplyr.html">Employer</a>
+      <a href="fclty.html">Faculty</a>
+      <a href="Archv.html">Archive</a>
+      <div class="user-icon" onclick="toggleDropdown()">
+        <img src="img/cat-svgrepo-com.svg" alt="User Icon"/>
+      </div>
+      <div class="admin-text">
+        <span>Admin <i class="fa-solid fa-angle-down"></i></span>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <a href="#">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="header">
+    <h2>Attendance Tracking</h2>
+    <p>Monitor interns' attendance and time tracking in real-time</p>
+  </div>
+
+  <div class="dashboard-stats">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div class="stat-info">
+        <span id="present-count">0</span>
+        <p>Present Today</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-user-slash"></i>
+      </div>
+      <div class="stat-info">
+        <span id="absent-count">0</span>
+        <p>Absent Today</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-info">
+        <span id="avg-hours">0</span>
+        <p>Avg. Hours/Day</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-percentage"></i>
+      </div>
+      <div class="stat-info">
+        <span id="attendance-rate">0%</span>
+        <p>Attendance Rate</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <div class="date-filter">
+      <label for="date-selector">Date:</label>
+      <input type="date" id="date-selector" />
+      <button id="today-btn">Today</button>
+    </div>
+    <div class="search">
+      <input type="text" id="searchInput" placeholder="Search by name or ID..."/>
+      <button onclick="searchTable()">Search</button>
+    </div>
+    <div class="view-options">
+      <button id="daily-view-btn" class="active">Daily View</button>
+      <button id="summary-view-btn">Summary View</button>
+    </div>
+  </div>
+
+  <!-- Daily Attendance View -->
+  <div id="daily-view" class="table-container">
+    <div class="info-message">
+      <i class="fas fa-info-circle"></i>
+      <span>Showing attendance for <span id="current-date-display">today</span></span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Status</th>
+          <th>Time In</th>
+          <th>Time Out</th>
+          <th>Duration</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="attendanceTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Summary View -->
+  <div id="summary-view" class="table-container" style="display: none;">
+    <div class="date-range-filter">
+      <label for="start-date">From:</label>
+      <input type="date" id="start-date" />
+      <label for="end-date">To:</label>
+      <input type="date" id="end-date" />
+      <button id="apply-range-btn">Apply</button>
+      <button id="this-week-btn">This Week</button>
+      <button id="this-month-btn">This Month</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Days Present</th>
+          <th>Hours Logged</th>
+          <th>Attendance Rate</th>
+          <th>First Day</th>
+          <th>Last Day</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="summaryTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Attendance Details Modal -->
+  <div id="detailsModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeDetailsModal()">&times;</span>
+      <h3>Attendance Details: <span id="intern-name-display"></span></h3>
+      <div class="intern-info">
+        <p><strong>Student ID:</strong> <span id="student-id-display"></span></p>
+        <p><strong>Company:</strong> <span id="company-display"></span></p>
+        <p><strong>Internship Period:</strong> <span id="internship-period-display"></span></p>
+      </div>
+      <div class="attendance-stats">
+        <div class="stat-group">
+          <div class="stat">
+            <span id="days-present-display">0</span>
+            <p>Days Present</p>
+          </div>
+          <div class="stat">
+            <span id="total-hours-display">0</span>
+            <p>Total Hours</p>
+          </div>
+          <div class="stat">
+            <span id="avg-hours-display">0</span>
+            <p>Avg. Hours/Day</p>
+          </div>
+        </div>
+      </div>
+      <div class="details-filter">
+        <label for="details-start-date">From:</label>
+        <input type="date" id="details-start-date" />
+        <label for="details-end-date">To:</label>
+        <input type="date" id="details-end-date" />
+        <button id="apply-details-filter">Apply</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time In</th>
+              <th>Time Out</th>
+              <th>Duration</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceDetailsBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button id="export-attendance-btn" class="btn-primary">Export to CSV</button>
+        <button onclick="closeDetailsModal()" class="btn-light">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/admin/admin-auth.js"></script>
+  <script src="AttendanceTracking.js"></script>
+</body>
+</html> 
