@@ -16,6 +16,22 @@
     <script src="/student/scripts/employer-applications-connector.js"></script>
     <script src="/student/scripts/employer-applications.js" defer></script>
     <script src="/student/scripts/employer-application-detail.js" defer></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to log out?')) {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              localStorage.removeItem('userData');
+              window.location.href = '/student/mpl-login.html';
+            }
+          });
+        }
+      });
+    </script>
 </head>
 <body>
     <header>
