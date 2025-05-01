@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../styles/home-navbar.css">
+    <link rel="stylesheet" href="../styles/internship-report.css">
+    <title>Intern Progress Report</title>
+</head>
+<body>
+    <header>
+        <!---NAV BAR-->
+        <div class="nav-bar">
+            <div class="logo">
+                <img src="../imgs/qcuims-logo.png" alt="logo">
+            </div>
+            
+            <div class="nav-links">
+                <a href="../faculty.html">Home</a>
+                <a href="../faculty/attendance.html">Attendance</a>
+                <a href="../faculty/internship-report-view.html" class="active">Intern Reports</a>
+                <a href="#" class="logout-link">Logout</a>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <h1 class="report-title">Intern Progress Report</h1>
+            <p class="report-subtitle">View-only report of intern's progress</p>
+    
+            <!-- Intern Information -->
+            <div class="intern-info-card">
+                <h2>Intern Information</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Name:</span>
+                        <span id="intern-name">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Student ID:</span>
+                        <span id="intern-id">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Company:</span>
+                        <span id="intern-company">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Start Date:</span>
+                        <span id="intern-start-date">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">End Date:</span>
+                        <span id="intern-end-date">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Status:</span>
+                        <span id="intern-status">Loading...</span>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Report Types Tabs -->
+            <div class="report-tabs">
+                <button class="tab-button active" data-tab="daily">Daily Reports</button>
+                <button class="tab-button" data-tab="weekly">Weekly Reports</button>
+                <button class="tab-button" data-tab="monthly">Monthly Reports</button>
+            </div>
+    
+            <!-- Daily Reports Tab Content -->
+            <div class="tab-content active" id="daily-tab">
+                <!-- Attendance Report -->
+                <div class="card report-card">
+                    <h2>Attendance Report</h2>
+                    <table id="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>DATE</th>
+                                <th>TIME IN</th>
+                                <th>TIME OUT</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Attendance records will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+    
+                <!-- Accomplishment Report -->
+                <div class="card report-card">
+                    <h2>Daily Accomplishment Report</h2>
+                    <table id="accomplishment-table">
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>DATE</th>
+                                <th>DETAILS</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Accomplishment records will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Weekly Reports Tab Content -->
+            <div class="tab-content" id="weekly-tab">
+                <div class="card full-width">
+                    <table id="weekly-report-table">
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>WEEK PERIOD</th>
+                                <th>SUMMARY</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Weekly reports will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Monthly Reports Tab Content -->
+            <div class="tab-content" id="monthly-tab">
+                <div class="card full-width">
+                    <table id="monthly-report-table">
+                        <thead>
+                            <tr>
+                                <th>NO.</th>
+                                <th>MONTH</th>
+                                <th>SUMMARY</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Monthly reports will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- View Report Modal -->
+    <div id="view-report-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Report Details</h2>
+            <div id="report-details-content"></div>
+            <div id="report-feedback-section">
+                <h3>Feedback</h3>
+                <div id="supervisor-feedback" class="feedback-box"></div>
+                <div id="faculty-feedback" class="feedback-box"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Include auth utilities -->
+    <script src="../scripts/auth.js"></script>
+    <script src="../scripts/protect-page.js"></script>
+    <script src="../scripts/faculty/internship-report-view.js"></script>
+</body>
+</html>

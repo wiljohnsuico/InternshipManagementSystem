@@ -90,7 +90,7 @@ body {
 .stats-right,
 .chart-container {
     flex: 1;
-    min-width: 200px; /* Ensures they don’t get too small on smaller screens */
+    min-width: 200px; /* Ensures they don't get too small on smaller screens */
 }
 
 .chart-container {
@@ -133,4 +133,32 @@ body {
 
 .students-table tr:nth-child(even) {
     background-color: rgba(255, 255, 255, 0.1);
+}
+
+.attendance-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #0088FE;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.attendance-btn:hover {
+    background-color: #0070cc;
+}
+
+.attendance-btn i {
+    font-size: 16px;
+}
+
+/* Ensure the nav-links container has proper spacing */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }

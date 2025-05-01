@@ -505,41 +505,6 @@ document.addEventListener('DOMContentLoaded', function() {
         { label: 'About', selector: '.about-text', field: 'about' }
     ];
 
-    editableFields.forEach(field => {
-        const element = field.id ? document.getElementById(field.id) : document.querySelector(field.selector);
-        if (element) {
-            const editButton = document.createElement('button');
-            editButton.className = 'btn-edit';
-            editButton.innerHTML = '✎';
-            editButton.onclick = () => {
-                const newValue = prompt(`Enter new ${field.label}:`, element.textContent.trim());
-                if (newValue !== null) {
-                    const updateData = { [field.field]: newValue };
-                    updateProfile(updateData);
-                }
-            };
-            element.parentNode.appendChild(editButton);
-        }
-    });
-
-    // Add skills editing
-    const skillsSection = document.querySelector('.skills-section');
-    if (skillsSection) {
-        const editButton = document.createElement('button');
-        editButton.className = 'btn-edit';
-        editButton.innerHTML = '✎';
-        editButton.onclick = () => {
-            const currentSkills = Array.from(skillsSection.querySelectorAll('.skill-tag'))
-                .map(tag => tag.textContent)
-                .join(', ');
-            const newSkills = prompt('Enter skills (comma-separated):', currentSkills);
-            if (newSkills !== null) {
-                const skillsArray = newSkills.split(',').map(s => s.trim()).filter(s => s);
-                updateProfile({ skills: skillsArray });
-            }
-        };
-        skillsSection.querySelector('h3').appendChild(editButton);
-    }
 });
 
 // Add event listener for resumeUpdated event

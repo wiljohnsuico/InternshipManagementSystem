@@ -16,13 +16,16 @@
             </div>
             
             <div class="nav-links">
+                <a href="attendance.html" class="attendance-btn">
+                    <i class="fas fa-calendar-check"></i>
+                    Attendance
+                </a>
                 <div class="profile">
                     <button class="dropdown-profile">Menu</button>
                     <div class="profile-content">
                        <a href="#">Log out</a>
                     </div>
                 </div>
-                
             </div>
         </div>
     </header>
@@ -33,6 +36,13 @@
                 <p>College of Comuter Studies</p>
                 <p>IT Department</p>
             </header>
+            
+            <div class="filter-row" style="display: flex; gap: 16px; align-items: center; margin-bottom: 16px;">
+                <label for="department-filter"><strong>Department:</strong></label>
+                <select id="department-filter" style="padding: 6px 12px; border-radius: 4px;"></select>
+                <label for="section-filter"><strong>Section:</strong></label>
+                <select id="section-filter" style="padding: 6px 12px; border-radius: 4px;"></select>
+            </div>
             
             <div class="stats-container">
                 <div class="stats-row">
@@ -80,117 +90,8 @@
         </div>
     
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
-        <script>
-            // Sample data - In a real application, you would fetch this from your database
-            const stats = {
-                attendanceRatio: 67,
-                remainingHours: 50,
-                studentsApplied: 19,
-                studentsAccepted: 14
-            };
-            
-            const students = [
-                { id: 31159, name: "Gina Cruz-Jones", section: "BUS-40", companyApplied: "Sampler Company" },
-                { id: 31239, name: "Jacob Patel", section: "BUS-40", companyApplied: "Sampler Company" }
-            ];
-    
-            // Initialize the attendance chart
-            function initializeChart() {
-                const ctx = document.getElementById('attendance-chart').getContext('2d');
-                
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        datasets: [{
-                            data: [stats.attendanceRatio, 100 - stats.attendanceRatio],
-                            backgroundColor: ['#0088FE', '#FFFFFF'],
-                            borderWidth: 0,
-                            cutout: '70%'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                enabled: false
-                            }
-                        }
-                    }
-                });
-            }
-    
-            // Populate the students table
-            function populateStudentsTable() {
-                const tableBody = document.getElementById('students-table-body');
-                
-                // Clear existing rows
-                tableBody.innerHTML = '';
-                
-                // Add student data rows
-                students.forEach(student => {
-                    const row = document.createElement('tr');
-                    
-                    const nameCell = document.createElement('td');
-                    nameCell.textContent = student.name;
-                    row.appendChild(nameCell);
-                    
-                    const idCell = document.createElement('td');
-                    idCell.textContent = student.id;
-                    row.appendChild(idCell);
-                    
-                    const sectionCell = document.createElement('td');
-                    sectionCell.textContent = student.section;
-                    row.appendChild(sectionCell);
-                    
-                    const companyCell = document.createElement('td');
-                    companyCell.textContent = student.companyApplied;
-                    row.appendChild(companyCell);
-                    
-                    tableBody.appendChild(row);
-                });
-                
-                // Add empty rows to match the design
-                for (let i = 0; i < 5; i++) {
-                    const emptyRow = document.createElement('tr');
-                    
-                    for (let j = 0; j < 4; j++) {
-                        const emptyCell = document.createElement('td');
-                        emptyCell.innerHTML = '&nbsp;';
-                        emptyRow.appendChild(emptyCell);
-                    }
-                    
-                    tableBody.appendChild(emptyRow);
-                }
-            }
-            
-            // Function to fetch data from database (to be implemented)
-            async function fetchDataFromDatabase() {
-                // In a real implementation, you would fetch data from your API
-                // Example:
-                // const statsResponse = await fetch('/api/faculty/stats');
-                // const statsData = await statsResponse.json();
-                // const studentsResponse = await fetch('/api/faculty/students');
-                // const studentsData = await studentsResponse.json();
-                
-                // Update the UI with the fetched data
-                // updateStats(statsData);
-                // updateStudents(studentsData);
-                
-                // For now, we'll use the sample data
-                initializeChart();
-                populateStudentsTable();
-            }
-            
-            // Initialize the page
-            document.addEventListener('DOMContentLoaded', function() {
-                fetchDataFromDatabase();
-            });
-        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+        <script src="/student/scripts/faculty/faculty-dashboard.js"></script>
     </main>
-    
 </body>
 </html>
