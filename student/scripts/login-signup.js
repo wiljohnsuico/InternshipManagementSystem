@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             window.location.href = '/student/employers/dashboard.html';
                             break;
                         case 'Faculty':
-                            window.location.href = 'mplhome.html';
+                            window.location.href = '/faculty/faculty.html';
                             break;
                         case 'Admin':
                             window.location.href = 'mplhome.html';
