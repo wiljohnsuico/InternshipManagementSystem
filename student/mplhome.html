@@ -629,9 +629,11 @@
         // Add logout functionality
         document.querySelector(".logout-link").addEventListener("click", function(e) {
             e.preventDefault();
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = "/student/mpl-login.html";
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = "/student/mpl-login.html";
+            }
         });
         
         // Hide login button if user is logged in

@@ -226,10 +226,12 @@
         
         // Logout functionality
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('userData');
-            window.location.href = '/student/mpl-login.html';
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('userData');
+                window.location.href = '/student/mpl-login.html';
+            }
         });
     </script>
 </body>
