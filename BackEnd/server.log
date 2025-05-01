@@ -1,0 +1,90 @@
+Database configuration: { host: 'localhost', user: 'root', database: 'qcu_ims' }
+Database connection pool created successfully
+Checking upload directory on server startup: D:\DOWNLOAD\INTERN\InternshipManagementSystem\BackEnd\BackEnd\uploads\applications
+Upload directory already exists
+Upload directory is writable
+
+======================================================
+      Starting Internship Management System Server      
+======================================================
+
+Setting up database tables...
+Executing report_tables.sql script...
+✅ Database connection successful
+Successfully connected to MySQL database
+Successfully executed report_tables.sql script
+Running admin tables migration...
+Tables already exist, checking for test users
+Created archived_interns_tbl (if it didn't exist)
+User with ID 2 already exists
+Added is_deleted column to users_tbl (if it didn't exist)
+Added is_deleted column to companies_tbl (if it didn't exist)
+job_listings_tbl does not exist, skipping
+applications_tbl does not exist, skipping
+Added verification_status column to interns_tbl (if it didn't exist)
+Created admin_activity_log (if it didn't exist)
+Admin tables migration completed successfully.
+
+Attempting to start server on port 5004...
+
+✅ Server successfully started on port 5004
+
+Access the API at: http://localhost:5004
+Press Ctrl+C to stop the server
+
+Updated password for user 2
+Available tables: [
+  'admin_activity_log',
+  'admin_tbl',
+  'applications',
+  'archived_companies',
+  'archived_companies_tbl',
+  'archived_employers_tbl',
+  'archived_faculties_tbl',
+  'archived_interns_tbl',
+  'archived_users',
+  'attendance_tracking_tbl',
+  'companies',
+  'companies_tbl',
+  'daily_accomplishment_tbl',
+  'employers',
+  'employers_tbl',
+  'faculties_tbl',
+  'faculty',
+  'intern_requirements_submission_tbl',
+  'interns_tbl',
+  'internship_placements_tbl',
+  'internship_requirements_tbl',
+  'job_listings',
+  'monthly_report_tbl',
+  'notifications',
+  'performance_evaluation_tbl',
+  'reports_tbl',
+  'resumes',
+  'users_tbl',
+  'weekly_report_tbl'
+]
+Available users: [
+  { user_id: 2, email: 'justincabang@gmail.com', role: 'Intern' },
+  { user_id: 3, email: 'suico@gmail.com', role: 'Intern' },
+  { user_id: 5, email: 'hello@gmail.com', role: 'Intern' },
+  { user_id: 6, email: 'Faculty Ni Justin Cabang', role: 'Faculty' },
+  { user_id: 7, email: 'Faculty Ni Suico', role: 'Faculty' },
+  { user_id: 8, email: 'HelloHi', role: 'Faculty' },
+  { user_id: 9, email: 'admin@gmail.com', role: 'Admin' },
+  { user_id: 10, email: 'wiljohnsuico@gmail.com', role: 'Faculty' },
+  { user_id: 11, email: 'assd@gmail.com', role: 'Employer' }
+]
+Database initialization completed successfully
+2025-04-24T09:59:25.630Z - GET /api/health
+Request body: {}
+2025-04-24T09:59:46.308Z - GET /api/health
+Request body: {}
+2025-04-24T09:59:46.334Z - GET /api/admin/interns
+Request body: {}
+DEVELOPMENT MODE: Bypassing authentication
+2025-04-24T09:59:49.899Z - PUT /api/admin/interns/4/archive
+Request body: {}
+DEVELOPMENT MODE: Bypassing authentication
+Archiving intern...
+Processing archive request for intern ID: 4
