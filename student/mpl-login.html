@@ -6,6 +6,48 @@
     <link rel="stylesheet" href="styles/nav-bar.css">
     <link rel="stylesheet" href="styles/landing.css">
     <title>LANDING PAGE</title>
+    <style>
+        /* Add/Update styles for nav bar and login button */
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-links a {
+            color: #0056b3;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 18px;
+            border-radius: 5px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a:focus {
+            background: #e6f0ff;
+            color: #003d82;
+        }
+
+        .login-button {
+            background: #0056b3;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .login-button:hover, .login-button:focus {
+            background: #003d82;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(0,86,179,0.10);
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -17,7 +59,7 @@
 
             <div class="nav-links">
                 <a href="mplhome.html">Home</a>
-                <button type="" id="openLogin" class="openLogin">Login</button>
+                <button type="button" id="openLogin" class="openLogin login-button">Login</button>
                 
             </div>
         </div>
