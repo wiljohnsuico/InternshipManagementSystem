@@ -7,6 +7,29 @@ const fs = require('fs');
 const util = require('util');
 require('dotenv').config();
 
+const app = express();
+
+// CORS configuration - must be first!
+app.use(cors({
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    exposedHeaders: ['Content-Length', 'X-Total-Count'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
+}));
+
+// --- HEALTH CHECK ROUTE ---
+app.get('/api/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        message: 'Server is running',
+        timestamp: new Date().toISOString()
+    });
+});
+// --------------------------
+
 // Import routes
 const authRoutes = require('./routes/auth.routes');
 const internRoutes = require('./routes/intern.routes');
@@ -24,19 +47,6 @@ const statusRoutes = require('./routes/status');
 
 // Import migration scripts
 const runAdminMigration = require('./config/run-admin-migration');
-
-const app = express();
-
-// CORS configuration - Allow development requests from anywhere
-app.use(cors({
-    origin: true,  // Allow requests from any origin
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-    exposedHeaders: ['Content-Length', 'X-Total-Count'],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-}));
 
 // Log CORS issues
 app.use((req, res, next) => {
@@ -106,15 +116,6 @@ app.use('/api/status', statusRoutes);
 // Test route
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to Internship Management System API' });
-});
-
-// Add health check endpoint
-app.get('/api/health', (req, res) => {
-    res.status(200).json({
-        status: 'ok',
-        message: 'Server is running',
-        timestamp: new Date().toISOString()
-    });
 });
 
 // API Status route for server discovery (no auth required)

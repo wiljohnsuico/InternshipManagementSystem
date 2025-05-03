@@ -39,11 +39,9 @@ const APPLICATIONS_CONNECTOR = {
                 return this.getMockApplications();
             }
             
-            // Try multiple endpoints
+            // Try only the correct endpoint for employer applications
             const endpoints = [
-                `${this.API_URL}/applications/employer`,
-                `${this.API_URL}/employers/applications`,
-                `${this.API_URL}/applications`
+                `${this.API_URL}/applications/employer`
             ];
             
             let applications = null;
@@ -60,7 +58,12 @@ const APPLICATIONS_CONNECTOR = {
                     
                     if (response.ok) {
                         const data = await response.json();
-                        applications = this.normalizeApplicationsData(data);
+                        // The backend returns { success, count, applications: [...] }
+                        if (data && data.success && Array.isArray(data.applications)) {
+                            applications = this.normalizeApplicationsData(data.applications);
+                        } else {
+                            applications = [];
+                        }
                         break;
                     }
                 } catch (e) {

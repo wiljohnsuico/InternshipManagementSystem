@@ -421,7 +421,7 @@ function createApplicationCard(application) {
             ` : ''}
         </div>
         <div class="application-actions">
-            <div class="action-buttons">
+            <div class="action-buttons" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
                 <button class="action-btn preview-btn" data-application-id="${application.id || application.application_id}" data-job-id="${jobId}" title="Preview Application">
                     <i class="fas fa-eye"></i>
                 </button>
@@ -1051,7 +1051,7 @@ async function loadApplications(forceRefresh = false) {
                     if (!contentType.includes('application/json')) {
                         throw new Error(`Server returned non-JSON response (Content-Type: ${contentType})`);
                     }
-                    const data = await response.json();
+        const data = await response.json();
                     applications = data.applications || data.data || [];
                     console.log(`Successfully fetched ${applications.length} applications from ${endpoint}`);
                     fetchSuccess = true;
@@ -2378,12 +2378,8 @@ async function deleteApplication(applicationId) {
 
 // Add this to the end of loadApplications function in student/scripts/applications.js
 function updateJobListingUI() {
-  // Only run this on job listing pages, not on application tracking page
-  if (window.location.pathname.includes('application-tracking.html')) {
-    return;
-  }
-  // Get all apply buttons on the page
-  const applyButtons = document.querySelectorAll('.apply-btn, button[data-job-id]');
+  // Only target apply buttons, not all buttons with data-job-id
+  const applyButtons = document.querySelectorAll('.apply-btn');
   
   // Get cached applications
   const cachedApplications = JSON.parse(localStorage.getItem('cachedApplications') || '{}');

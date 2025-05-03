@@ -146,7 +146,7 @@ const beginTransaction = async () => await db.beginTransaction();
 const commit = async () => await db.commit();
 const rollback = async () => await db.rollback();
 
-// Place this FIRST
+// Place this FIRST, before any parameterized routes!
 router.get('/my-applications', authenticateToken, async (req, res) => {
     try {
         // Get intern_id from interns_tbl using user_id
@@ -185,6 +185,82 @@ router.get('/my-applications', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error fetching applications',
+            error: error.message
+        });
+    }
+});
+
+// Place this AFTER
+router.get('/employer', authenticateToken, authorizeRoles(['Employer']), async (req, res) => {
+    try {
+        console.log('Fetching employer applications for user:', req.user.user_id);
+        
+        // Get company_id from employer information
+        const [employer] = await db.query(
+            'SELECT company_id FROM employers_tbl WHERE user_id = ?',
+            [req.user.user_id]
+        );
+        
+        if (employer.length === 0 || !employer[0].company_id) {
+            console.log('No company associated with this employer:', req.user.user_id);
+            return res.status(400).json({
+                success: false,
+                message: 'No company associated with this employer'
+            });
+        }
+        
+        const company_id = employer[0].company_id;
+        console.log('Found company_id:', company_id);
+        
+        // Get all applications for job listings of this company
+        const [applications] = await db.query(`
+            SELECT a.*, j.job_title, j.location, j.is_paid,
+                   c.company_name, c.industry_sector,
+                   u.first_name, u.last_name, u.email
+            FROM applications a
+            JOIN job_listings j ON a.listing_id = j.listing_id
+            JOIN companies_tbl c ON j.company_id = c.company_id
+            JOIN interns_tbl i ON a.intern_id = i.id
+            JOIN users_tbl u ON i.user_id = u.user_id
+            WHERE j.company_id = ?
+            ORDER BY a.applied_at DESC
+        `, [company_id]);
+        
+        console.log(`Found ${applications.length} applications for company ${company_id}`);
+        
+        // Process applications to include student information
+        const processedApplications = applications.map(app => ({
+            application_id: app.application_id,
+            listing_id: app.listing_id,
+            intern_id: app.intern_id,
+            status: app.status,
+            applied_at: app.applied_at,
+            updated_at: app.updated_at,
+            cover_letter: app.cover_letter,
+            file_info: typeof app.file_info === 'string' ? JSON.parse(app.file_info) : app.file_info,
+            additional_info: typeof app.additional_info === 'string' ? JSON.parse(app.additional_info) : app.additional_info,
+            job_title: app.job_title,
+            location: app.location,
+            is_paid: app.is_paid,
+            company_name: app.company_name,
+            industry_sector: app.industry_sector,
+            student: {
+                first_name: app.first_name,
+                last_name: app.last_name,
+                email: app.email
+            }
+        }));
+        
+        res.json({
+            success: true,
+            count: processedApplications.length,
+            applications: processedApplications
+        });
+    } catch (error) {
+        console.error('Error fetching employer applications:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching employer applications',
             error: error.message
         });
     }
@@ -1222,82 +1298,6 @@ router.post('/:applicationId/cancel', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error canceling application',
-            error: error.message
-        });
-    }
-});
-
-// Get all applications for the employer's company
-router.get('/employer', authenticateToken, authorizeRoles(['Employer']), async (req, res) => {
-    try {
-        console.log('Fetching employer applications for user:', req.user.user_id);
-        
-        // Get company_id from employer information
-        const [employer] = await db.query(
-            'SELECT company_id FROM employers_tbl WHERE user_id = ?',
-            [req.user.user_id]
-        );
-        
-        if (employer.length === 0 || !employer[0].company_id) {
-            console.log('No company associated with this employer:', req.user.user_id);
-            return res.status(400).json({
-                success: false,
-                message: 'No company associated with this employer'
-            });
-        }
-        
-        const company_id = employer[0].company_id;
-        console.log('Found company_id:', company_id);
-        
-        // Get all applications for job listings of this company
-        const [applications] = await db.query(`
-            SELECT a.*, j.job_title, j.location, j.is_paid,
-                   c.company_name, c.industry_sector,
-                   u.first_name, u.last_name, u.email
-            FROM applications a
-            JOIN job_listings j ON a.listing_id = j.listing_id
-            JOIN companies_tbl c ON j.company_id = c.company_id
-            JOIN interns_tbl i ON a.intern_id = i.id
-            JOIN users_tbl u ON i.user_id = u.user_id
-            WHERE j.company_id = ?
-            ORDER BY a.applied_at DESC
-        `, [company_id]);
-        
-        console.log(`Found ${applications.length} applications for company ${company_id}`);
-        
-        // Process applications to include student information
-        const processedApplications = applications.map(app => ({
-            application_id: app.application_id,
-            listing_id: app.listing_id,
-            intern_id: app.intern_id,
-            status: app.status,
-            applied_at: app.applied_at,
-            updated_at: app.updated_at,
-            cover_letter: app.cover_letter,
-            file_info: typeof app.file_info === 'string' ? JSON.parse(app.file_info) : app.file_info,
-            additional_info: typeof app.additional_info === 'string' ? JSON.parse(app.additional_info) : app.additional_info,
-            job_title: app.job_title,
-            location: app.location,
-            is_paid: app.is_paid,
-            company_name: app.company_name,
-            industry_sector: app.industry_sector,
-            student: {
-                first_name: app.first_name,
-                last_name: app.last_name,
-                email: app.email
-            }
-        }));
-        
-        res.json({
-            success: true,
-            count: processedApplications.length,
-            applications: processedApplications
-        });
-    } catch (error) {
-        console.error('Error fetching employer applications:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching employer applications',
             error: error.message
         });
     }
