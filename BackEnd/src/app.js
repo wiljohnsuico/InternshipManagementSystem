@@ -246,3 +246,5 @@ if (require.main === module) {
         }
     }, 2000);
 }
+
+app.use('/api', require('./routes/index'));

@@ -146,7 +146,51 @@ const beginTransaction = async () => await db.beginTransaction();
 const commit = async () => await db.commit();
 const rollback = async () => await db.rollback();
 
-// NEW ENDPOINT: Get application details by ID
+// Place this FIRST
+router.get('/my-applications', authenticateToken, async (req, res) => {
+    try {
+        // Get intern_id from interns_tbl using user_id
+        const [interns] = await db.query(
+            'SELECT id as intern_id FROM interns_tbl WHERE user_id = ?',
+            [req.user.user_id]
+        );
+        
+        if (interns.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Intern profile not found'
+            });
+        }
+        
+        const internId = interns[0].intern_id;
+        
+        // Get all applications for this intern with job and company details
+        const [applications] = await db.query(`
+            SELECT a.*, j.job_title, j.location, j.is_paid, 
+                   c.company_name, c.industry_sector
+            FROM applications a
+            JOIN job_listings j ON a.listing_id = j.listing_id
+            JOIN companies_tbl c ON j.company_id = c.company_id
+            WHERE a.intern_id = ?
+            ORDER BY a.applied_at DESC
+        `, [internId]);
+        
+        res.json({
+            success: true,
+            count: applications.length,
+            applications
+        });
+    } catch (error) {
+        console.error('Error fetching applications:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching applications',
+            error: error.message
+        });
+    }
+});
+
+// Place this AFTER
 router.get('/:applicationId', async (req, res) => {
     try {
         const { applicationId } = req.params;
@@ -237,9 +281,10 @@ router.get('/:applicationId', async (req, res) => {
 
             if (applications.length === 0) {
                 console.log(`Application ID ${applicationId} join query returned no results`);
-                return res.status(404).json({
-                    success: false,
-                    message: 'Application details not found'
+                return res.json({
+                    success: true,
+                    count: 0,
+                    applications: []
                 });
             }
 
@@ -376,50 +421,6 @@ function getStatusMessage(status) {
             return 'Application status unknown.';
     }
 }
-
-// Get all applications for a specific intern (student view)
-router.get('/my-applications', authenticateToken, async (req, res) => {
-    try {
-        // Get intern_id from interns_tbl using user_id
-        const [interns] = await db.query(
-            'SELECT id as intern_id FROM interns_tbl WHERE user_id = ?',
-            [req.user.user_id]
-        );
-        
-        if (interns.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Intern profile not found'
-            });
-        }
-        
-        const internId = interns[0].intern_id;
-        
-        // Get all applications for this intern with job and company details
-        const [applications] = await db.query(`
-            SELECT a.*, j.job_title, j.location, j.is_paid, 
-                   c.company_name, c.industry_sector
-            FROM applications a
-            JOIN job_listings j ON a.listing_id = j.listing_id
-            JOIN companies_tbl c ON j.company_id = c.company_id
-            WHERE a.intern_id = ?
-            ORDER BY a.applied_at DESC
-        `, [internId]);
-        
-        res.json({
-            success: true,
-            count: applications.length,
-            applications
-        });
-    } catch (error) {
-        console.error('Error fetching applications:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching applications',
-            error: error.message
-        });
-    }
-});
 
 // Get all applications for a specific job listing (employer view)
 router.get('/listing/:listingId', authenticateToken, authorizeRoles(['Employer', 'Admin']), async (req, res) => {

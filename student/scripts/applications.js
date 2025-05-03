@@ -5,8 +5,8 @@ const DEVELOPMENT_MODE = window.location.hostname === 'localhost' || window.loca
 const API_TIMEOUT = 10000; // 10 seconds
 
 // Initialize API base URL with fallbacks
-let BASE_URL = '';
-const API_HOST = window.location.hostname === 'localhost' ? 'http://localhost:3000' : window.location.origin;
+let BASE_URL = 'http://localhost:5004/api';
+const API_HOST = 'http://localhost:5004';
 
 // Cache timestamp tracking
 let lastApiCallTimestamp = 0;
@@ -27,8 +27,7 @@ const MOCK_APPLICATIONS = [
 // Try multiple potential base URLs
 const POSSIBLE_BASE_URLS = [
     'http://localhost:5004/api',  // Default port
-    'http://127.0.0.1:5004/api',  // Alternative localhost
-    window.location.origin + '/api' // For production deployment
+    'http://127.0.0.1:5004/api'   // Alternative localhost
 ];
 
 // Function to find a working API base URL
@@ -270,6 +269,8 @@ async function checkApiConnectivity() {
         const statusEndpoints = [
             `${BASE_URL}/status`,
             `${BASE_URL}/health`,
+            `${BASE_URL}/api/status`,
+            `${BASE_URL}/api/health`,
             `${BASE_URL}`
         ];
         
@@ -1022,10 +1023,7 @@ async function loadApplications(forceRefresh = false) {
         
         // Define possible API endpoints to try in order
         const endpoints = [
-            `${BASE_URL}/applications`,
-            `${BASE_URL}/applications/my-applications`,
-            `${BASE_URL}/student/applications`,
-            `${BASE_URL}/student/my-applications`
+            `${BASE_URL}/applications/my-applications`
         ];
         
         console.log('Trying these endpoints in order:', endpoints);
@@ -1048,7 +1046,12 @@ async function loadApplications(forceRefresh = false) {
                 });
                 
                 if (response.ok) {
-        const data = await response.json();
+                    // Check if the response is JSON
+                    const contentType = response.headers.get('content-type') || '';
+                    if (!contentType.includes('application/json')) {
+                        throw new Error(`Server returned non-JSON response (Content-Type: ${contentType})`);
+                    }
+                    const data = await response.json();
                     applications = data.applications || data.data || [];
                     console.log(`Successfully fetched ${applications.length} applications from ${endpoint}`);
                     fetchSuccess = true;
@@ -2372,3 +2375,58 @@ async function deleteApplication(applicationId) {
         hideCancelConfirmation();
     }
 }
+
+// Add this to the end of loadApplications function in student/scripts/applications.js
+function updateJobListingUI() {
+  // Only run this on job listing pages, not on application tracking page
+  if (window.location.pathname.includes('application-tracking.html')) {
+    return;
+  }
+  // Get all apply buttons on the page
+  const applyButtons = document.querySelectorAll('.apply-btn, button[data-job-id]');
+  
+  // Get cached applications
+  const cachedApplications = JSON.parse(localStorage.getItem('cachedApplications') || '{}');
+  const applications = Array.isArray(cachedApplications) ? cachedApplications : 
+                      (cachedApplications.applications || []);
+  
+  // Get locally stored application IDs
+  const appliedJobs = JSON.parse(localStorage.getItem('appliedJobs') || '[]');
+  const appliedJobsFromServer = JSON.parse(localStorage.getItem('appliedJobsFromServer') || '[]');
+  
+  // Check each button
+  applyButtons.forEach(button => {
+    const jobId = button.getAttribute('data-job-id');
+    if (!jobId) return;
+    
+    // Check if this job is in any of our applied lists
+    const isApplied = 
+      appliedJobs.includes(jobId) || 
+      appliedJobsFromServer.includes(jobId) ||
+      applications.some(app => 
+        (app.job_id == jobId || app.listing_id == jobId) && 
+        app.status !== 'Withdrawn'
+      );
+    
+    if (isApplied) {
+      button.textContent = 'Applied';
+      button.disabled = true;
+      button.classList.remove('btn-primary');
+      button.classList.add('btn-success', 'applied');
+      
+      // Also update the job card if it exists
+      const jobCard = button.closest('.job-card');
+      if (jobCard) {
+        jobCard.classList.add('job-applied');
+      }
+    }
+  });
+}
+
+// Call this function when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(updateJobListingUI, 500); // Small delay to let the page fully load
+});
+
+// Also add an event listener for when job listings are loaded
+document.addEventListener('job-listings-loaded', updateJobListingUI);

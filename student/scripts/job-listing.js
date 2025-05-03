@@ -259,45 +259,49 @@ function hasAppliedToJob(jobId) {
             window.appliedJobCacheTimestamp = Date.now();
         }
         
-        // CRITICAL: First check if job has been withdrawn - if so, return false immediately
+        // Check all withdrawal records first
         const withdrawnJobsMap = JSON.parse(localStorage.getItem('withdrawnJobsMap') || '{}');
-        if (withdrawnJobsMap[jobId]) {
-            window.appliedJobCache[jobId] = false;
-            return false;
-        }
-        
-        // Quick check of completed withdrawals
+        const withdrawnJobs = JSON.parse(localStorage.getItem('withdrawnJobs') || '[]');
         const completedWithdrawals = JSON.parse(localStorage.getItem('completedWithdrawals') || '[]');
-        if (completedWithdrawals.includes(jobId)) {
+        
+        // If job is in any withdrawal list, check if it was reapplied
+        const isWithdrawn = withdrawnJobsMap[jobId] || 
+                           withdrawnJobs.includes(jobId) || 
+                           completedWithdrawals.includes(jobId);
+        
+        // Now check if the application was added after withdrawal
+        const appliedJobs = JSON.parse(localStorage.getItem('appliedJobs') || '[]');
+        const appliedJobsFromServer = JSON.parse(localStorage.getItem('appliedJobsFromServer') || '[]');
+        const locallyStoredApplications = JSON.parse(localStorage.getItem('locallyStoredApplications') || '[]');
+        
+        // If job is in applied lists, it means it was reapplied after withdrawal
+        const isApplied = appliedJobs.includes(jobId) || 
+                         appliedJobsFromServer.includes(jobId) ||
+                         locallyStoredApplications.includes(jobId);
+        
+        // If both withdrawn and reapplied, prioritize the applied status
+        if (isApplied) {
+            window.appliedJobCache[jobId] = true;
+            return true;
+        }
+        
+        // If only withdrawn and not reapplied, consider it not applied
+        if (isWithdrawn) {
             window.appliedJobCache[jobId] = false;
             return false;
-        }
-        
-        // SIMPLIFY: Then check direct storage arrays 
-        // These are the most reliable indicators
-        const appliedJobs = JSON.parse(localStorage.getItem('appliedJobs') || '[]');
-        if (appliedJobs.includes(jobId)) {
-            window.appliedJobCache[jobId] = true;
-            return true;
-        }
-        
-        const appliedJobsFromServer = JSON.parse(localStorage.getItem('appliedJobsFromServer') || '[]');
-        if (appliedJobsFromServer.includes(jobId)) {
-            window.appliedJobCache[jobId] = true;
-            return true;
-        }
-        
-        // Check for local storage applications
-        const locallyStoredApplications = JSON.parse(localStorage.getItem('locallyStoredApplications') || '[]');
-        if (locallyStoredApplications.includes(jobId)) {
-            window.appliedJobCache[jobId] = true;
-            return true;
         }
         
         // Final check: Look for this job in cached applications
-        const cachedApplications = JSON.parse(localStorage.getItem('cachedApplications') || '[]');
+        let cachedApplications = JSON.parse(localStorage.getItem('cachedApplications') || '[]');
+        // Ensure cachedApplications is always an array
+        if (!Array.isArray(cachedApplications)) {
+            if (cachedApplications && Array.isArray(cachedApplications.applications)) {
+                cachedApplications = cachedApplications.applications;
+            } else {
+                cachedApplications = [];
+            }
+        }
         
-        // Find any application for this job that's not withdrawn
         const hasActiveApp = cachedApplications.some(app => {
             // Match by job_id, listing_id, or jobId
             const isMatchingJob = 
