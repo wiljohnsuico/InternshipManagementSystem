@@ -820,117 +820,236 @@ function showCancelConfirmation(applicationId, jobId) {
 
 /**
  * Cancel/withdraw an application
- * @param {string|number} applicationId - The ID of the application to cancel
- * @returns {Promise<boolean>} - Whether the cancellation was successful
+ * @param {number|string} applicationId - ID of the application
+ * @param {number|string} jobId - ID of the associated job listing
  */
-async function cancelApplication(applicationId) {
-    try {
-        // Use the global variable if no ID was provided
-        applicationId = applicationId || window.currentApplicationId;
+function cancelApplication(applicationId, jobId) {
+    console.log(`Cancelling application ${applicationId} for job ${jobId}`);
+    
+    // Mark as direct withdrawal for notification purposes
+    localStorage.setItem('directWithdrawal', 'true');
+    
+    // Show confirmation modal
+    const modal = document.getElementById('confirmModal');
+    if (modal) {
+        modal.style.display = 'block';
         
-        if (!applicationId) {
-            throw new Error("Application ID is required");
+        // Set application ID and job ID on confirm button
+        const confirmButton = document.getElementById('confirmCancelBtn');
+        if (confirmButton) {
+            confirmButton.dataset.applicationId = applicationId;
+            confirmButton.dataset.jobId = jobId;
         }
-        
-        console.log(`Canceling application ${applicationId}`);
-        showLoadingIndicator();
-        
-        const token = getAuthToken();
-        if (!token) {
-            throw new Error("Authentication required");
+    } else {
+        // If no modal, ask for confirmation directly
+        if (confirm('Are you sure you want to withdraw this application?')) {
+            completeApplicationCancellation(applicationId, jobId);
         }
-        
-        // Try to determine the user ID
-        const userData = getUserData();
-        const userId = userData?.user_id || userData?.id;
-        
-        // Define possible API endpoints to try
-        const endpoints = [
-            `${BASE_URL}/applications/${applicationId}/withdraw`,
-            `${BASE_URL}/applications/${applicationId}/cancel`,
-            `${BASE_URL}/applications/withdraw/${applicationId}`,
-            `${BASE_URL}/student/applications/${applicationId}/withdraw`
-        ];
-        
-        console.log(`Will try these endpoints to cancel application ${applicationId}:`, endpoints);
-        
-        let success = false;
-        let error = null;
-        
-        // Try each endpoint in sequence
-        for (let i = 0; i < endpoints.length; i++) {
-            try {
-                const endpoint = endpoints[i];
-                console.log(`Attempting cancellation with endpoint: ${endpoint}`);
-                
-                const response = await fetch(endpoint, {
-                    method: 'PUT',  // Most APIs use PUT for updates
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        status: 'withdrawn',
-                        user_id: userId
-                    })
-                });
-                
-                if (response.ok) {
-                    console.log(`Successfully canceled application with endpoint ${i+1}`);
-                    success = true;
-                    break;
-                } else {
-                    console.warn(`Endpoint ${i+1} failed with status: ${response.status}`);
-                    error = new Error(`Server returned ${response.status}: ${response.statusText}`);
-                }
-            } catch (err) {
-                console.warn(`Error with endpoint ${i+1}:`, err);
-                error = err;
-            }
-        }
-        
-        if (success) {
-            // Track the withdrawn application locally
-            withdrawnApplicationIds.push(applicationId);
-            localStorage.setItem('withdrawnApplicationIds', JSON.stringify(withdrawnApplicationIds));
-            
-            // Update UI
-            const appElement = document.querySelector(`.application-card[data-application-id="${applicationId}"]`);
-            if (appElement) {
-                // Option 1: Remove the application from the list
-                appElement.remove();
-                
-                // Option 2: Update the status (alternative approach)
-                // const statusBadge = appElement.querySelector('.status-badge');
-                // if (statusBadge) {
-                //     statusBadge.textContent = 'Withdrawn';
-                //     statusBadge.className = 'status-badge status-withdrawn';
-                // }
-            }
-            
-            // Show success notification
-            showSuccessNotification('Application successfully withdrawn');
-            
-            // Clear global variable
-            window.currentApplicationId = null;
-            window.currentJobId = null;
-            
-            // Refresh applications list after a short delay
-            setTimeout(() => loadApplications(true), 1000);
-            
-            return true;
-        } else {
-            throw error || new Error("Failed to withdraw application");
-        }
-    } catch (error) {
-        console.error("Error canceling application:", error);
-        showErrorNotification(`Failed to withdraw application: ${error.message}`);
-        return false;
-    } finally {
-        hideLoadingIndicator();
-        hideCancelConfirmation();
     }
+}
+
+/**
+ * Complete the application cancellation process after confirmation
+ * @param {number|string} applicationId - ID of the application
+ * @param {number|string} jobId - ID of the associated job listing
+ */
+function completeApplicationCancellation(applicationId, jobId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showErrorNotification("You must be logged in to cancel applications");
+        return;
+    }
+    
+    // Get API base URL
+    let baseUrl = localStorage.getItem('apiBaseUrl') || API_URL || 'http://localhost:5004/api';
+    
+    // Ensure jobId and applicationId are strings for consistency in comparisons
+    jobId = String(jobId);
+    applicationId = String(applicationId);
+    
+    // Show cancellation in progress notification
+    showInfoNotification("Cancelling application...");
+    
+    // IMPORTANT: Update localStorage IMMEDIATELY for responsive UI
+    // This ensures other pages like job listings will show the correct status
+    updateLocalStorageAfterCancellation(jobId);
+    
+    // Track server request success
+    let serverRequestAttempted = false;
+    let success = false;
+    
+    // Call the API to cancel the application
+    fetch(`${baseUrl}/applications/${applicationId}/cancel`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        serverRequestAttempted = true;
+        
+        if (!response.ok) {
+            // Still try to parse error message
+            return response.json().then(data => {
+                throw new Error(data.message || `Server error (${response.status})`);
+            }).catch(() => {
+                throw new Error(`Server error (${response.status})`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Application cancelled successfully on server:', data);
+        success = true;
+        
+        // Update UI by reloading applications
+        loadAndDisplayApplications();
+        
+        // Show success notification
+        showSuccessNotification("Application withdrawn successfully");
+        
+        // Perform a complete sync with the server to ensure all data is fresh
+        if (typeof window.forceApplicationStateSyncWithServer === 'function') {
+            console.log('Performing complete application state sync with server');
+            window.forceApplicationStateSyncWithServer();
+        } else {
+            // If the sync function isn't available, update localStorage again
+            updateLocalStorageAfterCancellation(jobId);
+        }
+        
+        // Dispatch event for other components to respond
+        document.dispatchEvent(new CustomEvent('application-cancel-complete', {
+            detail: { applicationId, jobId, timestamp: Date.now() }
+        }));
+    })
+    .catch(error => {
+        console.error('Error cancelling application on server:', error);
+        
+        // If server request was attempted but failed
+        if (serverRequestAttempted) {
+            showErrorNotification("Server error: " + error.message + ". Changes applied locally.");
+            
+            // Mark API as temporarily unavailable
+            localStorage.setItem('apiUnavailable', 'true');
+            // Clear this flag after 5 minutes
+            setTimeout(() => {
+                localStorage.removeItem('apiUnavailable');
+            }, 5 * 60 * 1000);
+        } else {
+            showErrorNotification("Network error: Unable to reach server. Changes applied locally.");
+        }
+        
+        // Still update the UI and localStorage for better user experience
+        updateLocalStorageAfterCancellation(jobId);
+        
+        // Mark as withdrawn in cached applications
+        try {
+            let cachedApplications = JSON.parse(localStorage.getItem('cachedApplications') || '[]');
+            if (Array.isArray(cachedApplications)) {
+                cachedApplications = cachedApplications.map(app => {
+                    if ((app.job_id && String(app.job_id) === jobId) || 
+                        (app.listing_id && String(app.listing_id) === jobId) ||
+                        (app.jobId && String(app.jobId) === jobId)) {
+                        return {...app, status: 'Withdrawn'};
+                    }
+                    return app;
+                });
+                localStorage.setItem('cachedApplications', JSON.stringify(cachedApplications));
+            }
+        } catch (e) {
+            console.error('Error updating cached applications:', e);
+        }
+        
+        // Dispatch event for other components to respond
+        document.dispatchEvent(new CustomEvent('application-cancel-complete', {
+            detail: { applicationId, jobId, timestamp: Date.now() }
+        }));
+        
+        // Reload the application list
+        loadAndDisplayApplications();
+    });
+}
+
+/**
+ * Update all localStorage items after cancellation
+ * @param {string} jobId - The job ID to remove from localStorage arrays
+ */
+function updateLocalStorageAfterCancellation(jobId) {
+    if (!jobId) return;
+    
+    console.log(`Updating localStorage after cancellation of job ${jobId}`);
+    jobId = String(jobId);
+    
+    // Remove from all applied jobs arrays
+    const keysToUpdate = [
+        'appliedJobs',
+        'appliedJobsFromServer',
+        'locallyStoredApplications'
+    ];
+    
+    keysToUpdate.forEach(key => {
+        try {
+            const arr = JSON.parse(localStorage.getItem(key) || '[]');
+            const index = arr.indexOf(jobId);
+            if (index !== -1) {
+                arr.splice(index, 1);
+                localStorage.setItem(key, JSON.stringify(arr));
+                console.log(`Removed job ${jobId} from ${key}`);
+            }
+        } catch (e) {
+            console.error(`Error updating ${key}:`, e);
+        }
+    });
+    
+    // Remove from applicationIdMap
+    try {
+        const applicationIdMap = JSON.parse(localStorage.getItem('applicationIdMap') || '{}');
+        if (applicationIdMap[jobId]) {
+            delete applicationIdMap[jobId];
+            localStorage.setItem('applicationIdMap', JSON.stringify(applicationIdMap));
+            console.log(`Removed job ${jobId} from applicationIdMap`);
+        }
+    } catch (e) {
+        console.error('Error updating applicationIdMap:', e);
+    }
+    
+    // Update cachedApplications
+    try {
+        let cachedApplications = localStorage.getItem('cachedApplications');
+        if (cachedApplications) {
+            let parsed = JSON.parse(cachedApplications);
+            
+            // Handle both array and object formats
+            if (Array.isArray(parsed)) {
+                parsed = parsed.filter(app => {
+                    const appJobId = app.job_id || app.listing_id || app.jobId;
+                    return String(appJobId) !== jobId;
+                });
+                localStorage.setItem('cachedApplications', JSON.stringify(parsed));
+                console.log(`Removed job ${jobId} from cachedApplications array`);
+            } else if (parsed && Array.isArray(parsed.applications)) {
+                parsed.applications = parsed.applications.filter(app => {
+                    const appJobId = app.job_id || app.listing_id || app.jobId;
+                    return String(appJobId) !== jobId;
+                });
+                localStorage.setItem('cachedApplications', JSON.stringify(parsed));
+                console.log(`Removed job ${jobId} from cachedApplications.applications`);
+            }
+        }
+    } catch (e) {
+        console.error('Error updating cachedApplications:', e);
+    }
+    
+    // Clear any in-memory caches if they exist
+    if (window.appliedJobCache) {
+        window.appliedJobCache[jobId] = false;
+    }
+    if (window.hasAppliedCache) {
+        window.hasAppliedCache[jobId] = false;
+    }
+    
+    console.log(`Successfully updated all localStorage after cancellation of job ${jobId}`);
 }
 
 /**
@@ -1398,6 +1517,80 @@ function useMockDataIfNeeded() {
     }
 }
 
+/**
+ * Load and display applications with most current data
+ * @param {boolean} forceRefresh - Whether to force refresh from server
+ */
+async function loadAndDisplayApplications(forceRefresh = true) {
+    try {
+        showLoadingIndicator();
+        
+        console.log('Loading and displaying applications with fresh data');
+        
+        // Fetch applications, force refresh from server
+        const applications = await loadApplications(forceRefresh);
+        
+        // Expose sync function globally if it doesn't exist already
+        if (typeof window.forceApplicationStateSyncWithServer !== 'function') {
+            window.forceApplicationStateSyncWithServer = async function() {
+                console.log('Global sync function called');
+                const freshApps = await loadApplications(true);
+                
+                // Update all localStorage entries with fresh data
+                const appliedJobs = freshApps
+                    .filter(app => app.status?.toLowerCase() !== 'withdrawn')
+                    .map(app => String(app.job_id || app.listing_id));
+                
+                localStorage.setItem('appliedJobs', JSON.stringify(appliedJobs));
+                localStorage.setItem('appliedJobsFromServer', JSON.stringify(appliedJobs));
+                
+                // Update withdrawnJobsMap
+                const withdrawnJobsMap = {};
+                freshApps
+                    .filter(app => app.status?.toLowerCase() === 'withdrawn')
+                    .forEach(app => {
+                        const jobId = String(app.job_id || app.listing_id);
+                        withdrawnJobsMap[jobId] = Date.now();
+                    });
+                
+                localStorage.setItem('withdrawnJobsMap', JSON.stringify(withdrawnJobsMap));
+                
+                // Trigger UI update if the function exists
+                if (typeof updateJobListingUI === 'function') {
+                    updateJobListingUI();
+                }
+                
+                return freshApps;
+            };
+            
+            console.log('Global sync function registered');
+        }
+        
+        // Add a refresh button if it doesn't exist
+        if (!document.getElementById('refresh-apps-btn')) {
+            const actionBar = document.querySelector('.action-bar') || 
+                             document.querySelector('.filters') || 
+                             document.querySelector('header');
+            
+            if (actionBar) {
+                const refreshBtn = document.createElement('button');
+                refreshBtn.id = 'refresh-apps-btn';
+                refreshBtn.className = 'btn btn-refresh';
+                refreshBtn.innerHTML = '<i class="fas fa-sync"></i> Refresh Data';
+                refreshBtn.addEventListener('click', () => loadAndDisplayApplications(true));
+                actionBar.appendChild(refreshBtn);
+            }
+        }
+        
+        return applications;
+    } catch (error) {
+        console.error('Error loading and displaying applications:', error);
+        showErrorNotification('Failed to load applications: ' + error.message);
+    } finally {
+        hideLoadingIndicator();
+    }
+}
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Applications script loaded, setting up event listeners and initializing');
@@ -1408,13 +1601,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up event listeners
     setupEventListeners();
     
-    // Run debug function to check button bindings
-    setTimeout(() => {
-        debugModalButtons();
-    }, 1000);  // Run after a slight delay to ensure DOM is fully processed
-    
-    // Load applications
-    loadApplications().catch(err => {
+    // Load applications with fresh server data
+    loadAndDisplayApplications(true).catch(err => {
         console.error("Error loading applications:", err);
         // Fall back to mock data after 2 seconds if loading fails
         setTimeout(useMockDataIfNeeded, 2000);

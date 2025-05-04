@@ -247,51 +247,29 @@ function hasAppliedToJob(jobId) {
             window.appliedJobCacheTimestamp = Date.now();
         }
         
-        // Check if we have a cached result that's less than 30 seconds old
+        // Check if we have a cached result that's less than 5 seconds old (reduced from 30s)
         const cacheAge = Date.now() - window.appliedJobCacheTimestamp;
-        if (cacheAge < 30000 && jobId in window.appliedJobCache) {
+        if (cacheAge < 5000 && jobId in window.appliedJobCache) {
             return window.appliedJobCache[jobId];
         }
         
         // If cache is too old, reset it
-        if (cacheAge >= 30000) {
+        if (cacheAge >= 5000) {
             window.appliedJobCache = {};
             window.appliedJobCacheTimestamp = Date.now();
         }
         
-        // Check all withdrawal records first
+        // Check withdrawal records first
         const withdrawnJobsMap = JSON.parse(localStorage.getItem('withdrawnJobsMap') || '{}');
-        const withdrawnJobs = JSON.parse(localStorage.getItem('withdrawnJobs') || '[]');
         const completedWithdrawals = JSON.parse(localStorage.getItem('completedWithdrawals') || '[]');
         
-        // If job is in any withdrawal list, check if it was reapplied
-        const isWithdrawn = withdrawnJobsMap[jobId] || 
-                           withdrawnJobs.includes(jobId) || 
-                           completedWithdrawals.includes(jobId);
-        
-        // Now check if the application was added after withdrawal
-        const appliedJobs = JSON.parse(localStorage.getItem('appliedJobs') || '[]');
-        const appliedJobsFromServer = JSON.parse(localStorage.getItem('appliedJobsFromServer') || '[]');
-        const locallyStoredApplications = JSON.parse(localStorage.getItem('locallyStoredApplications') || '[]');
-        
-        // If job is in applied lists, it means it was reapplied after withdrawal
-        const isApplied = appliedJobs.includes(jobId) || 
-                         appliedJobsFromServer.includes(jobId) ||
-                         locallyStoredApplications.includes(jobId);
-        
-        // If both withdrawn and reapplied, prioritize the applied status
-        if (isApplied) {
-            window.appliedJobCache[jobId] = true;
-            return true;
-        }
-        
-        // If only withdrawn and not reapplied, consider it not applied
-        if (isWithdrawn) {
+        // If job is in any withdrawal list, consider it not applied
+        if (withdrawnJobsMap[jobId] || completedWithdrawals.includes(jobId)) {
             window.appliedJobCache[jobId] = false;
             return false;
         }
         
-        // Final check: Look for this job in cached applications
+        // Look for this job in cached applications from server
         let cachedApplications = JSON.parse(localStorage.getItem('cachedApplications') || '[]');
         // Ensure cachedApplications is always an array
         if (!Array.isArray(cachedApplications)) {
@@ -316,12 +294,6 @@ function hasAppliedToJob(jobId) {
         });
         
         if (hasActiveApp) {
-            // Ensure it's also in our primary storage for future checks
-            if (!appliedJobs.includes(jobId)) {
-                appliedJobs.push(jobId);
-                localStorage.setItem('appliedJobs', JSON.stringify(appliedJobs));
-            }
-            
             window.appliedJobCache[jobId] = true;
             return true;
         }
@@ -532,18 +504,43 @@ function processApplicationData(data) {
 
 // Function to update UI elements based on user applications
 function updateAppliedJobsUI() {
-    console.log("Updating UI for applied jobs");
+    console.log("Updating UI for applied jobs with latest data");
     
     try {
-        // Get all the relevant storage data for accurate status checks
-        const completedWithdrawals = JSON.parse(localStorage.getItem('completedWithdrawals') || '[]');
-        const withdrawnJobs = JSON.parse(localStorage.getItem('withdrawnJobs') || '[]');
-        const withdrawnJobsMap = JSON.parse(localStorage.getItem('withdrawnJobsMap') || '{}');
-        const appliedJobs = JSON.parse(localStorage.getItem('appliedJobs') || '[]');
+        // Get the most recent data from server-synced localStorage
+        const cachedApplications = JSON.parse(localStorage.getItem('cachedApplications') || '[]');
         const appliedJobsFromServer = JSON.parse(localStorage.getItem('appliedJobsFromServer') || '[]');
-        const locallyStoredApplications = JSON.parse(localStorage.getItem('locallyStoredApplications') || '[]');
+        const withdrawnJobsMap = JSON.parse(localStorage.getItem('withdrawnJobsMap') || '{}');
+        const completedWithdrawals = JSON.parse(localStorage.getItem('completedWithdrawals') || '[]');
         
-        console.log(`Found ${appliedJobs.length} applied jobs, ${appliedJobsFromServer.length} server-confirmed jobs`);
+        // Create a map for faster lookups of application status by job ID
+        const jobStatusMap = {};
+        
+        // Process cached applications from server first (most authoritative)
+        if (Array.isArray(cachedApplications)) {
+            cachedApplications.forEach(app => {
+                const jobId = String(app.job_id || app.listing_id || app.jobId);
+                if (jobId) {
+                    // Only consider non-withdrawn applications as "applied"
+                    if (app.status && app.status.toLowerCase() === 'withdrawn') {
+                        jobStatusMap[jobId] = 'withdrawn';
+                    } else {
+                        jobStatusMap[jobId] = 'applied';
+                    }
+                }
+            });
+        }
+        
+        // Consider entries in withdrawnJobsMap and completedWithdrawals as withdrawn
+        Object.keys(withdrawnJobsMap).forEach(jobId => {
+            jobStatusMap[jobId] = 'withdrawn';
+        });
+        
+        completedWithdrawals.forEach(jobId => {
+            jobStatusMap[jobId] = 'withdrawn';
+        });
+        
+        console.log(`Found ${Object.keys(jobStatusMap).filter(id => jobStatusMap[id] === 'applied').length} applied jobs and ${Object.keys(jobStatusMap).filter(id => jobStatusMap[id] === 'withdrawn').length} withdrawn jobs`);
         
         // Update any UI elements that show applied status
         // Target ALL buttons that have data-job-id attributes, not just apply-btn class
@@ -556,7 +553,7 @@ function updateAppliedJobsUI() {
             'button.btn-success'
         ];
         const applyButtons = document.querySelectorAll(allSelectors.join(', '));
-        console.log(`Found ${applyButtons.length} total apply buttons to check`);
+        console.log(`Found ${applyButtons.length} total buttons to check`);
         
         let updatedCount = 0;
         
@@ -573,15 +570,15 @@ function updateAppliedJobsUI() {
             }
             
             if (!jobId) {
-                console.warn("Found apply button without data-job-id attribute and can't determine job ID from parent");
                 return;
             }
             
             const jobIdStr = String(jobId);
+            const status = jobStatusMap[jobIdStr];
             
-            // Check if job has been withdrawn - if so, reset to apply state
-            if (completedWithdrawals.includes(jobIdStr) || withdrawnJobs.includes(jobIdStr) || withdrawnJobsMap[jobIdStr]) {
-                console.log(`Job ${jobId} was previously withdrawn - resetting button to Apply Now state`);
+            // Update button based on application status
+            if (status === 'withdrawn' || !status) {
+                // Job is withdrawn or not applied - show "Apply Now"
                 button.textContent = 'Apply Now';
                 button.disabled = false;
                 button.classList.remove('btn-success', 'btn-warning', 'applied', 'applied-pending');
@@ -593,58 +590,17 @@ function updateAppliedJobsUI() {
                     jobCard.classList.remove('job-applied');
                 }
                 updatedCount++;
-                return;
-            }
-
-            // Log all possible application states for debugging
-            console.log(`Checking job ${jobId}: ${appliedJobs.includes(jobIdStr) ? 'In appliedJobs' : 'Not in appliedJobs'}, ${appliedJobsFromServer.includes(jobIdStr) ? 'In serverJobs' : 'Not in serverJobs'}`);
-
-            // If it's not withdrawn, check if applied using BOTH appliedJobs and appliedJobsFromServer
-            const isInAppliedJobs = appliedJobs.includes(jobIdStr);
-            const isInServerJobs = appliedJobsFromServer.includes(jobIdStr);
-            const isApplied = isInAppliedJobs || isInServerJobs || hasAppliedToJob(jobId);
-            const isLocalApplication = locallyStoredApplications.includes(jobIdStr) && 
-                                      !appliedJobsFromServer.includes(jobIdStr);
-            
-            if (isApplied) {
-                console.log(`Marking job ${jobId} as applied in UI (${isInAppliedJobs ? 'local' : ''}${isInServerJobs ? 'server' : ''})`);
-                // Update button to "Applied" state
+            } else if (status === 'applied') {
+                // Job is applied - show "Applied"
                 button.textContent = 'Applied';
                 button.disabled = true;
                 button.classList.remove('btn-primary', 'btn-warning', 'applied-pending');
                 button.classList.add('btn-success', 'applied');
                 
-                // Find and update the job card if it exists
+                // Add applied class to job card if present
                 const jobCard = button.closest('.job-card');
                 if (jobCard) {
                     jobCard.classList.add('job-applied');
-                }
-                updatedCount++;
-            } else if (isLocalApplication) {
-                // This job has a pending local application
-                button.textContent = 'Applied (Pending Sync)';
-                button.classList.add('applied-pending');
-                button.classList.remove('btn-primary', 'btn-success');
-                button.classList.add('btn-warning');
-                button.disabled = true;
-                
-                // Find and update the job card if it exists
-                const jobCard = button.closest('.job-card');
-                if (jobCard) {
-                    jobCard.classList.add('job-applied');
-                }
-                updatedCount++;
-            } else {
-                // Always reset button and card to Apply Now state if not applied and not withdrawn
-                button.textContent = 'Apply Now';
-                button.disabled = false;
-                button.classList.remove('btn-success', 'btn-warning', 'applied', 'applied-pending');
-                button.classList.add('btn-primary');
-                
-                // Remove applied class from job card if present
-                const jobCard = button.closest('.job-card');
-                if (jobCard && jobCard.classList.contains('job-applied')) {
-                    jobCard.classList.remove('job-applied');
                 }
                 updatedCount++;
             }
@@ -2138,44 +2094,44 @@ function initJobListingsPage() {
         }
     }
     
-    // Restore search state from localStorage
-    restoreSearchState();
+    // IMPORTANT: Always fetch fresh application data first before showing anything
+    console.log('Fetching latest application data from server before initializing job listings');
     
-    // Initialize in parallel to avoid blocking UI
-    Promise.all([
-        // Promise to set up UI elements
-        new Promise(resolve => {
-            // Setup search fields 
-            if (typeof setupSearchFields === 'function') {
-                setupSearchFields();
-            }
-            
-            // Setup pagination controls
-            if (typeof setupPagination === 'function') {
-                setupPagination();
-            }
-            
-            resolve();
-        }),
+    // Show a loading indicator while we fetch
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.innerHTML = '<div class="spinner"></div><p>Loading latest application data...</p>';
+    if (jobListingsElement) {
+        jobListingsElement.innerHTML = '';
+        jobListingsElement.appendChild(loadingIndicator);
+    }
+    
+    // First fetch fresh application data from server
+    fetchUserApplications(true).then(() => {
+        console.log('Successfully fetched fresh application data, now loading job listings');
         
-        // Promise to load cached data and start fetching
-        new Promise(resolve => {
-            // First check for cached job listings to show immediately
-            const cachedListings = JSON.parse(localStorage.getItem('cachedJobListings') || '[]');
-            const lastFetchTime = parseInt(localStorage.getItem('jobListingsLastFetched') || '0');
-            const isCacheRecent = (Date.now() - lastFetchTime) < 60000; // 1 minute cache
-            
-            if (cachedListings.length > 0 && isCacheRecent) {
-                // Show cached listings first for instant display
-                console.log('Showing cached job listings while fetching fresh data');
-                displayJobListings(cachedListings);
+        // Now restore search state and proceed with normal initialization
+        restoreSearchState();
+        
+        // Initialize in parallel to avoid blocking UI
+        Promise.all([
+            // Promise to set up UI elements
+            new Promise(resolve => {
+                // Setup search fields 
+                if (typeof setupSearchFields === 'function') {
+                    setupSearchFields();
+                }
                 
-                // Update applied status
-                updateAppliedJobsUI();
-            }
+                // Setup pagination controls
+                if (typeof setupPagination === 'function') {
+                    setupPagination();
+                }
+                
+                resolve();
+            }),
             
-            // Then start fetch for fresh data
-            setTimeout(() => {
+            // Promise to fetch job listings
+            new Promise(resolve => {
                 // Use the stored search parameters for initial fetch
                 const searchTitle = localStorage.getItem('lastSearchTitle') || '';
                 const searchLocation = localStorage.getItem('lastSearchLocation') || '';
@@ -2186,28 +2142,22 @@ function initJobListingsPage() {
                 else if (lastFilter === 'unpaid') isPaid = false;
                 
                 fetchJobListings(searchTitle, searchLocation, isPaid);
-            }, 100);
-            
-            resolve();
-        }),
-        
-        // Promise to fetch user applications in background
-        new Promise(resolve => {
-            setTimeout(() => {
-                if (typeof fetchUserApplications === 'function') {
-                    fetchUserApplications(false).then(resolve).catch(resolve);
-                } else {
-                    resolve();
-                }
-            }, 200);
+                resolve();
+            })
+        ])
+        .then(() => {
+            perfMonitor.end('pageInit');
+            console.log('Job listings page initialization complete with fresh application data');
         })
-    ])
-    .then(() => {
-        perfMonitor.end('pageInit');
-        console.log('Job listings page initialization complete');
-    })
-    .catch(error => {
-        console.error('Error during page initialization:', error);
+        .catch(error => {
+            console.error('Error during page initialization:', error);
+        });
+    }).catch(err => {
+        console.error('Error fetching application data:', err);
+        
+        // Still try to load job listings even if application data fetch fails
+        restoreSearchState();
+        fetchJobListings();
     });
 }
 
@@ -2355,12 +2305,12 @@ function markJobAsWithdrawn(jobId) {
                 let parsed = JSON.parse(cachedApplications);
                 if (Array.isArray(parsed)) {
                     parsed = parsed.filter(app => {
-                        return !(
-                            (app.job_id && String(app.job_id) === jobId) || 
-                            (app.listing_id && String(app.listing_id) === jobId) ||
-                            (app.jobId && String(app.jobId) === jobId)
-                        );
-                    });
+                    return !(
+                        (app.job_id && String(app.job_id) === jobId) || 
+                        (app.listing_id && String(app.listing_id) === jobId) ||
+                        (app.jobId && String(app.jobId) === jobId)
+                    );
+                });
                     localStorage.setItem('cachedApplications', JSON.stringify(parsed));
                 } else if (parsed && Array.isArray(parsed.applications)) {
                     parsed.applications = parsed.applications.filter(app => {
@@ -2401,25 +2351,28 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Initialize API URL
     initApiUrl();
     
-    // IMPORTANT: Force sync with server first
+    // PRIORITY 1: Clear any stale cached data and force fresh sync with server
+    // This ensures we start with the latest data from the server for this user
     await forceApplicationStateSyncWithServer();
     
-    // Check intern verification status and show appropriate notification
+    // After sync with server, check verification status if needed
     await checkVerificationStatus();
     
-    // Check if this is the job listings page
-    if (document.querySelector('.job-listings-container') || 
-        document.getElementById('job-listings') ||
-        document.querySelector('.job-cards')) {
+    // Check if this is the job listings page by looking for container elements
+    const isJobListingsPage = document.querySelector('.job-listings-container') || 
+                             document.getElementById('job-listings') ||
+                             document.querySelector('.job-cards');
+    
+    if (isJobListingsPage) {
         console.log('This is a job listings page - setting up functionality');
         
-        // Set up full page functionality
+        // Initialize job listings page with latest data
         initJobListingsPage();
         
         // Set up search fields
         setupSearchFields();
         
-        // Set up pulling to refresh
+        // Set up pull-to-refresh
         let touchStartY = 0;
         document.addEventListener('touchstart', function(e) {
             touchStartY = e.touches[0].clientY;
@@ -2440,8 +2393,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         });
     } else {
-        // Not the job listings page - setup minimal requirements
         console.log('Not a job listings page - setting up minimum requirements');
+        
+        // Even for non-job-listing pages, ensure we have the latest application data
+        // This helps keep the navbar and other UI elements up-to-date
+        fetchUserApplications(true).catch(err => {
+            console.warn('Error fetching application data on non-job page:', err);
+        });
         
         // Setup search fields if available
         if (typeof setupSearchFields === 'function') {
@@ -2599,43 +2557,339 @@ function addStatusBanner(status) {
     }
 }
 
-// Function to force a complete refresh of application data
-function forceApplicationStateSyncWithServer() {
+// Function to fetch applications directly from server before UI decisions 
+async function fetchApplicationsFromServer() {
+    console.log('Fetching fresh application data from server...');
+    
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No authentication token found for fetchApplicationsFromServer');
+            return { success: false, applications: [] };
+        }
+
+        // Get the API URL
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/applications/my-applications`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success && Array.isArray(data.applications)) {
+                console.log(`Successfully fetched ${data.applications.length} applications from server`);
+                
+                // Save to localStorage as a fallback
+                localStorage.setItem('cachedApplications', JSON.stringify(data.applications));
+                localStorage.setItem('applicationsLastFetched', Date.now().toString());
+                
+                // Extract application IDs for faster lookups
+                const appliedJobsFromServer = data.applications
+                    .filter(app => app.status?.toLowerCase() !== 'withdrawn')
+                    .map(app => String(app.listing_id || app.job_id));
+                
+                localStorage.setItem('appliedJobsFromServer', JSON.stringify(appliedJobsFromServer));
+                
+                return { success: true, applications: data.applications };
+            }
+        }
+        
+        console.warn(`Server returned status ${response.status} when fetching applications`);
+        return { success: false, applications: [] };
+    } catch (error) {
+        console.error('Error fetching applications from server:', error);
+        return { success: false, applications: [] };
+    }
+}
+
+// Improved function to force application state to sync with server
+async function forceApplicationStateSyncWithServer() {
     console.log("Forcing application state sync with server");
     
-    // Clear all application-related data from localStorage
-    const applicationKeys = [
-        'appliedJobs',
-        'appliedJobsFromServer',
-        'locallyStoredApplications',
-        'cachedApplications',
-        'withdrawnJobs',
-        'withdrawnJobsMap',
-        'completedWithdrawals',
-        'applicationIdMap'
-    ];
+    showLoadingIndicator();
     
-    // Clear each key
-    applicationKeys.forEach(key => {
-        console.log(`Clearing ${key} from localStorage`);
-        localStorage.removeItem(key);
-    });
-    
-    // Also clear in-memory caches
+    // Clear all application-related caches for fresh start
     window.appliedJobCache = {};
     window.hasAppliedCache = {};
     
-    // Force refresh from server
-    console.log("Fetching fresh application data from server");
-    return fetchUserApplications(true)
-        .then(() => {
-            console.log("Refreshing job listings UI");
+    try {
+        // Fetch fresh data from server first
+        const serverData = await fetchApplicationsFromServer();
+        
+        if (serverData.success) {
+            console.log(`Synced ${serverData.applications.length} applications from server`);
+            
+            // Update all caches completely
+            const applicationKeys = [
+                'appliedJobs',
+                'locallyStoredApplications',
+                'withdrawnJobs',
+                'completedWithdrawals',
+                'applicationIdMap'
+            ];
+            
+            // Clear localStorage keys for fresh rebuild
+            applicationKeys.forEach(key => localStorage.removeItem(key));
+            
+            // Create appliedJobs from server data
+            const appliedJobs = serverData.applications
+                .filter(app => app.status?.toLowerCase() !== 'withdrawn')
+                .map(app => String(app.listing_id || app.job_id));
+            
+            localStorage.setItem('appliedJobs', JSON.stringify(appliedJobs));
+            
+            // Create withdrawnJobsMap from server data
+            const withdrawnJobsMap = {};
+            serverData.applications
+                .filter(app => app.status?.toLowerCase() === 'withdrawn')
+                .forEach(app => {
+                    const jobId = String(app.listing_id || app.job_id);
+                    withdrawnJobsMap[jobId] = Date.now();
+                });
+            
+            localStorage.setItem('withdrawnJobsMap', JSON.stringify(withdrawnJobsMap));
+            
+            // Update UI based on fresh data
             updateAppliedJobsUI();
             if (typeof fetchJobListings === 'function') {
                 fetchJobListings();
             }
+            
+            hideLoadingIndicator();
+            return true;
+        } else {
+            // Fall back to existing cached data 
+            console.warn("Server sync failed, using existing cached data");
+            updateAppliedJobsUI();
+            hideLoadingIndicator();
+            return false;
+        }
+    } catch (error) {
+        console.error("Error syncing application state with server:", error);
+        hideLoadingIndicator();
+        return false;
+    }
+}
+
+// Add a function for UI to manually trigger a sync
+function syncApplicationDataWithServer() {
+    // Show notification
+    if (window.notification && typeof window.notification.info === 'function') {
+        window.notification.info('Syncing application data with server...', true);
+    }
+    
+    return forceApplicationStateSyncWithServer()
+        .then(success => {
+            if (success) {
+                if (window.notification && typeof window.notification.success === 'function') {
+                    window.notification.success('Application data successfully synchronized!', true);
+                }
+            } else {
+                if (window.notification && typeof window.notification.warning === 'function') {
+                    window.notification.warning('Sync incomplete. Using cached data.', true);
+                }
+            }
+            return success;
+        })
+        .catch(err => {
+            console.error("Error during sync:", err);
+            if (window.notification && typeof window.notification.error === 'function') {
+                window.notification.error('Failed to sync with server. Please try again.', true);
+            }
+            return false;
+        });
+}
+
+// Function to sync application data after login
+function syncApplicationDataAfterLogin() {
+    console.log("Syncing application data after login");
+    return forceApplicationStateSyncWithServer();
+}
+
+// Update DOM ready handler to prioritize server data
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - initializing job listings page');
+    
+    // Initialize performance monitoring
+    if (!window.perfStartTime) {
+        window.perfStartTime = performance.now();
+    }
+    console.log(`Page load to DOMContentLoaded: ${(performance.now() - window.perfStartTime).toFixed(2)}ms`);
+    
+    // Always fetch fresh application data first, BEFORE anything else
+    forceApplicationStateSyncWithServer().then(() => {
+        console.log('Application data synced with server, proceeding with page initialization');
+        
+        // Rest of initialization
+        // Setup radio filters
+        const allRadio = document.getElementById('all');
+        const paidRadio = document.getElementById('paid');
+        const unpaidRadio = document.getElementById('unpaid');
+        
+        // Add listeners to radio buttons to trigger search
+        [allRadio, paidRadio, unpaidRadio].forEach(radio => {
+            if (radio) {
+                console.log(`Adding listener to radio button: ${radio.id}`);
+                radio.addEventListener('change', function() {
+                    console.log(`Radio button changed: ${this.id} is now checked`);
+                    performSearch();
+                });
+            }
+        });
+        
+        // Setup search button
+        const searchButton = document.querySelector('.search-button') || document.querySelector('.search-bar button');
+        if (searchButton) {
+            console.log('Setting up search button');
+            searchButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                performSearch();
+            });
+        }
+        
+        // Check if this is the job listings page
+        const isJobListingsPage = document.getElementById('job-listings') !== null;
+        if (isJobListingsPage) {
+            console.log('Job listings page detected, initializing...');
+            initJobListingsPage();
+        } else {
+            // Not the job listings page - setup minimal requirements
+            console.log('Not a job listings page - setting up minimum requirements');
+            
+            // Setup search fields if available
+            if (typeof setupSearchFields === 'function') {
+                setupSearchFields();
+            }
+        }
+    });
+    
+    // Add a manual sync button to the UI
+    const syncButton = document.createElement('button');
+    syncButton.className = 'btn btn-sync';
+    syncButton.innerHTML = '<i class="fas fa-sync"></i> Sync Data';
+    syncButton.addEventListener('click', function() {
+        syncApplicationDataWithServer();
+    });
+    
+    // Add the sync button to the page where appropriate
+    setTimeout(() => {
+        const navContainer = document.querySelector('.nav-links') || 
+                            document.querySelector('.navigation') || 
+                            document.querySelector('header nav');
+        if (navContainer) {
+            navContainer.appendChild(syncButton);
+        }
+    }, 1000);
+}); 
+
+// Also modify fetchJobListings to always get fresh application data first
+function fetchJobListings(searchTitle, searchLocation, isPaid) {
+    // Get the job listings container
+    const jobListingsContainer = document.getElementById('job-listings');
+    if (!jobListingsContainer) {
+        console.error('Job listings container not found');
+        return;
+    }
+
+    // Show loading state
+    jobListingsContainer.innerHTML = '<div class="loading-indicator">Loading job listings...</div>';
+    
+    // Get authentication token - check both possible storage keys
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    if (!token) {
+        jobListingsContainer.innerHTML = '<div class="error">Please log in to view job listings</div>';
+        return;
+    }
+
+    // First fetch latest application data from server, then fetch job listings
+    // This ensures the application status is always up-to-date
+    fetchApplicationsFromServer()
+        .then(() => {
+            console.log('Application data refreshed, now fetching job listings');
+            
+            // Build query parameters
+            const queryParams = new URLSearchParams();
+            
+            // Add search parameters if they exist
+            if (searchTitle) {
+                queryParams.append('search', searchTitle);
+            } else {
+                // Fallback to input elements if no direct parameters
+                const searchInput = document.getElementById('search-input') || document.getElementById('job-search-input');
+                if (searchInput && searchInput.value) {
+                    queryParams.append('search', searchInput.value);
+                }
+            }
+            
+            if (searchLocation) {
+                queryParams.append('location', searchLocation);
+            } else {
+                const locationInput = document.getElementById('location-input');
+                if (locationInput && locationInput.value) {
+                    queryParams.append('location', locationInput.value);
+                }
+            }
+            
+            // Handle isPaid parameter - can be true, false, or null (for "all")
+            if (isPaid === true) {
+                queryParams.append('isPaid', 'true');
+            } else if (isPaid === false) {
+                queryParams.append('isPaid', 'false');
+            }
+            
+            // Add pagination
+            const currentPage = parseInt(localStorage.getItem('currentJobPage') || '1');
+            queryParams.append('page', currentPage);
+            queryParams.append('limit', 10);
+            
+            // Get the correct API URL
+            const apiUrl = getApiUrl();
+            console.log(`Fetching jobs from: ${apiUrl}/jobs?${queryParams.toString()}`);
+            
+            // Fetch job listings
+            return fetch(`${apiUrl}/jobs?${queryParams.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        })
+        .then(response => {
+            if (!response || !response.ok) {
+                throw new Error(`Server returned ${response ? response.status : 'no response'}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.listings && data.listings.length > 0) {
+                // Cache the listings
+                cacheJobListings(data.listings);
+                
+                // Display job listings
+                displayJobListings(data.listings);
+                
+                // Update pagination if needed
+                if (typeof displayPaginationControls === 'function') {
+                    displayPaginationControls();
+                }
+                
+                // Update applied buttons state with latest server data
+                updateAppliedJobsUI();
+            } else {
+                jobListingsContainer.innerHTML = '<div class="no-results">No job listings found</div>';
+            }
         })
         .catch(error => {
-            console.error("Error syncing application state:", error);
+            console.error('Error fetching job listings:', error);
+            showCachedJobListings();
+            
+            // Even if fetching jobs fails, try to update UI based on cached application data
+            updateAppliedJobsUI();
         });
 }
