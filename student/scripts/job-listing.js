@@ -265,24 +265,24 @@ function hasAppliedToJob(jobId) {
             
             // Check if user has an active application for this job
             const hasServerApplication = window.userApplications.some(app => {
-                // Match by job_id, listing_id, or jobId
-                const isMatchingJob = 
-                    (app.job_id && String(app.job_id) === jobId) || 
-                    (app.listing_id && String(app.listing_id) === jobId) ||
-                    (app.jobId && String(app.jobId) === jobId);
-                
-                // Check if not withdrawn
-                const isNotWithdrawn = !app.status || app.status.toLowerCase() !== 'withdrawn';
-                
-                return isMatchingJob && isNotWithdrawn;
-            });
+            // Match by job_id, listing_id, or jobId
+            const isMatchingJob = 
+                (app.job_id && String(app.job_id) === jobId) || 
+                (app.listing_id && String(app.listing_id) === jobId) ||
+                (app.jobId && String(app.jobId) === jobId);
             
+            // Check if not withdrawn
+            const isNotWithdrawn = !app.status || app.status.toLowerCase() !== 'withdrawn';
+            
+            return isMatchingJob && isNotWithdrawn;
+        });
+        
             if (hasServerApplication) {
                 console.log(`Server data confirms user has applied to job ${jobId}`);
-                window.appliedJobCache[jobId] = true;
-                return true;
-            }
-            
+            window.appliedJobCache[jobId] = true;
+            return true;
+        }
+        
             console.log(`Server data confirms user has NOT applied to job ${jobId}`);
             window.appliedJobCache[jobId] = false;
             return false;
@@ -478,11 +478,11 @@ async function fetchUserApplications(forceRefresh = false) {
             if (cachedApps.length > 0) {
                 console.log(`Using ${cachedApps.length} cached applications as fallback after server fetch failed`);
                 window.userApplications = cachedApps;
-                
-                if (typeof hideLoadingIndicator === 'function') {
-                    hideLoadingIndicator();
-                }
-                
+        
+        if (typeof hideLoadingIndicator === 'function') {
+            hideLoadingIndicator();
+        }
+        
                 return cachedApps;
             }
             
@@ -579,7 +579,7 @@ function updateAppliedJobsUI() {
                 console.warn("Found apply button without data-job-id attribute and can't determine job ID from parent");
                 return;
             }
-            
+
             const jobIdStr = String(jobId);
             
             // Check application status directly from server data
@@ -644,100 +644,100 @@ function fetchJobListings(searchTitle, searchLocation, isPaid) {
     console.log("Fetching fresh application data before showing job listings");
     fetchUserApplications(true)
         .then(() => {
-            try {
-                console.log(`Fetching job listings with searchTitle: "${searchTitle}", location: "${searchLocation}", isPaid: ${isPaid}`);
-                
-                // Build query parameters more efficiently
-                const queryParams = new URLSearchParams();
-                
-                // Add search parameters if they exist - prioritize parameters passed directly to the function
-                if (searchTitle) {
-                    queryParams.append('search', searchTitle);
-                } else {
-                    // Fallback to input elements if no direct parameters
-                    const searchInput = document.getElementById('search-input') || document.getElementById('job-search-input');
-                    if (searchInput && searchInput.value) {
-                        queryParams.append('search', searchInput.value);
-                    }
-                }
-                
-                if (searchLocation) {
-                    queryParams.append('location', searchLocation);
-                } else {
-                    const locationInput = document.getElementById('location-input');
-                    if (locationInput && locationInput.value) {
-                        queryParams.append('location', locationInput.value);
-                    }
-                }
-                
-                // Handle isPaid parameter - can be true, false, or null (for "all")
-                if (isPaid === true) {
-                    queryParams.append('isPaid', 'true');
-                } else if (isPaid === false) {
-                    queryParams.append('isPaid', 'false');
-                }
-                // If isPaid is null, don't add the parameter (show all)
-                
-                // Add pagination
-                const currentPage = parseInt(localStorage.getItem('currentJobPage') || '1');
-                queryParams.append('page', currentPage);
-                queryParams.append('limit', 10);
-                
-                // Get the correct API URL
-                const apiUrl = getApiUrl();
-                
-                // Set a timeout to handle potential fetch failures
-                const timeoutId = setTimeout(() => {
-                    console.log('Job listing fetch timeout - showing cached data');
-                    showCachedJobListings();
-                }, 5000);
-                
-                // Log the request URL for debugging
-                console.log(`Fetching jobs from: ${apiUrl}/jobs?${queryParams.toString()}`);
-                
-                // Fetch job listings with timeout
-                fetch(`${apiUrl}/jobs?${queryParams.toString()}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    clearTimeout(timeoutId);
-                    if (!response.ok) {
-                        throw new Error(`Server returned ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success && data.listings && data.listings.length > 0) {
-                        // Cache the listings
-                        cacheJobListings(data.listings);
-                        
-                        // Display job listings
-                        displayJobListings(data.listings);
-                        
-                        // Update pagination if needed
-                        if (typeof displayPaginationControls === 'function') {
-                            displayPaginationControls();
-                        }
-                        
-                        // Update applied buttons state using server data
-                        updateAppliedJobsUI();
-                    } else {
-                        jobListingsContainer.innerHTML = '<div class="no-results">No job listings found</div>';
-                    }
-                })
-                .catch(error => {
-                    clearTimeout(timeoutId);
-                    console.error('Error fetching job listings:', error);
-                    showCachedJobListings();
-                });
-            } catch (error) {
-                console.error('Error in fetchJobListings:', error);
-                showCachedJobListings();
+    try {
+        console.log(`Fetching job listings with searchTitle: "${searchTitle}", location: "${searchLocation}", isPaid: ${isPaid}`);
+        
+        // Build query parameters more efficiently
+        const queryParams = new URLSearchParams();
+        
+        // Add search parameters if they exist - prioritize parameters passed directly to the function
+        if (searchTitle) {
+            queryParams.append('search', searchTitle);
+        } else {
+            // Fallback to input elements if no direct parameters
+            const searchInput = document.getElementById('search-input') || document.getElementById('job-search-input');
+            if (searchInput && searchInput.value) {
+                queryParams.append('search', searchInput.value);
             }
+        }
+        
+        if (searchLocation) {
+            queryParams.append('location', searchLocation);
+        } else {
+            const locationInput = document.getElementById('location-input');
+            if (locationInput && locationInput.value) {
+                queryParams.append('location', locationInput.value);
+            }
+        }
+        
+        // Handle isPaid parameter - can be true, false, or null (for "all")
+        if (isPaid === true) {
+            queryParams.append('isPaid', 'true');
+        } else if (isPaid === false) {
+            queryParams.append('isPaid', 'false');
+        }
+        // If isPaid is null, don't add the parameter (show all)
+        
+        // Add pagination
+        const currentPage = parseInt(localStorage.getItem('currentJobPage') || '1');
+        queryParams.append('page', currentPage);
+        queryParams.append('limit', 10);
+        
+        // Get the correct API URL
+        const apiUrl = getApiUrl();
+        
+        // Set a timeout to handle potential fetch failures
+        const timeoutId = setTimeout(() => {
+            console.log('Job listing fetch timeout - showing cached data');
+            showCachedJobListings();
+        }, 5000);
+        
+        // Log the request URL for debugging
+        console.log(`Fetching jobs from: ${apiUrl}/jobs?${queryParams.toString()}`);
+        
+        // Fetch job listings with timeout
+        fetch(`${apiUrl}/jobs?${queryParams.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            clearTimeout(timeoutId);
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.listings && data.listings.length > 0) {
+                // Cache the listings
+                cacheJobListings(data.listings);
+                
+                // Display job listings
+                displayJobListings(data.listings);
+                
+                // Update pagination if needed
+                if (typeof displayPaginationControls === 'function') {
+                    displayPaginationControls();
+                }
+                
+                        // Update applied buttons state using server data
+                updateAppliedJobsUI();
+            } else {
+                jobListingsContainer.innerHTML = '<div class="no-results">No job listings found</div>';
+            }
+        })
+        .catch(error => {
+            clearTimeout(timeoutId);
+            console.error('Error fetching job listings:', error);
+            showCachedJobListings();
+        });
+    } catch (error) {
+        console.error('Error in fetchJobListings:', error);
+        showCachedJobListings();
+    }
         })
         .catch(error => {
             console.error('Error fetching user applications:', error);
@@ -2133,18 +2133,18 @@ function initJobListingsPage() {
             console.log("Application data successfully fetched from server");
             
             // Then initialize the rest of the page
-            // Use the stored search parameters for initial fetch
-            const searchTitle = localStorage.getItem('lastSearchTitle') || '';
-            const searchLocation = localStorage.getItem('lastSearchLocation') || '';
-            const lastFilter = localStorage.getItem('lastSearchFilter') || 'all';
-            
-            let isPaid = null;
-            if (lastFilter === 'paid') isPaid = true;
-            else if (lastFilter === 'unpaid') isPaid = false;
-            
+                // Use the stored search parameters for initial fetch
+                const searchTitle = localStorage.getItem('lastSearchTitle') || '';
+                const searchLocation = localStorage.getItem('lastSearchLocation') || '';
+                const lastFilter = localStorage.getItem('lastSearchFilter') || 'all';
+                
+                let isPaid = null;
+                if (lastFilter === 'paid') isPaid = true;
+                else if (lastFilter === 'unpaid') isPaid = false;
+                
             // Now fetch job listings
             console.log("Now fetching job listings with correct application state");
-            fetchJobListings(searchTitle, searchLocation, isPaid);
+                fetchJobListings(searchTitle, searchLocation, isPaid);
             
             // Setup search fields 
             if (typeof setupSearchFields === 'function') {
@@ -2156,10 +2156,10 @@ function initJobListingsPage() {
                 setupPagination();
             }
             
-            perfMonitor.end('pageInit');
-            console.log('Job listings page initialization complete');
+        perfMonitor.end('pageInit');
+        console.log('Job listings page initialization complete');
         } catch (error) {
-            console.error('Error during page initialization:', error);
+        console.error('Error during page initialization:', error);
             
             // Fall back to regular initialization if the optimized flow fails
             console.log("Falling back to regular initialization");
@@ -2236,7 +2236,7 @@ function refreshJobListings() {
     // Always fetch user applications first, then job listings
     fetchUserApplications(true).then(() => {
         // Fetch job listings after applications are fetched
-        fetchJobListings();
+    fetchJobListings();
     }).catch(error => {
         console.error("Error refreshing applications:", error);
         // Still try to fetch job listings even if application fetch fails

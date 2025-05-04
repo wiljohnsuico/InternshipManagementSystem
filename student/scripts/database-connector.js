@@ -104,37 +104,142 @@ const DB_CONNECTOR = {
                 return this.getMockApplicationById(applicationId);
             }
             
-            // Try to get the specific application
+            // Check if we have a cached successful endpoint from previous calls
+            let cachedEndpoint = null;
             try {
-                const response = await fetch(`${this.API_URL}/applications/${applicationId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Application fetched successfully:', data);
-                    return this.normalizeApplicationData(data);
+                const successfulEndpoints = JSON.parse(localStorage.getItem('successfulApiEndpoints') || '{}');
+                if (successfulEndpoints.applicationById) {
+                    cachedEndpoint = successfulEndpoints.applicationById.replace('{id}', applicationId);
+                    console.log('Using cached successful endpoint:', cachedEndpoint);
                 }
-                
-                // If direct fetch fails, try getting all applications and filtering
-                const applications = await this.getApplications();
-                const application = applications.find(app => app.id === applicationId);
-                
-                if (application) {
-                    return application;
-                }
-                
-                console.warn(`Application with ID ${applicationId} not found, returning mock data`);
-                return this.getMockApplicationById(applicationId);
-            } catch (error) {
-                console.error('Error fetching application by ID:', error);
-                return this.getMockApplicationById(applicationId);
+            } catch (e) {
+                console.warn('Could not retrieve cached endpoints:', e);
             }
+            
+            // Define endpoints to try - based on observed successful behavior, we'll order them differently
+            // From screenshot, we can see /api/applications/employer?id=157 works successfully
+            const endpoints = [];
+            
+            // Add the cached endpoint first if it exists
+            if (cachedEndpoint) {
+                endpoints.push(cachedEndpoint);
+            }
+            
+            // Add the known working endpoints first, then fallbacks
+            endpoints.push(
+                `${this.API_URL}/applications/employer?id=${applicationId}`,
+                `${this.API_URL}/applications/${applicationId}`,
+                `${this.API_URL}/applications/listing/${applicationId}`,
+                `${this.API_URL}/employer/applications/${applicationId}`
+            );
+            
+            let lastError = null;
+            let workingEndpoint = null;
+            
+            // Try each endpoint in order
+            for (const endpoint of endpoints) {
+                try {
+                    // Use info level instead of log to reduce console noise
+                    console.info(`Trying to fetch application from: ${endpoint}`);
+                    const response = await fetch(endpoint, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const data = await response.json();
+                            console.log('Application fetched successfully:', data);
+                            
+                            // Save the successful endpoint pattern for future use
+                            workingEndpoint = endpoint;
+                            
+                            // Handle different response formats
+                            if (data.applications && Array.isArray(data.applications)) {
+                                // If we got an array of applications, find the one with matching ID
+                                const application = data.applications.find(app => 
+                                    app.id == applicationId || 
+                                    app.application_id == applicationId ||
+                                    app._id == applicationId
+                                );
+                                
+                                if (application) {
+                                    // Cache the successful endpoint pattern for future use
+                                    this.cacheSuccessfulEndpoint(endpoint, applicationId);
+                                    return this.normalizeApplicationData(application);
+                                }
+                            } else {
+                                // Direct application data response
+                                // Cache the successful endpoint pattern for future use
+                                this.cacheSuccessfulEndpoint(endpoint, applicationId);
+                                return this.normalizeApplicationData(data);
+                            }
+                        }
+                    } else if (response.status === 404) {
+                        // Downgrade to info level - 404s are expected during the fallback process
+                        console.info(`Endpoint ${endpoint} returned 404 - trying next endpoint`);
+                    } else if (response.status === 500) {
+                        console.error(`Server error (500) at endpoint ${endpoint}`);
+                        lastError = new Error(`Server returned 500 error for ${endpoint}`);
+                    } else {
+                        console.warn(`Endpoint ${endpoint} returned status ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error(`Error fetching from ${endpoint}:`, error);
+                    lastError = error;
+                }
+            }
+            
+            // If all direct endpoints failed, fallback to getting all applications and filtering
+            try {
+                console.log('Attempting to get all applications and filter');
+                const applications = await this.getApplications();
+                
+                if (applications && Array.isArray(applications)) {
+                    const application = applications.find(app => 
+                        app.id == applicationId || 
+                        app.application_id == applicationId ||
+                        app._id == applicationId
+                    );
+                    
+                    if (application) {
+                        console.log('Found application in applications list');
+                        return application;
+                    }
+                }
+            } catch (allAppsError) {
+                console.error('Error getting all applications:', allAppsError);
+            }
+            
+            // If all methods failed, log the error and return mock data
+            if (lastError) {
+                console.warn(`All API endpoints failed. Last error:`, lastError);
+            }
+            
+            console.warn(`Application with ID ${applicationId} not found, returning mock data`);
+            return this.getMockApplicationById(applicationId);
         } catch (error) {
             console.error('Error in getApplicationById:', error);
             return this.getMockApplicationById(applicationId);
+        }
+    },
+    
+    // Helper function to cache successful endpoint patterns
+    cacheSuccessfulEndpoint: function(endpoint, applicationId) {
+        try {
+            // Extract the pattern by replacing the ID with a placeholder
+            const pattern = endpoint.replace(applicationId, '{id}');
+            
+            const successfulEndpoints = JSON.parse(localStorage.getItem('successfulApiEndpoints') || '{}');
+            successfulEndpoints.applicationById = pattern;
+            localStorage.setItem('successfulApiEndpoints', JSON.stringify(successfulEndpoints));
+            
+            console.log('Cached successful endpoint pattern:', pattern);
+        } catch (e) {
+            console.warn('Could not cache successful endpoint:', e);
         }
     },
     

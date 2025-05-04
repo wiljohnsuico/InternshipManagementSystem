@@ -14,10 +14,130 @@
     <link rel="stylesheet" href="/student/styles/home-navbar.css">
     <link rel="stylesheet" href="/student/styles/employer-dashboard.css">
     
+    <!-- URL Parameter Handler -->
+    <script>
+      // Handle URL redirects and fix missing application ID
+      (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let applicationId = urlParams.get('id');
+        
+        // Check if we have an application ID
+        if (!applicationId) {
+          // Try other possible parameter names
+          applicationId = urlParams.get('applicationId') || urlParams.get('application_id');
+          
+          // If found in other parameter, redirect to correct URL format
+          if (applicationId) {
+            window.location.href = `application-detail.html?id=${applicationId}`;
+          }
+        }
+        
+        // Update page title with application ID for better tracking
+        if (applicationId) {
+          document.title = `Application #${applicationId} - Employer Portal`;
+        }
+      })();
+    </script>
+    
     <!-- Scripts -->
     <script src="/student/scripts/database-connector.js"></script>
     <script src="/student/scripts/employer-applications-connector.js"></script>
-    <script src="/student/scripts/application-detail.js" defer></script>
+    <!-- Fallback if connectors fail to load -->
+    <script>
+      // Create fallback connectors if they don't load
+      document.addEventListener('DOMContentLoaded', function() {
+        // Check if the DB_CONNECTOR is available
+        if (!window.DB_CONNECTOR) {
+          console.warn('DB_CONNECTOR not found, creating fallback connector');
+          window.DB_CONNECTOR = {
+            API_URL: document.querySelector('meta[name="api-url"]')?.getAttribute('content') || 'http://localhost:5004/api',
+            
+            // Get application by ID
+            getApplicationById: async function(applicationId) {
+              try {
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+                if (!token) {
+                  throw new Error('No authentication token found');
+                }
+
+                const response = await fetch(`${this.API_URL}/applications/${applicationId}`, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  return data.application || data;
+                } else {
+                  throw new Error(`Server returned status ${response.status}`);
+                }
+              } catch (error) {
+                console.error('Error fetching application:', error);
+                return null;
+              }
+            },
+            
+            // Update application status
+            updateApplicationStatus: async function(applicationId, status) {
+              try {
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+                if (!token) {
+                  throw new Error('No authentication token found');
+                }
+
+                const response = await fetch(`${this.API_URL}/applications/${applicationId}/status`, {
+                  method: 'PUT',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ status })
+                });
+
+                if (response.ok) {
+                  return { success: true };
+                } else {
+                  throw new Error(`Server returned status ${response.status}`);
+                }
+              } catch (error) {
+                console.error('Error updating status:', error);
+                return { success: false, error: error.message };
+              }
+            },
+            
+            // Save application notes
+            saveApplicationNotes: async function(applicationId, notes) {
+              try {
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+                if (!token) {
+                  throw new Error('No authentication token found');
+                }
+
+                const response = await fetch(`${this.API_URL}/applications/${applicationId}/notes`, {
+                  method: 'PUT',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ notes })
+                });
+
+                if (response.ok) {
+                  return { success: true };
+                } else {
+                  throw new Error(`Server returned status ${response.status}`);
+                }
+              } catch (error) {
+                console.error('Error saving notes:', error);
+                return { success: false, error: error.message };
+              }
+            }
+          };
+        }
+      });
+    </script>
+    <script src="/student/scripts/employer-application-detail.js" defer></script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const logoutBtn = document.getElementById('logoutBtn');
@@ -34,6 +154,77 @@
         }
       });
     </script>
+    <style>
+      /* Status badge styles */
+      .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        background-color: #f0f0f0;
+      }
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      .status-reviewed, .status-shortlisted {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+      .status-interviewed {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .status-accepted {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      
+      /* Tab styles */
+      .tab-btn {
+        cursor: pointer;
+      }
+      .tab-pane {
+        display: none;
+      }
+      .tab-pane.active {
+        display: block;
+      }
+      
+      /* Toast notification */
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 4px;
+        color: white;
+        z-index: 9999;
+        max-width: 300px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .toast.show {
+        opacity: 1;
+      }
+      .toast-info {
+        background-color: #17a2b8;
+      }
+      .toast-success {
+        background-color: #28a745;
+      }
+      .toast-warning {
+        background-color: #ffc107;
+        color: #333;
+      }
+      .toast-error {
+        background-color: #dc3545;
+      }
+    </style>
 </head>
 <body>
     <header>

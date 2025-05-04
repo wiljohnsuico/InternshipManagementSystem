@@ -131,21 +131,48 @@ const APPLICATIONS_CONNECTOR = {
     
     // Normalize a single application
     normalizeApplicationData: function(app) {
+        if (!app) return null;
+        
+        // Extract ID - check all possible formats
+        const id = app.id || app._id || app.applicationId || app.application_id || 
+                  app.intern_application_id || app.internApplicationId || 
+                  (app.application ? app.application.id : null) || '';
+                  
+        // If we still don't have an ID and there's a listing ID, use that as fallback
+        const fallbackId = app.listing_id || app.listingId || app.job_id || app.jobId || '';
+        
+        // Construct student name from various possible formats
+        const studentName = app.studentName || app.student_name || 
+            (app.student ? `${app.student.firstName || app.student.first_name || ''} ${app.student.lastName || app.student.last_name || ''}`.trim() : '') ||
+            (app.intern ? `${app.intern.firstName || app.intern.first_name || ''} ${app.intern.lastName || app.intern.last_name || ''}`.trim() : '');
+        
+        // Return normalized object with all possible fields
         return {
-            id: app.id || app._id || app.applicationId || '',
-            studentName: app.studentName || app.student_name || 
-                (app.student ? `${app.student.firstName || app.student.first_name || ''} ${app.student.lastName || app.student.last_name || ''}`.trim() : ''),
-            studentId: app.studentId || app.student_id || (app.student ? app.student.id || app.student._id || '' : ''),
-            studentEmail: app.studentEmail || app.student_email || (app.student ? app.student.email || '' : ''),
-            studentPhone: app.studentPhone || app.student_phone || (app.student ? app.student.phone || '' : 'Not provided'),
-            jobTitle: app.jobTitle || app.job_title || app.position || '',
-            jobId: app.jobId || app.job_id || '',
-            appliedDate: app.appliedDate || app.applied_date || app.createdAt || app.created_at || new Date(),
-            status: app.status || 'Pending',
+            id: id || fallbackId,
+            applicationId: id || fallbackId, // Duplicate for consistent access
+            studentName: studentName || 'Unknown Student',
+            studentId: app.studentId || app.student_id || 
+                      (app.student ? app.student.id || app.student._id || app.student.studentId || '' : '') ||
+                      (app.intern ? app.intern.id || app.intern._id || app.intern.studentId || '' : ''),
+            studentEmail: app.studentEmail || app.student_email || 
+                         (app.student ? app.student.email || '' : '') ||
+                         (app.intern ? app.intern.email || '' : ''),
+            studentPhone: app.studentPhone || app.student_phone || 
+                         (app.student ? app.student.phone || '' : '') ||
+                         (app.intern ? app.intern.phone || '' : '') || 'Not provided',
+            jobTitle: app.jobTitle || app.job_title || app.position || 
+                     (app.job ? app.job.title || app.job.jobTitle || '' : '') ||
+                     (app.listing ? app.listing.title || app.listing.jobTitle || '' : '') || 'Unknown Position',
+            jobId: app.jobId || app.job_id || 
+                  (app.job ? app.job.id || app.job._id || '' : '') ||
+                  (app.listing ? app.listing.id || app.listing._id || '' : '') || '',
+            appliedDate: app.appliedDate || app.applied_date || app.createdAt || app.created_at || 
+                        app.date || app.application_date || new Date(),
+            status: app.status || app.application_status || app.applicationStatus || 'Pending',
             coverLetter: app.coverLetter || app.cover_letter || '',
-            resumeUrl: app.resumeUrl || app.resume_url || '',
-            notes: app.notes || '',
-            activities: app.activities || app.activity_log || [],
+            resumeUrl: app.resumeUrl || app.resume_url || app.resume || '',
+            notes: app.notes || app.application_notes || app.applicationNotes || '',
+            activities: app.activities || app.activity_log || app.activityLog || [],
             // Include all original data to avoid losing anything
             originalData: app
         };

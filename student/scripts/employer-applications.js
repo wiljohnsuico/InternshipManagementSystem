@@ -151,7 +151,11 @@ function displayApplications() {
             </tr>
         `;
     } else {
-        tableBody.innerHTML = pageApplications.map(app => `
+        tableBody.innerHTML = pageApplications.map(app => {
+            // Get application ID - check multiple possible properties
+            const applicationId = app.id || app._id || app.applicationId || app.application_id || '';
+            
+            return `
             <tr>
                 <td>${app.studentName || 'N/A'}</td>
                 <td>${app.jobTitle || 'N/A'}</td>
@@ -165,12 +169,19 @@ function displayApplications() {
                     ` : 'N/A'}
                 </td>
                 <td>
-                    <button class="btn btn-primary btn-sm" onclick="openApplicationDetail('${app.id}')">
-                        <i class="fas fa-eye"></i> View
-                    </button>
+                    ${applicationId ? `
+                        <button class="btn btn-primary btn-sm" onclick="openApplicationDetail('${applicationId}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    ` : `
+                        <button class="btn btn-primary btn-sm disabled" title="Application ID not available">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    `}
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
     
     // Update pagination
@@ -337,7 +348,54 @@ function showToast(message, type = 'info') {
 
 // Open application detail view
 function openApplicationDetail(applicationId) {
-    window.location.href = `application-detail.html?id=${applicationId}`;
+    // Handle the case when applicationId is undefined, null, or empty string
+    if (!applicationId || applicationId === 'undefined' || applicationId === 'null') {
+        console.warn('Invalid or missing application ID provided to openApplicationDetail');
+        showToast('Error: Cannot open application details without a valid ID', 'error');
+        return;
+    }
+    
+    console.log(`Opening application detail for ID: ${applicationId}`);
+    
+    // Define a safe fallback function in case of errors
+    const safeNavigate = (id) => {
+        try {
+            const cleanId = String(id).trim();
+            window.location.href = `application-detail.html?id=${encodeURIComponent(cleanId)}`;
+        } catch (e) {
+            console.error('Error while navigating to application detail:', e);
+            showToast('Error opening application detail', 'error');
+        }
+    };
+    
+    // Try to safely navigate to the application detail page
+    try {
+        // Clean the application ID - remove any characters that might cause issues in URLs
+        const cleanId = String(applicationId).trim();
+        
+        // Check if this ID exists in our loaded applications to validate
+        // This is a sanity check, but we'll continue even if the app doesn't exist locally
+        if (Array.isArray(applications) && applications.length > 0) {
+            const applicationExists = applications.some(app => {
+                // Compare with all possible ID properties
+                const appId = app.id || app._id || app.applicationId || '';
+                return String(appId) === cleanId;
+            });
+            
+            if (!applicationExists) {
+                console.warn(`Application ID ${cleanId} not found in loaded applications, but proceeding anyway`);
+            }
+        }
+        
+        // Redirect to application detail page with the ID
+        window.location.href = `application-detail.html?id=${encodeURIComponent(cleanId)}`;
+    } catch (error) {
+        console.error('Error opening application detail:', error);
+        showToast('Error opening application detail. Trying fallback navigation...', 'warning');
+        
+        // Try fallback navigation with minimal processing
+        safeNavigate(applicationId);
+    }
 }
 
 window.changePage = changePage; 
