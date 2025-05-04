@@ -124,35 +124,42 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log('Login response:', { ...data, token: data.token ? '[HIDDEN]' : null });
 
                 if (data.success) {
-                    // Store token and user data
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify({
-                        user_id: data.user.user_id,
-                        role: data.user.role,
-                        email: data.user.email,
-                        first_name: data.user.first_name,
-                        last_name: data.user.last_name
-                    }));
+                    // Use handleSuccessfulLogin if available, otherwise fall back to default behavior
+                    if (typeof handleSuccessfulLogin === 'function') {
+                        // Use the centralized login handler
+                        handleSuccessfulLogin(data.user, data.token);
+                    } else {
+                        // Fall back to existing implementation
+                        // Store token and user data
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify({
+                            user_id: data.user.user_id,
+                            role: data.user.role,
+                            email: data.user.email,
+                            first_name: data.user.first_name,
+                            last_name: data.user.last_name
+                        }));
 
-                    // Show success message
-                    alert('Login successful! Welcome ' + data.user.first_name + '!');
+                        // Show success message
+                        alert('Login successful! Welcome ' + data.user.first_name + '!');
 
-                    // Redirect based on role
-                    switch (data.user.role) {
-                        case 'Intern':
-                            window.location.href = 'mplhome.html';
-                            break;
-                        case 'Employer':
-                            window.location.href = '/student/employers/dashboard.html';
-                            break;
-                        case 'Faculty':
-                            window.location.href = '/faculty/faculty.html';
-                            break;
-                        case 'Admin':
-                            window.location.href = 'mplhome.html';
-                            break;
-                        default:
-                            alert('Unknown user role');
+                        // Redirect based on role
+                        switch (data.user.role) {
+                            case 'Intern':
+                                window.location.href = 'mplhome.html';
+                                break;
+                            case 'Employer':
+                                window.location.href = '/student/employers/dashboard.html';
+                                break;
+                            case 'Faculty':
+                                window.location.href = '/faculty/faculty.html';
+                                break;
+                            case 'Admin':
+                                window.location.href = 'mplhome.html';
+                                break;
+                            default:
+                                alert('Unknown user role');
+                        }
                     }
                 } else {
                     alert(data.message || 'Login failed for unknown reason');

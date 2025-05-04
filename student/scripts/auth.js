@@ -27,17 +27,36 @@ function getCurrentUser() {
 
 // Logout function
 function logout() {
-    // Clear all potential user data from localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('userData');
-    localStorage.removeItem('userInfo');
+    // Only preserve these non-user-specific settings
+    const keysToPreserve = [
+        // UI preferences only - NO USER DATA
+        'theme',
+        'uiPreferences',
+        'notificationPreferences',
+        'language'
+    ];
     
-    // Clear from sessionStorage too
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('userData');
-    sessionStorage.removeItem('userInfo');
+    // Save values before clearing localStorage
+    const preservedValues = {};
+    keysToPreserve.forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value) {
+            preservedValues[key] = value;
+        }
+    });
+    
+    // Clear ALL localStorage - important for security
+    localStorage.clear();
+    
+    // Clear ALL sessionStorage
+    sessionStorage.clear();
+    
+    // Restore only non-user-specific preferences
+    Object.keys(preservedValues).forEach(key => {
+        localStorage.setItem(key, preservedValues[key]);
+    });
+    
+    console.log('Cleared all user data during logout');
     
     // Redirect to login page using relative path for better compatibility
     window.location.href = 'mpl-login.html';
@@ -84,6 +103,39 @@ function getAuthToken() {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
 }
 
+// Function to sync application data with server after login
+function syncApplicationDataAfterLogin() {
+    console.log('Syncing application data after login');
+    
+    // Clear any stale application data that might exist
+    const applicationKeys = [
+        'appliedJobs',
+        'appliedJobsFromServer',
+        'locallyStoredApplications',
+        'cachedApplications',
+        'withdrawnJobs',
+        'withdrawnJobsMap',
+        'completedWithdrawals',
+        'applicationIdMap'
+    ];
+    
+    // Clear all keys related to applications
+    applicationKeys.forEach(key => {
+        if (localStorage.getItem(key)) {
+            console.log(`Clearing stale ${key} data`);
+            localStorage.removeItem(key);
+        }
+    });
+    
+    // Note: The next time the user visits a page that needs application data,
+    // it will be fetched fresh from the server
+    console.log('Application data cleared, will be fetched fresh from server when needed');
+    
+    // Also clear any in-memory caches if they exist
+    if (window.appliedJobCache) window.appliedJobCache = {};
+    if (window.hasAppliedCache) window.hasAppliedCache = {};
+}
+
 // Initialize auth state when page loads
 document.addEventListener('DOMContentLoaded', function() {
     // Check if token exists but no user data (incomplete auth)
@@ -111,4 +163,37 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn("Unauthorized access to protected page. Redirecting to login.");
         window.location.href = 'mpl-login.html';
     }
-}); 
+});
+
+// In your login handler or wherever users successfully log in, add:
+function handleSuccessfulLogin(userData, token) {
+    // Store auth token
+    localStorage.setItem('token', token);
+    
+    // Store user data
+    if (userData) {
+        localStorage.setItem('userData', JSON.stringify(userData));
+        localStorage.setItem('user', JSON.stringify({
+            id: userData.id || userData.user_id,
+            email: userData.email,
+            role: userData.role
+        }));
+    }
+    
+    // Sync application data to ensure fresh state
+    syncApplicationDataAfterLogin();
+    
+    // Update UI
+    updateAuthUI();
+    
+    // Determine redirect URL
+    let redirectUrl = 'mplhome.html';
+    if (userData && userData.role === 'Employer') {
+        redirectUrl = 'employers/dashboard.html';
+    } else if (userData && userData.role === 'Admin') {
+        redirectUrl = '/admin/dashboard.html';
+    }
+    
+    // Redirect user
+    window.location.href = redirectUrl;
+} 

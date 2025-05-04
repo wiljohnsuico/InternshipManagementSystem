@@ -546,15 +546,34 @@ function updateAppliedJobsUI() {
         console.log(`Found ${appliedJobs.length} applied jobs, ${appliedJobsFromServer.length} server-confirmed jobs`);
         
         // Update any UI elements that show applied status
-        const applyButtons = document.querySelectorAll('.apply-btn');
+        // Target ALL buttons that have data-job-id attributes, not just apply-btn class
+        const allSelectors = [
+            'button[data-job-id]',
+            'button[data-listing-id]',
+            '.card-actions button',
+            '.job-card button',
+            'button.applied',
+            'button.btn-success'
+        ];
+        const applyButtons = document.querySelectorAll(allSelectors.join(', '));
         console.log(`Found ${applyButtons.length} total apply buttons to check`);
         
         let updatedCount = 0;
         
         applyButtons.forEach(button => {
-            const jobId = button.getAttribute('data-job-id');
+            let jobId = button.getAttribute('data-job-id');
+            
+            // If button doesn't have job ID, try to get it from parent job card
             if (!jobId) {
-                console.warn("Found apply button without data-job-id attribute");
+                const jobCard = button.closest('.job-card') || button.closest('[data-job-id]');
+                if (jobCard) {
+                    jobId = jobCard.getAttribute('data-job-id');
+                    console.log(`Found job ID ${jobId} from parent card for button:`, button.textContent);
+                }
+            }
+            
+            if (!jobId) {
+                console.warn("Found apply button without data-job-id attribute and can't determine job ID from parent");
                 return;
             }
             
@@ -616,7 +635,7 @@ function updateAppliedJobsUI() {
                 }
                 updatedCount++;
             } else {
-                // Ensure button is in "Apply Now" state
+                // Always reset button and card to Apply Now state if not applied and not withdrawn
                 button.textContent = 'Apply Now';
                 button.disabled = false;
                 button.classList.remove('btn-success', 'btn-warning', 'applied', 'applied-pending');
@@ -627,6 +646,7 @@ function updateAppliedJobsUI() {
                 if (jobCard && jobCard.classList.contains('job-applied')) {
                     jobCard.classList.remove('job-applied');
                 }
+                updatedCount++;
             }
         });
         
@@ -1035,21 +1055,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
-            // Preserve specific localStorage items that should persist after logout
+            // Only preserve these non-user-specific settings
             const keysToPreserve = [
-                // Notification keys
-                'persistentNotifications',
-                'notifications',
-                // Application state keys
-                'withdrawnJobsMap',
-                'completedWithdrawals',
-                'appliedJobs',
-                'appliedJobsFromServer',
-                'cachedApplications',
-                'applicationIdMap',
-                'cachedJobListings',
-                'jobListingsLastFetched',
-                'locallyStoredApplications'
+                // UI preferences only - NO USER DATA
+                'theme',
+                'uiPreferences',
+                'notificationPreferences',
+                'language'
             ];
             
             // Save values before clearing localStorage
@@ -1061,26 +1073,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Copy notifications from regular storage to persistent storage to ensure they survive
-            try {
-                const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-                if (notifications.length > 0) {
-                    localStorage.setItem('persistentNotifications', JSON.stringify(notifications));
-                    console.log('Backed up notifications to persistent storage before logout');
-                }
-            } catch (e) {
-                console.error('Error backing up notifications:', e);
-            }
-            
-            // Clear localStorage
+            // Clear ALL localStorage - important for security and to prevent data leakage between users
             localStorage.clear();
             
-            // Restore preserved values
+            // Restore only non-user-specific preferences
             Object.keys(preservedValues).forEach(key => {
                 localStorage.setItem(key, preservedValues[key]);
             });
             
-            console.log('Preserved the following localStorage keys:', Object.keys(preservedValues));
+            console.log('Cleared all user data from localStorage during logout');
+            console.log('Preserved only UI preferences:', Object.keys(preservedValues));
             
             // Redirect to login page
             window.location.href = '../index.html';
@@ -2101,10 +2103,39 @@ function initJobListingsPage() {
     console.log('Initializing job listings page...');
     
     // Check for job listings container
-    const jobListingsContainer = document.getElementById('job-listings');
-    if (!jobListingsContainer) {
+    const jobListingsElement = document.getElementById('job-listings');
+    if (!jobListingsElement) {
         console.warn('Job listings container not found - may not be the job listings page');
         return;
+    }
+    
+    // Add sync button to the page
+    const topNav = document.querySelector('.nav-links') || document.querySelector('nav') || document.body;
+    const syncButton = document.createElement('button');
+    syncButton.className = 'btn btn-secondary sync-button';
+    syncButton.innerHTML = '<i class="fas fa-sync"></i> Sync Applications';
+    syncButton.style.marginLeft = '10px';
+    syncButton.addEventListener('click', function() {
+        forceApplicationStateSyncWithServer().then(() => {
+            if (window.notification && typeof window.notification.success === 'function') {
+                window.notification.success('Application data synchronized with server', true);
+            } else {
+                alert('Application data synchronized with server');
+            }
+        });
+    });
+    
+    // Try to add to the nav or fallback to another location
+    if (topNav) {
+        if (topNav.appendChild) {
+            topNav.appendChild(syncButton);
+        } else {
+            // Fallback option if element doesn't support appendChild
+            const searchContainer = document.querySelector('.search-bar') || document.querySelector('.filter-container');
+            if (searchContainer) {
+                searchContainer.parentNode.insertBefore(syncButton, searchContainer.nextSibling);
+            }
+        }
     }
     
     // Restore search state from localStorage
@@ -2285,46 +2316,76 @@ function markJobAsWithdrawn(jobId) {
         // Run button updates immediately
         updateButtons();
         
-        // Clear in-memory cache
+        // Clear in-memory cache and hasAppliedToJob cache for this job
         if (window.appliedJobCache) {
             window.appliedJobCache[jobId] = false;
         }
+        if (window.hasAppliedCache) {
+            window.hasAppliedCache[jobId] = false;
+        }
         
-        // Then update cached applications in the background to avoid UI lag
-        setTimeout(() => {
+        // Remove jobId from all localStorage arrays/maps that track applied jobs
+        const keysToRemove = ['appliedJobs', 'appliedJobsFromServer', 'locallyStoredApplications'];
+        keysToRemove.forEach(key => {
+            const arr = JSON.parse(localStorage.getItem(key) || '[]');
+            const idx = arr.indexOf(jobId);
+            if (idx !== -1) {
+                arr.splice(idx, 1);
+                localStorage.setItem(key, JSON.stringify(arr));
+            }
+        });
+        // Remove from withdrawnJobsMap if present
+        const withdrawnJobsMap = JSON.parse(localStorage.getItem('withdrawnJobsMap') || '{}');
+        if (withdrawnJobsMap[jobId]) {
+            delete withdrawnJobsMap[jobId];
+            localStorage.setItem('withdrawnJobsMap', JSON.stringify(withdrawnJobsMap));
+        }
+        // Remove from completedWithdrawals
+        const completedWithdrawals = JSON.parse(localStorage.getItem('completedWithdrawals') || '[]');
+        const idx = completedWithdrawals.indexOf(jobId);
+        if (idx !== -1) {
+            completedWithdrawals.splice(idx, 1);
+            localStorage.setItem('completedWithdrawals', JSON.stringify(completedWithdrawals));
+        }
+        
+        // --- Remove from cachedApplications (handle both array and {applications: []} object) ---
+        let cachedApplications = localStorage.getItem('cachedApplications');
+        if (cachedApplications) {
             try {
-                // Update cachedApplications
-                const cachedApplications = JSON.parse(localStorage.getItem('cachedApplications') || '[]');
-                const newCachedApps = cachedApplications.filter(app => {
-                    return !(
-                        (app.job_id && String(app.job_id) === jobId) || 
-                        (app.listing_id && String(app.listing_id) === jobId) ||
-                        (app.jobId && String(app.jobId) === jobId)
-                    );
-                });
-                localStorage.setItem('cachedApplications', JSON.stringify(newCachedApps));
-                
-                // Update in-memory userApplications array if it exists
-                if (typeof userApplications !== 'undefined' && Array.isArray(userApplications)) {
-                    userApplications = userApplications.filter(app => {
+                let parsed = JSON.parse(cachedApplications);
+                if (Array.isArray(parsed)) {
+                    parsed = parsed.filter(app => {
                         return !(
                             (app.job_id && String(app.job_id) === jobId) || 
                             (app.listing_id && String(app.listing_id) === jobId) ||
                             (app.jobId && String(app.jobId) === jobId)
                         );
                     });
+                    localStorage.setItem('cachedApplications', JSON.stringify(parsed));
+                } else if (parsed && Array.isArray(parsed.applications)) {
+                    parsed.applications = parsed.applications.filter(app => {
+                        return !(
+                            (app.job_id && String(app.job_id) === jobId) || 
+                            (app.listing_id && String(app.listing_id) === jobId) ||
+                            (app.jobId && String(app.jobId) === jobId)
+                        );
+                    });
+                    localStorage.setItem('cachedApplications', JSON.stringify(parsed));
                 }
-                
-                // Dispatch an event to notify other components about the withdrawal
-                document.dispatchEvent(new CustomEvent('application-withdrawn', {
-                    detail: { jobId: jobId, timestamp: Date.now() }
-                }));
-                
-                console.log(`Background update completed for withdrawn job ${jobId}`);
             } catch (e) {
-                console.error("Background update error:", e);
+                console.warn('Error updating cachedApplications after withdrawal:', e);
             }
-        }, 50); // Very small delay to prioritize UI updates first
+        }
+        // ---
+        
+        // --- Ensure UI is fully refreshed ---
+        // Force refresh of user applications and job listings to ensure all buttons update
+        fetchUserApplications(true).then(() => {
+            if (typeof fetchJobListings === 'function') {
+                fetchJobListings();
+            }
+        });
+        // ---
         
         return true;
     } catch (error) {
@@ -2339,6 +2400,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Initialize API URL
     initApiUrl();
+    
+    // IMPORTANT: Force sync with server first
+    await forceApplicationStateSyncWithServer();
     
     // Check intern verification status and show appropriate notification
     await checkVerificationStatus();
@@ -2389,21 +2453,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
-            // Preserve specific localStorage items that should persist after logout
+            // Only preserve these non-user-specific settings
             const keysToPreserve = [
-                // Notification keys
-                'persistentNotifications',
-                'notifications',
-                // Application state keys
-                'withdrawnJobsMap',
-                'completedWithdrawals',
-                'appliedJobs',
-                'appliedJobsFromServer',
-                'cachedApplications',
-                'applicationIdMap',
-                'cachedJobListings',
-                'jobListingsLastFetched',
-                'locallyStoredApplications'
+                // UI preferences only - NO USER DATA
+                'theme',
+                'uiPreferences',
+                'notificationPreferences',
+                'language'
             ];
             
             // Save values before clearing localStorage
@@ -2415,26 +2471,16 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             });
             
-            // Copy notifications from regular storage to persistent storage to ensure they survive
-            try {
-                const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-                if (notifications.length > 0) {
-                    localStorage.setItem('persistentNotifications', JSON.stringify(notifications));
-                    console.log('Backed up notifications to persistent storage before logout');
-                }
-            } catch (e) {
-                console.error('Error backing up notifications:', e);
-            }
-            
-            // Clear localStorage
+            // Clear ALL localStorage - important for security and to prevent data leakage between users
             localStorage.clear();
             
-            // Restore preserved values
+            // Restore only non-user-specific preferences
             Object.keys(preservedValues).forEach(key => {
                 localStorage.setItem(key, preservedValues[key]);
             });
             
-            console.log('Preserved the following localStorage keys:', Object.keys(preservedValues));
+            console.log('Cleared all user data from localStorage during logout');
+            console.log('Preserved only UI preferences:', Object.keys(preservedValues));
             
             // Redirect to login page
             window.location.href = '../index.html';
@@ -2551,4 +2597,45 @@ function addStatusBanner(status) {
             banner.style.border = '1px solid #bee5eb';
         }
     }
+}
+
+// Function to force a complete refresh of application data
+function forceApplicationStateSyncWithServer() {
+    console.log("Forcing application state sync with server");
+    
+    // Clear all application-related data from localStorage
+    const applicationKeys = [
+        'appliedJobs',
+        'appliedJobsFromServer',
+        'locallyStoredApplications',
+        'cachedApplications',
+        'withdrawnJobs',
+        'withdrawnJobsMap',
+        'completedWithdrawals',
+        'applicationIdMap'
+    ];
+    
+    // Clear each key
+    applicationKeys.forEach(key => {
+        console.log(`Clearing ${key} from localStorage`);
+        localStorage.removeItem(key);
+    });
+    
+    // Also clear in-memory caches
+    window.appliedJobCache = {};
+    window.hasAppliedCache = {};
+    
+    // Force refresh from server
+    console.log("Fetching fresh application data from server");
+    return fetchUserApplications(true)
+        .then(() => {
+            console.log("Refreshing job listings UI");
+            updateAppliedJobsUI();
+            if (typeof fetchJobListings === 'function') {
+                fetchJobListings();
+            }
+        })
+        .catch(error => {
+            console.error("Error syncing application state:", error);
+        });
 }

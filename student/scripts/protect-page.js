@@ -37,9 +37,15 @@ document.addEventListener('DOMContentLoaded', function() {
     logoutLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = 'mpl-login.html';
+            // Use the proper logout function instead of manually removing items
+            if (typeof logout === 'function') {
+                logout(); // This will properly clear all data and redirect
+            } else {
+                // Fallback if logout function is not available
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = 'mpl-login.html';
+            }
         });
     });
 
