@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/nav-bar.css">
     <link rel="stylesheet" href="styles/landing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>LANDING PAGE</title>
     <style>
         /* Add/Update styles for nav bar and login button */
@@ -46,6 +47,116 @@
             background: #003d82;
             color: #fff;
             box-shadow: 0 4px 16px rgba(0,86,179,0.10);
+        }
+
+        /* Footer styles */
+        footer {
+            margin-top: 0;
+            font-family: Arial, sans-serif;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        .footer-content {
+            background-color: #141c24;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Align logo/text vertically */
+            padding: 10px 6%;
+        }
+        .contact-info, .about-company {
+            width: 45%;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .contact-item i {
+            width: 20px;
+            margin-right: 6px;
+            color: #fff !important;
+            font-size: 1rem;
+        }
+        .contact-item p, .contact-item a {
+            font-size: 0.95rem;
+            color: #fff !important;
+            margin: 0;
+            text-decoration: none;
+        }
+        .about-company h3, .about-company p {
+            color: #fff;
+        }
+        .about-company h3 {
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+        .about-company p {
+            font-size: 0.95rem;
+        }
+        .social-media {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .social-icon {
+            width: 22px;
+            height: 22px;
+            font-size: 1rem;
+            background-color: #fff2; /* subtle white bg */
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .social-icon i {
+            color: #fff;
+        }
+        .social-icon:hover {
+            opacity: 0.8;
+        }
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                padding: 10px 2%;
+            }
+            .contact-info, .about-company {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Header/Nav Bar compression and alignment */
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 4%;
+            min-height: 48px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            height: 56px;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 44px;
+        }
+        .nav-links a, .login-button {
+            padding: 8px 16px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            height: 36px;
         }
     </style>
 </head>
@@ -139,16 +250,40 @@
     </main>
 
     <footer>
-        <div class="footer-container">
             <div class="footer-content">
-                <h3>About the QCUIMS</h3>
-                <p>Lorem ipsum odor amet, consectetuer adipiscing elit. Imperdiet ullamcorper vestibulum penatibus nullam lectus posuere. 
-                Sapien aliquet sociosqu purus diam porttitor torquent. Lorem ipsum odor amet, consectetuer adipiscing elit. Imperdiet ullamcorper vestibulum penatibus nullam lectus posuere. 
-                Sapien aliquet sociosqu purus diam porttitor torquent.</p>
+            <!-- Left side - Contact info -->
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <p>21 Revolution Street<br>Paris, France</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <p>+1 555 123456</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:support@company.com">support@company.com</a>
+                </div>
+            </div>
 
+            <!-- Right side - What we do -->
+            <div class="about-company">
+                <h3>What we do?</h3>
+                <p>QCU Internship management system goal is to connect students with internships that match their skills, streamline communication with partner companies, and enable efficient tracking of attendance and daily progress.</p>
 
+                <!-- Social Icons -->
+                <div class="social-media">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                </div>
             </div>
         </div>
     </footer>
+
+    <script src="scripts/login-signup.js"></script>
 </body>
 </html>
+
