@@ -6,9 +6,11 @@
     <meta name="api-url" content="http://localhost:5004/api">
         <link rel="stylesheet" href="styles/home-navbar.css">
         <link rel="stylesheet" href="styles/home.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./styles/dashboard.css">
     <link rel="stylesheet" href="./styles/notification.css">
+    <link rel="stylesheet" href="styles/footer.css">
+    <link rel="stylesheet" href="styles/back-to-top.css">
     <title>QCU Internship Management System</title>
     <script src="./scripts/dashboard.js" defer></script>
     <script src="./scripts/notification.js" defer></script>
@@ -617,14 +619,11 @@
         </section>
     </main>
     
-    <footer class="footer">
-        <p>&copy; 2023 QCU Internship Management System. All rights reserved.</p>
-    </footer>
-
     <!-- Include auth utilities -->
     <script src="scripts/auth.js"></script>
     <script src="scripts/mplhome.js"></script>
-    
+    <div id="footer-container"></div>
+    <script src="scripts/back-to-top.js"></script>
     <script>
         // Add logout functionality
         document.querySelector(".logout-link").addEventListener("click", function(e) {
@@ -685,6 +684,12 @@
                 initNotificationSystem();
             }
         });
+
+        fetch('components/footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
     </script>
     </body>
     </html>

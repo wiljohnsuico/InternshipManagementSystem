@@ -172,15 +172,6 @@ body {
     margin: 0;
 }
 
-/* Footer Styles */
-footer {
-    background-color: var(--primary-color);
-    color: white;
-    text-align: center;
-    padding: 1rem;
-    margin-top: 3rem;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-container {

@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interview Guide - QCU IMS</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../styles/resources.css">
+    <link rel="stylesheet" href="../styles/nav-bar.css">
+    <link rel="stylesheet" href="../styles/footer.css">
+    <link rel="stylesheet" href="../styles/back-to-top.css">
     <style>
         #back-to-top {
             position: fixed;
@@ -165,9 +168,14 @@
         <i class="fas fa-arrow-up"></i>
     </button>
 
-    <footer>
-        <p>&copy; 2023 QCU Internship Management System. All rights reserved.</p>
-    </footer>
-    <script src="../scripts/resources.js"></script>
+    <div id="footer-container"></div>
+    <script src="../scripts/back-to-top.js"></script>
+    <script>
+        fetch('../components/footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
+    </script>
 </body>
 </html> 

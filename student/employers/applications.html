@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="/student/styles/home-navbar.css">
     <link rel="stylesheet" href="/student/styles/employer-dashboard.css">
+    <link rel="stylesheet" href="../styles/footer.css">
+    <link rel="stylesheet" href="../styles/back-to-top.css">
     <!-- Database connector script -->
     <script src="/student/scripts/database-connector.js"></script>
     <script src="/student/scripts/employer-applications-connector.js"></script>
@@ -298,10 +300,14 @@
         </div>
     </div>
     
-    <footer>
-        <div class="footer-content">
-            <p>&copy; 2025 QCU Internship Management System. All rights reserved.</p>
-        </div>
-    </footer>
+    <div id="footer-container"></div>
+    <script src="../scripts/back-to-top.js"></script>
+    <script>
+        fetch('../components/footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
+    </script>
 </body>
 </html> 

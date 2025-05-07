@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/home-navbar.css">
     <link rel="stylesheet" href="styles/mainprofile.css">
+    <link rel="stylesheet" href="styles/footer.css">
+    <link rel="stylesheet" href="styles/back-to-top.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Edit Modal Styles */
         .modal {
@@ -211,6 +214,26 @@
             margin-top: 30px;
             font-style: italic;
             color: #666;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1 0 auto;
+        }
+
+        #footer-container {
+            flex-shrink: 0;
         }
     </style>
 
@@ -737,6 +760,15 @@
                 });
             }
         });
+    </script>
+    <div id="footer-container"></div>
+    <script src="scripts/back-to-top.js"></script>
+    <script>
+        fetch('components/footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
     </script>
 </body>
 </html>

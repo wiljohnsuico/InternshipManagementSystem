@@ -6,8 +6,11 @@
     <meta name="api-url" content="http://localhost:5004/api">
     <title>My Applications - QCU IMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./styles/notification.css">
     <link rel="stylesheet" href="./styles/application-details.css">
+    <link rel="stylesheet" href="styles/footer.css">
+    <link rel="stylesheet" href="styles/back-to-top.css">
     <script src="./scripts/notification.js" defer></script>
     <style>
         body {
@@ -909,6 +912,8 @@
     <script src="scripts/auth.js"></script>
     <script src="scripts/applications.js"></script>
     
+    <div id="footer-container"></div>
+    <script src="scripts/back-to-top.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize notification system
@@ -1034,6 +1039,12 @@
             console.log('confirmModal:', document.getElementById('confirmModal'));
             console.log('applicationModal:', document.getElementById('applicationModal'));
         });
+
+        fetch('components/footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
     </script>
 </body>
 </html>
