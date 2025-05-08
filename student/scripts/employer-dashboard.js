@@ -1,5 +1,7 @@
 // Employer Dashboard JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing employer dashboard.js');
+    
     // Initialize elements
     const logoutBtn = document.getElementById('logoutBtn');
     const employerNameEl = document.getElementById('employerName');
@@ -15,8 +17,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Display user info
             displayUserInfo(user);
             
-            // Load dashboard data
-            loadDashboardData();
+            // Ensure we wait for DB_CONNECTOR to be ready
+            setTimeout(() => {
+                // Load dashboard data - use the dashboard connector if available
+                if (window.EMPLOYER_DASHBOARD_CONNECTOR) {
+                    console.log('Using dashboard connector to load data');
+                    // Data will be loaded by the dashboard connector
+                } else {
+                    console.log('No dashboard connector found, loading data manually');
+                    loadDashboardData();
+                }
+            }, 200);
             
             // Setup event listeners
             setupEventListeners();
@@ -36,14 +47,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // View all applications button
         if (viewAllApplicationsBtn) {
             viewAllApplicationsBtn.addEventListener('click', () => {
-                window.location.href = 'http://localhost:3000/student/employers/applications.html';
+                window.location.href = '/student/employers/applications.html';
             });
         }
         
         // View all jobs button
         if (viewAllJobsBtn) {
             viewAllJobsBtn.addEventListener('click', () => {
-                window.location.href = 'http://localhost:3000/student/employers/job-postings.html';
+                window.location.href = '/student/employers/job-postings.html';
             });
         }
         
@@ -59,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     localStorage.setItem('usingMockData', 'true');
                 }
                 
-                window.location.href = 'http://localhost:3000/student/employers/job-postings.html';
+                window.location.href = '/student/employers/job-postings.html';
                 return false;
             });
         }
@@ -67,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Fix Post New Internship button if it exists
         const postInternshipBtn2 = document.querySelector('.btn-primary[href="/student/employers/job-postings.html"]');
         if (postInternshipBtn2) {
-            postInternshipBtn2.href = 'http://localhost:3000/student/employers/job-postings.html';
+            postInternshipBtn2.href = '/student/employers/job-postings.html';
         }
         
         // Add View Applications button handler
@@ -76,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
             viewApplicationsBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 console.log('View Applications button clicked');
-                window.location.href = 'http://localhost:3000/student/employers/applications.html';
+                window.location.href = '/student/employers/applications.html';
                 return false;
             });
         }
@@ -106,56 +117,104 @@ document.addEventListener('DOMContentLoaded', function() {
     // Track API availability globally
     let isApiAvailable = false;
 
-    // Load dashboard data
+    // Load dashboard data with improved error handling
     async function loadDashboardData() {
         try {
-            // First check if API is available
-            isApiAvailable = await checkApiConnectivity();
-            
-            if (!isApiAvailable) {
-                console.log('API not available, using mock data');
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            if (!token) {
+                console.warn('No authentication token found');
                 displayMockData();
                 return;
             }
             
-            const token = localStorage.getItem('token');
+            console.log('Loading dashboard data...');
             
-            // Update stats using the dashboard stats endpoint
-            try {
-                const statsEndpoint = 'http://localhost:5004/api/employers/dashboard/stats';
-                console.log(`Loading dashboard statistics from: ${statsEndpoint}`);
-                
-                const response = await fetch(statsEndpoint, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    displayDashboardStats(data);
-                    console.log('Dashboard stats loaded successfully:', data);
-                } else {
-                    console.error('Error loading dashboard statistics:', response.status);
-                    // Fall back to job stats if dashboard stats fail
-                    await loadJobStats(token);
+            // Check if shared API connector is available with dashboard stats method
+            if (window.SHARED_API_CONNECTOR && window.SHARED_API_CONNECTOR.getDashboardStats) {
+                try {
+                    console.log('Using shared API connector for dashboard stats');
+                    const dashboardStats = await window.SHARED_API_CONNECTOR.getDashboardStats();
+                    console.log('Dashboard stats loaded successfully:', dashboardStats);
+                    displayDashboardStats(dashboardStats);
+                    
+                    // Load applications and jobs
+                    loadApplicationsAndJobs();
+                    return;
+                } catch (connectorError) {
+                    console.warn('Error using shared API connector for dashboard stats:', connectorError);
+                    // Continue with fallback methods
                 }
-            } catch (error) {
-                console.error('Error fetching dashboard stats:', error);
-                // Fall back to job stats if dashboard stats fail
+            }
+            
+            // Try the DB_CONNECTOR if available
+            if (window.DB_CONNECTOR && window.DB_CONNECTOR.getDashboardStats) {
+                try {
+                    console.log('Using DB_CONNECTOR for dashboard stats');
+                    const dashboardStats = await window.DB_CONNECTOR.getDashboardStats();
+                    console.log('Dashboard stats loaded successfully from DB_CONNECTOR:', dashboardStats);
+                    displayDashboardStats(dashboardStats);
+                    
+                    // Load applications and jobs
+                    loadApplicationsAndJobs();
+                    return;
+                } catch (dbConnectorError) {
+                    console.warn('Error using DB_CONNECTOR for dashboard stats:', dbConnectorError);
+                    // Continue with direct API call
+                }
+            }
+            
+            // Direct API call as fallback
+            console.log('Using direct API call for dashboard stats');
+            
+            // Try both possible endpoint formats with retry
+            const endpoints = [
+                `${API_URL}/dashboard/employers/dashboard/stats`,
+                `${API_URL}/employer/dashboard/stats`,
+                `${API_URL}/employers/dashboard/stats`
+            ];
+            
+            let dashboardStats = null;
+            let lastError = null;
+            
+            for (const endpoint of endpoints) {
+                if (dashboardStats) break;
+                
+                try {
+                    console.log(`Trying endpoint: ${endpoint}`);
+                    const response = await fetch(endpoint, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        dashboardStats = await response.json();
+                        console.log('Dashboard stats loaded successfully from direct API call:', dashboardStats);
+                        break;
+                    } else {
+                        console.warn(`Endpoint ${endpoint} returned status ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error(`Error fetching from ${endpoint}:`, error);
+                    lastError = error;
+                }
+            }
+            
+            if (dashboardStats) {
+                displayDashboardStats(dashboardStats);
+            } else {
+                console.warn('All dashboard stat endpoints failed, falling back to job stats');
+                // Fall back to job stats
                 await loadJobStats(token);
             }
             
-            // Load recent applications
-            await loadRecentApplications(token);
-            
-            // Load active job postings
-            await loadActiveJobs(token);
+            // Load applications and jobs
+            loadApplicationsAndJobs();
             
         } catch (error) {
-            console.error('Error in loadDashboardData:', error);
+            console.error('Error loading dashboard data:', error);
             displayMockData();
         }
     }
@@ -206,252 +265,187 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Load recent applications
-    async function loadRecentApplications(token) {
+    // Load applications and jobs separately
+    async function loadApplicationsAndJobs() {
         try {
-            const applicationsEndpoint = 'http://localhost:5004/api/applications/employer/recent';
-            console.log(`Loading recent applications from: ${applicationsEndpoint}`);
-            
-            const appResponse = await fetch(applicationsEndpoint, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (appResponse.ok) {
-                const appData = await appResponse.json();
-                // Get only the first 5 recent applications if there are more
-                const recentApps = Array.isArray(appData) ? appData.slice(0, 5) 
-                    : (appData.applications ? appData.applications.slice(0, 5) 
-                    : (appData.data ? appData.data.slice(0, 5) : []));
-                    
-                displayRecentApplications(recentApps);
-            } else {
-                console.error('Error loading recent applications:', appResponse.status);
-                // Fall back to all applications and just take the most recent
-                await loadAllApplications(token);
-            }
-        } catch (error) {
-            console.error('Error loading recent applications:', error);
-            document.getElementById('recentApplications').innerHTML = `
-                <tr>
-                    <td colspan="5" class="empty-state">No recent applications available</td>
-                </tr>
-            `;
-        }
-    }
-    
-    // Load all applications as fallback
-    async function loadAllApplications(token) {
-        try {
-            const applicationsEndpoint = 'http://localhost:5004/api/applications/employer';
-            
-            const appResponse = await fetch(applicationsEndpoint, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (appResponse.ok) {
-                const appData = await appResponse.json();
-                // Extract applications array and sort by date
-                let applications = [];
-                if (Array.isArray(appData)) {
-                    applications = appData;
-                } else if (appData.applications && Array.isArray(appData.applications)) {
-                    applications = appData.applications;
-                } else if (appData.data && Array.isArray(appData.data)) {
-                    applications = appData.data;
+            // Get recent applications from shared connector if available
+            if (window.SHARED_API_CONNECTOR) {
+                try {
+                    console.log('Using shared API connector for applications');
+                    const applications = await window.SHARED_API_CONNECTOR.getApplications({
+                        filters: { limit: 5 }
+                    });
+                    console.log('Recent applications loaded successfully:', applications);
+                    displayRecentApplications(applications);
+                } catch (error) {
+                    console.warn('Error loading applications from shared connector:', error);
+                    displayRecentApplications([]);
                 }
                 
-                // Sort by date (newest first) and take first 5
-                applications.sort((a, b) => {
-                    const dateA = new Date(a.applied_date || a.created_at || a.updatedAt || 0);
-                    const dateB = new Date(b.applied_date || b.created_at || b.updatedAt || 0);
-                    return dateB - dateA;
+                // Get active jobs
+                try {
+                    console.log('Using shared API connector for jobs');
+                    const response = await window.SHARED_API_CONNECTOR.apiRequest('/jobs/employer?status=active&limit=5');
+                    console.log('Active jobs loaded successfully:', response);
+                    const jobs = response.jobs || [];
+                    displayActiveJobs(jobs);
+                } catch (error) {
+                    console.warn('Error loading jobs from shared connector:', error);
+                    displayActiveJobs([]);
+                }
+                
+                return;
+            }
+            
+            // Fallback to DB_CONNECTOR if available
+            if (window.DB_CONNECTOR) {
+                try {
+                    console.log('Using DB_CONNECTOR for applications');
+                    const recentApplications = await window.DB_CONNECTOR.getRecentApplications(5);
+                    displayRecentApplications(recentApplications);
+                } catch (error) {
+                    console.error('Error getting recent applications:', error);
+                    displayRecentApplications([]);
+                }
+                
+                // Get active jobs
+                try {
+                    console.log('Using DB_CONNECTOR for jobs');
+                    const activeJobs = await window.DB_CONNECTOR.getActiveJobPostings(5);
+                    displayActiveJobs(activeJobs);
+                } catch (error) {
+                    console.error('Error getting active jobs:', error);
+                    displayActiveJobs([]);
+                }
+                
+                return;
+            }
+            
+            // Direct API calls as final fallback
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            if (!token) {
+                console.warn('No token for direct API calls');
+                displayRecentApplications([]);
+                displayActiveJobs([]);
+                return;
+            }
+            
+            // Get applications
+            try {
+                const response = await fetch(`${API_URL}/applications/employer?limit=5`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
                 });
                 
-                const recentApps = applications.slice(0, 5);
-                displayRecentApplications(recentApps);
-            } else {
-                throw new Error(`Failed to load applications: ${appResponse.status}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayRecentApplications(data.applications || []);
+                } else {
+                    console.warn('Applications API returned status:', response.status);
+                    displayRecentApplications([]);
+                }
+            } catch (error) {
+                console.error('Error fetching applications directly:', error);
+                displayRecentApplications([]);
+            }
+            
+            // Get jobs
+            try {
+                const response = await fetch(`${API_URL}/jobs/employer?status=active&limit=5`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayActiveJobs(data.jobs || []);
+                } else {
+                    console.warn('Jobs API returned status:', response.status);
+                    displayActiveJobs([]);
+                }
+            } catch (error) {
+                console.error('Error fetching jobs directly:', error);
+                displayActiveJobs([]);
             }
         } catch (error) {
-            console.error('Error in loadAllApplications:', error);
-            document.getElementById('recentApplications').innerHTML = `
-                <tr>
-                    <td colspan="5" class="empty-state">No recent applications available</td>
-                </tr>
-            `;
+            console.error('Error in loadApplicationsAndJobs:', error);
+            displayRecentApplications([]);
+            displayActiveJobs([]);
         }
     }
     
-    // Load active job postings
-    async function loadActiveJobs(token) {
-        try {
-            const jobsEndpoint = 'http://localhost:5004/api/jobs/employer';
-            console.log(`Loading employer job postings from: ${jobsEndpoint}`);
-            
-            const jobsResponse = await fetch(jobsEndpoint, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (jobsResponse.ok) {
-                const jobsData = await jobsResponse.json();
-                
-                // Extract jobs array
-                let jobs = [];
-                if (Array.isArray(jobsData)) {
-                    jobs = jobsData;
-                } else if (jobsData.jobs && Array.isArray(jobsData.jobs)) {
-                    jobs = jobsData.jobs;
-                } else if (jobsData.listings && Array.isArray(jobsData.listings)) {
-                    jobs = jobsData.listings;
-                } else if (jobsData.data && Array.isArray(jobsData.data)) {
-                    jobs = jobsData.data;
-                }
-                
-                // Filter to only active jobs
-                const activeJobs = jobs.filter(job => 
-                    job.status === 'Active' || job.status === 'ACTIVE' || job.status === 'active'
-                ).slice(0, 5);
-                
-                displayActiveJobs(activeJobs);
-            } else {
-                console.error('Error loading active job postings:', jobsResponse.status);
-                document.getElementById('activeJobPostings').innerHTML = `
-                    <tr>
-                        <td colspan="5" class="empty-state">No active job postings</td>
-                    </tr>
-                `;
-            }
-        } catch (error) {
-            console.error('Error loading active job postings:', error);
-            document.getElementById('activeJobPostings').innerHTML = `
-                <tr>
-                    <td colspan="5" class="empty-state">No active job postings</td>
-                </tr>
-            `;
-        }
-    }
-    
-    // Display active jobs
-    function displayActiveJobs(jobs) {
-        const container = document.getElementById('activeJobPostings');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        if (!jobs || jobs.length === 0) {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="5" class="empty-state">No active job postings found</td>
-                </tr>
-            `;
-            return;
-        }
-        
-        jobs.forEach(job => {
-            const row = document.createElement('tr');
-            const postedDate = formatDate(job.created_at || job.createdAt || job.posted_date || new Date());
-            const applicationCount = job.application_count || job.applicationCount || job.applications_count || 0;
-            const jobTitle = job.title || job.job_title || 'Untitled Position';
-            const jobStatus = job.status || 'Active';
-            const jobId = job.id || job._id || job.job_id || '';
-            
-            row.innerHTML = `
-                <td>${jobTitle}</td>
-                <td>${postedDate}</td>
-                <td>${applicationCount}</td>
-                <td><span class="status-badge status-${jobStatus.toLowerCase()}">${jobStatus}</span></td>
-                <td>
-                    <a href="job-details.html?id=${jobId}" class="btn-icon view-btn">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                </td>
-            `;
-            
-            container.appendChild(row);
-        });
-    }
-    
-    // Display mock data when API is unavailable
+    // Display mock data
     function displayMockData() {
-        console.log('Displaying mock data for dashboard');
-        
-        // Mock statistics
+        // Dashboard stats
         displayDashboardStats({
             active_jobs: 3,
             total_applications: 12,
-            hired_interns: 2,
-            pending_applications: 5
+            hired_interns: 5,
+            pending_applications: 7
         });
         
-        // Mock recent applications
-        const mockApplications = [
+        // Recent applications
+        displayRecentApplications([
             {
-                applicant_name: 'John Doe',
-                job_title: 'Frontend Developer Intern',
-                applied_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+                id: 'app-1',
+                studentName: 'John Doe',
+                jobTitle: 'Frontend Developer Intern',
+                appliedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
                 status: 'Pending'
             },
             {
-                applicant_name: 'Jane Smith',
-                job_title: 'Backend Developer Intern',
-                applied_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-                status: 'Reviewed'
+                id: 'app-2',
+                studentName: 'Jane Smith',
+                jobTitle: 'Backend Developer Intern',
+                appliedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+                status: 'Accepted'
             },
             {
-                applicant_name: 'Mike Johnson',
-                job_title: 'UX Design Intern',
-                applied_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-                status: 'Interviewed'
+                id: 'app-3',
+                studentName: 'Alex Williams',
+                jobTitle: 'Data Science Intern',
+                appliedDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                status: 'Rejected'
             }
-        ];
+        ]);
         
-        displayRecentApplications(mockApplications);
-        
-        // Mock active job postings
-        const mockJobs = [
+        // Active job postings
+        displayActiveJobs([
             {
+                id: 'job-1',
                 title: 'Frontend Developer Intern',
-                created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-                application_count: 5,
-                status: 'Active',
-                id: 'job-1'
+                createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+                applicationCount: 5,
+                status: 'Active'
             },
             {
+                id: 'job-2',
                 title: 'Backend Developer Intern',
-                created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-                application_count: 3,
-                status: 'Active',
-                id: 'job-2'
+                createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+                applicationCount: 3,
+                status: 'Active'
             },
             {
-                title: 'UX Design Intern',
-                created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
-                application_count: 4,
-                status: 'Active',
-                id: 'job-3'
+                id: 'job-3',
+                title: 'Data Science Intern',
+                createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+                applicationCount: 4,
+                status: 'Active'
             }
-        ];
-        
-        displayActiveJobs(mockJobs);
+        ]);
     }
     
-    // Format date function
+    // Format date
     function formatDate(dateString) {
-        if (!dateString) return 'Unknown date';
-        
         try {
+            if (!dateString) return 'Unknown date';
+            
             const date = new Date(dateString);
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -459,35 +453,53 @@ document.addEventListener('DOMContentLoaded', function() {
                 day: 'numeric'
             });
         } catch (error) {
-            return 'Unknown date';
+            console.error('Error formatting date:', error);
+            return 'Invalid date';
         }
     }
     
-    // Display dashboard stats with empty stats as default
+    // Display dashboard stats
     function displayDashboardStats(stats = {}) {
-        // Update stat counters directly with real data or zeros
-        const activeJobsEl = document.getElementById('activeJobs');
-        const totalApplicationsEl = document.getElementById('totalApplications');
-        const hiredInternsEl = document.getElementById('hiredInterns');
-        const pendingApplicationsEl = document.getElementById('pendingApplications');
+        const statsElements = {
+            activeJobs: document.getElementById('activeJobs') || document.getElementById('activeJobsCount'),
+            totalApplications: document.getElementById('totalApplications') || document.getElementById('totalApplicationsCount'),
+            hiredInterns: document.getElementById('hiredInterns') || document.getElementById('acceptedStudentsCount'),
+            pendingApplications: document.getElementById('pendingApplications') || document.getElementById('pendingReviewsCount')
+        };
         
-        if (activeJobsEl) activeJobsEl.textContent = stats.active_jobs || 0;
-        if (totalApplicationsEl) totalApplicationsEl.textContent = stats.total_applications || 0;
-        if (hiredInternsEl) hiredInternsEl.textContent = stats.hired_interns || 0;
-        if (pendingApplicationsEl) pendingApplicationsEl.textContent = stats.pending_applications || 0;
+        console.log('Displaying dashboard stats:', stats);
+        
+        // Support multiple possible property names from different API formats
+        if (statsElements.activeJobs) {
+            statsElements.activeJobs.textContent = stats.active_jobs || stats.activeJobs || 0;
+        }
+        
+        if (statsElements.totalApplications) {
+            statsElements.totalApplications.textContent = stats.total_applications || stats.totalApplications || 0;
+        }
+        
+        if (statsElements.hiredInterns) {
+            statsElements.hiredInterns.textContent = stats.hired_interns || stats.hiredInterns || 0;
+        }
+        
+        if (statsElements.pendingApplications) {
+            statsElements.pendingApplications.textContent = stats.pending_applications || stats.pendingApplications || 0;
+        }
     }
     
     // Display recent applications
     function displayRecentApplications(applications) {
-        const recentApplicationsTable = document.getElementById('recentApplications');
-        if (!recentApplicationsTable) return;
+        const tableBody = document.getElementById('recentApplications');
         
-        // Clear existing rows
-        recentApplicationsTable.innerHTML = '';
+        if (!tableBody) {
+            console.warn('Recent applications table body not found');
+            return;
+        }
         
-        // If no applications, show empty state
+        tableBody.innerHTML = '';
+        
         if (!applications || applications.length === 0) {
-            recentApplicationsTable.innerHTML = `
+            tableBody.innerHTML = `
                 <tr>
                     <td colspan="5" class="empty-state">No recent applications</td>
                 </tr>
@@ -495,158 +507,191 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Process each application
-        applications.forEach(app => {
-            // Handle different API response formats
-            const id = app.id || app._id || app.application_id || '';
+        for (const app of applications) {
+            const appliedDate = formatDate(app.appliedDate || app.applied_date || app.createdAt || app.created_at);
             
-            // Get applicant name from various possible properties
-            let applicantName = app.applicant_name || '';
-            if (!applicantName && app.student) {
-                // Try to extract from student object
-                const firstName = app.student.first_name || app.student.firstName || '';
-                const lastName = app.student.last_name || app.student.lastName || '';
-                applicantName = firstName + (lastName ? ' ' + lastName : '');
-            }
+            // Standardize status (only use Pending, Accepted, Rejected)
+            let status = (app.status || 'Pending').trim();
             
-            // Get job title
-            const jobTitle = app.job_title || app.jobTitle || app.position || 'Unknown Position';
-            
-            // Get date and format it
-            const appliedDate = formatDate(app.applied_date || app.appliedDate || app.created_at || app.createdAt || new Date());
-            
-            // Get status with default
-            const status = app.status || 'Pending';
-            
-            // Create status class based on status
-            let statusClass;
-            switch (status.toLowerCase()) {
-                case 'accepted':
+            // Map any legacy statuses to our simplified set
+            switch(status.toLowerCase()) {
                 case 'hired':
-                    statusClass = 'success';
-                    break;
-                case 'rejected':
-                    statusClass = 'danger';
-                    break;
                 case 'interviewed':
                 case 'shortlisted':
-                    statusClass = 'info';
-                    break;
                 case 'reviewed':
-                    statusClass = 'secondary';
+                    status = 'Accepted';
+                    break;
+                case 'rejected':
+                    status = 'Rejected';
                     break;
                 case 'pending':
                 default:
-                    statusClass = 'warning';
+                    status = 'Pending';
                     break;
             }
             
-            // Create row
+            // Determine status class
+            const statusClass = `status-${status.toLowerCase()}`;
+            
+            // Get application ID
+            const applicationId = app.id || app._id || app.applicationId || app.application_id || '';
+            
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${applicantName}</td>
-                <td>${jobTitle}</td>
+                <td>${app.studentName || app.student_name || app.applicantName || 'Unknown Student'}</td>
+                <td>${app.jobTitle || app.job_title || app.position || 'Unknown Position'}</td>
                 <td>${appliedDate}</td>
-                <td><span class="status-badge status-${status.toLowerCase()}">${status}</span></td>
+                <td><span class="status-badge ${statusClass}">${status}</span></td>
                 <td>
-                    <a href="applications.html?id=${id}" class="btn-icon view-btn">
+                    <a href="application-detail.html?id=${applicationId}" class="btn-icon view-btn">
                         <i class="fas fa-eye"></i>
                     </a>
                 </td>
             `;
             
-            recentApplicationsTable.appendChild(row);
-        });
+            tableBody.appendChild(row);
+        }
     }
     
-    // Check if user is authenticated and has employer role
-    async function checkAuthentication() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.error('No authentication token found');
-                throw new Error('Not authenticated');
-            }
-            
-            // Get the user from localStorage
-            const userString = localStorage.getItem('user');
-            if (!userString) {
-                console.error('No user data found in localStorage');
-                throw new Error('User data missing');
-            }
-            
-            const user = JSON.parse(userString);
-            console.log('User from localStorage:', user);
-            
-            // The role might be 'Employer' (capitalized) but we should check case-insensitively
-            const userRole = (user.role || '').toLowerCase();
-            
-            if (userRole !== 'employer') {
-                console.error('User is not an employer. Role:', user.role);
-                throw new Error('Not authorized as employer');
-            }
-            
-            // Verify token with the backend
-            try {
-                const verifyResponse = await fetch('http://localhost:5004/api/auth/verify', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!verifyResponse.ok) {
-                    console.error('Token verification failed with status:', verifyResponse.status);
-                    throw new Error('Token validation failed');
-                }
-                
-                console.log('Authentication successful');
-                return user;
-            } catch (verifyError) {
-                console.error('Token verification error:', verifyError);
-                // Only redirect on actual auth errors, not network errors
-                if (verifyError.message.includes('validation')) {
-                    redirectToLogin();
-                }
-                throw verifyError;
-            }
-        } catch (error) {
-            console.error('Authentication check error:', error);
-            throw error;
+    // Display active jobs
+    function displayActiveJobs(jobs) {
+        const tableBody = document.getElementById('activeJobPostings');
+        
+        if (!tableBody) {
+            console.warn('Active jobs table body not found');
+            return;
         }
+        
+        tableBody.innerHTML = '';
+        
+        if (!jobs || jobs.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="empty-state">No active job postings</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        for (const job of jobs) {
+            const postedDate = formatDate(job.createdAt || job.created_at || job.postedDate || job.posted_date || job.dateCreated);
+            const jobId = job.id || job._id || job.jobId || job.job_id || '';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${job.title || job.jobTitle || job.job_title || 'Unnamed Position'}</td>
+                <td>${postedDate}</td>
+                <td>${job.applicationCount || job.applications_count || job.applicationsCount || 0}</td>
+                <td><span class="status-badge status-active">${job.status || 'Active'}</span></td>
+                <td>
+                    <a href="job-detail.html?id=${jobId}" class="btn-icon view-btn">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        }
+    }
+    
+    // Check authentication
+    async function checkAuthentication() {
+        return new Promise((resolve, reject) => {
+            // First check if we already have user data in localStorage
+            const userString = localStorage.getItem('userData') || localStorage.getItem('user');
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('employerToken');
+            
+            if (userString && token) {
+                try {
+                    const user = JSON.parse(userString);
+                    if (user) {
+                        console.log('User already authenticated:', user.name || user.email);
+                        return resolve(user);
+                    }
+                } catch (error) {
+                    console.warn('Error parsing user data from localStorage:', error);
+                    // Continue to API check
+                }
+            }
+            
+            // If we don't have user data or there was an error, try verifying the token with the API
+            if (token) {
+                // Try to use SHARED_API_CONNECTOR if available
+                if (window.SHARED_API_CONNECTOR) {
+                    window.SHARED_API_CONNECTOR.apiRequest('/auth/verify', {
+                        requiresAuth: true
+                    }).then(data => {
+                        // Store the user data in localStorage
+                        if (data.user) {
+                            localStorage.setItem('userData', JSON.stringify(data.user));
+                            resolve(data.user);
+                        } else {
+                            reject(new Error('No user data in API response'));
+                        }
+                    }).catch(error => {
+                        console.error('Error verifying authentication with API:', error);
+                        reject(error);
+                    });
+                } else {
+                    // Fall back to direct API call
+                    fetch('http://localhost:5004/api/auth/verify', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error(`API returned ${response.status}`);
+                        }
+                    }).then(data => {
+                        // Store the user data in localStorage
+                        if (data.user) {
+                            localStorage.setItem('userData', JSON.stringify(data.user));
+                            resolve(data.user);
+                        } else {
+                            reject(new Error('No user data in API response'));
+                        }
+                    }).catch(error => {
+                        console.error('Error verifying authentication with API:', error);
+                        reject(error);
+                    });
+                }
+            } else {
+                reject(new Error('No authentication token found'));
+            }
+        });
     }
     
     // Handle logout
     function handleLogout() {
-        // Ask for confirmation before logging out
-        if (confirm('Are you sure you want to log out?')) {
-            console.log('User confirmed logout');
-            
-            // Show toast notification
-            showToast('Logging out...', 'info');
-            
-            // Clear all authentication related data
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('mockJobPostings'); // Clear mock data too
-            
-            // Redirect to login page after a short delay
-            setTimeout(() => {
-                window.location.href = '../mpl-login.html';
-            }, 1000);
-        } else {
-            console.log('Logout cancelled by user');
-        }
+        // Clear all auth data from localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('employerToken');
+        localStorage.removeItem('userData');
+        localStorage.removeItem('user');
+        localStorage.removeItem('applicationStatusChanges');
+        
+        // Show toast notification
+        showToast('Logged out successfully', 'info');
+        
+        // Redirect to login page after a short delay
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
     }
     
     // Redirect to login page
     function redirectToLogin() {
-        window.location.href = 'job-postings.html';
+        window.location.href = '/';
     }
     
-    // Helper: Show toast notification
+    // Helper function to show toast notifications
     function showToast(message, type = 'info') {
-        console.log(`Toast: ${type} - ${message}`);
+        console.log(`Toast: ${message} (${type})`);
         
         // Create toast element
         const toast = document.createElement('div');
@@ -656,7 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add to document
         document.body.appendChild(toast);
         
-        // Show toast
+        // Show toast with a small delay
         setTimeout(() => {
             toast.classList.add('show');
         }, 10);
@@ -669,4 +714,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         }, 3000);
     }
-}); 
+});

@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "Sample Frontend Developer Intern",
+    "company_id": 1,
+    "company_name": "Example Company",
+    "description": "This is a sample job listing for testing purposes.",
+    "requirements": "HTML, CSS, JavaScript",
+    "location": "Manila, Philippines",
+    "salary": "₱15,000 - ₱20,000",
+    "is_paid": 1,
+    "is_active": 1,
+    "status": "Active",
+    "job_type": "On-site",
+    "positions_available": 2,
+    "application_deadline": null,
+    "start_date": null,
+    "duration": null,
+    "skills_required": "React, TypeScript, HTML, CSS",
+    "qualification": null,
+    "is_deleted": 0,
+    "created_at": "2025-05-08T09:12:33.000Z",
+    "updated_at": "2025-05-08T09:12:33.000Z",
+    "created_by": null
+  }
+]

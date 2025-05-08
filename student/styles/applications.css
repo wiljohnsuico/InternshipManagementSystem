@@ -45,7 +45,7 @@
 
 .application-table td {
     vertical-align: middle;
-    padding: 0.75rem;
+    padding: 10px;
 }
 
 .view-details-btn {
@@ -123,15 +123,14 @@
 .skills-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 5px;
+    margin-bottom: 15px;
 }
 
-.skill-badge {
-    background-color: #e9ecef;
-    color: #495057;
-    padding: 0.35rem 0.75rem;
-    border-radius: 30px;
+.skill-tag {
+    background-color: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
     font-size: 0.85rem;
 }
 
@@ -174,4 +173,66 @@ footer {
     .filter-section {
         padding: 1rem;
     }
+}
+
+/* Add styles for action buttons in the table */
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    margin-bottom: 3px;
+}
+
+/* Make sure the table cells have enough space for buttons */
+.application-table td {
+    vertical-align: middle;
+    padding: 10px;
+}
+
+/* Responsive adjustments for mobile screens */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: white;
+}
+
+.status-pending {
+    background-color: #f0ad4e; /* Bootstrap warning */
+}
+
+.status-accepted {
+    background-color: #5cb85c; /* Bootstrap success */
+}
+
+.status-rejected {
+    background-color: #d9534f; /* Bootstrap danger */
+}
+
+.status-reviewed,
+.status-shortlisted {
+    background-color: #5bc0de; /* Bootstrap info */
+}
+
+.status-interviewed {
+    background-color: #0275d8; /* Bootstrap primary */
 } 

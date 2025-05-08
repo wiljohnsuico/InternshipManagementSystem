@@ -5,7 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/home-navbar.css">
     <link rel="stylesheet" href="styles/resume.css">
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <title>RESUME</title>
+    <style>
+        /* Add styles for the form buttons */
+        .form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .reset-btn {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #ced4da;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .reset-btn:hover {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        /* Download button style */
+        .download-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .download-btn:hover {
+            background-color: #218838;
+        }
+        
+        /* Status message styles */
+        .status-message.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: block;
+            text-align: center;
+        }
+        
+        .status-message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: block;
+            text-align: center;
+        }
+        
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: block;
+            text-align: center;
+        }
+        
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: block;
+            text-align: center;
+        }
+        
+        /* Update submit button style for consistency */
+        .submit-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -121,9 +226,6 @@
                     <div class="form-group">
                         <label>Year</label>
                     </div>
-                    <div class="form-group" style="flex: 0.5;">
-                        <label>Date</label>
-                    </div>
                     <div style="width: 35px;"></div>
                 </div>
                 
@@ -135,9 +237,6 @@
                         </div>
                         <div class="form-group">
                             <input type="text" name="year">
-                        </div>
-                        <div class="form-group" style="flex: 0.5;">
-                            <input type="text" name="date">
                         </div>
                         <button class="delete-btn" onclick="deleteEducationEntry(this)">×</button>
                     </div>
@@ -204,7 +303,11 @@
             </div>
             
             <div id="statusMessage" class="status-message"></div>
-            <button type="submit" class="submit-btn">Save</button>
+            <div class="form-buttons">
+                <button type="button" class="reset-btn" id="reset-form">Reset</button>
+                <button type="button" class="download-btn" id="download-pdf">Download PDF</button>
+                <button type="submit" class="submit-btn">Save</button>
+            </div>
         </form>
     
         <script>
@@ -262,30 +365,26 @@
                 }
             });
     
-            // Add education entry functionality
+            // Add education entry
             document.getElementById('add-education').addEventListener('click', function(e) {
                 e.preventDefault();
-                const educationEntries = document.querySelector('.education-entries');
-                const entries = document.querySelectorAll('.education-entry').length;
+                const entries = document.querySelector('.education-entries');
+                const entryCount = entries.children.length + 1;
                 
                 const newEntry = document.createElement('div');
                 newEntry.className = 'education-entry';
-                
                 newEntry.innerHTML = `
-                    <div class="education-number">${entries + 1}</div>
+                    <div class="education-number">${entryCount}</div>
                     <div class="form-group">
                         <input type="text" name="school">
                     </div>
                     <div class="form-group">
                         <input type="text" name="year">
                     </div>
-                    <div class="form-group" style="flex: 0.5;">
-                        <input type="text" name="date">
-                    </div>
                     <button class="delete-btn" onclick="deleteEducationEntry(this)">×</button>
                 `;
                 
-                educationEntries.appendChild(newEntry);
+                entries.appendChild(newEntry);
             });
 
             // Delete education entry functionality
@@ -339,8 +438,209 @@
                     entry.querySelector('.work-number').textContent = index + 1;
                 });
             }
+
+            // Add event listener for form reset button
+            document.getElementById('reset-form').addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+                    document.getElementById('resume-form').reset();
+                    // Reset preview image
+                    previewImage.src = '';
+                    previewImage.style.display = 'none';
+                    placeholderText.style.display = 'block';
+                    // Reset any dynamic fields (education, work experience)
+                    const educationEntries = document.querySelector('.education-entries');
+                    while (educationEntries.children.length > 1) {
+                        educationEntries.removeChild(educationEntries.lastChild);
+                    }
+                    const workEntries = document.querySelector('.work-entries');
+                    while (workEntries.children.length > 1) {
+                        workEntries.removeChild(workEntries.lastChild);
+                    }
+                    // Reset any status messages
+                    document.getElementById('statusMessage').textContent = '';
+                    document.getElementById('statusMessage').className = 'status-message';
+                }
+            });
+
+            // PDF Download functionality
+            document.getElementById('download-pdf').addEventListener('click', function() {
+                // Get all form data
+                const firstName = document.querySelector('input[name="firstName"]').value || '';
+                const middleName = document.querySelector('input[name="middleName"]').value || '';
+                const lastName = document.querySelector('input[name="lastName"]').value || '';
+                const suffix = document.querySelector('input[name="suffix"]').value || '';
+                const birthday = document.querySelector('input[name="birthday"]').value || '';
+                const age = document.querySelector('input[name="age"]').value || '';
+                const mobile = document.querySelector('input[name="mobile"]').value || '';
+                const email = document.querySelector('input[name="email"]').value || '';
+                const street = document.querySelector('input[name="street"]').value || '';
+                const barangay = document.querySelector('input[name="barangay"]').value || '';
+                const city = document.querySelector('input[name="city"]').value || '';
+                const country = document.querySelector('input[name="country"]').value || '';
+                const objectives = document.querySelector('textarea[name="objectives"]').value || '';
+                
+                // Get education entries
+                const educationEntries = [];
+                document.querySelectorAll('.education-entry').forEach(entry => {
+                    const school = entry.querySelector('input[name="school"]').value;
+                    const year = entry.querySelector('input[name="year"]').value;
+                    if (school) {
+                        educationEntries.push({ school, year });
+                    }
+                });
+                
+                // Get work experience entries
+                const workEntries = [];
+                document.querySelectorAll('.work-entry').forEach(entry => {
+                    const position = entry.querySelector('input[name="position"]').value;
+                    const company = entry.querySelector('input[name="company"]').value;
+                    const duration = entry.querySelector('input[name="duration"]').value;
+                    if (position && company) {
+                        workEntries.push({ position, company, duration });
+                    }
+                });
+                
+                // Get skills
+                const skills = document.querySelector('.skills-box').value.split(',').map(skill => skill.trim()).filter(skill => skill);
+                
+                // Populate hidden resume preview
+                const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}${suffix ? ' ' + suffix : ''}`;
+                document.getElementById('pdf-name').textContent = fullName;
+                document.getElementById('pdf-contact').textContent = `${mobile} | ${email}`;
+                document.getElementById('pdf-objectives').textContent = objectives;
+                
+                // Personal info
+                const personalInfo = document.getElementById('pdf-personal-info');
+                personalInfo.innerHTML = '';
+                if (age) {
+                    const li = document.createElement('li');
+                    li.textContent = `Age: ${age}`;
+                    personalInfo.appendChild(li);
+                }
+                if (birthday) {
+                    const li = document.createElement('li');
+                    li.textContent = `Birthday: ${birthday}`;
+                    personalInfo.appendChild(li);
+                }
+                
+                const address = [street, barangay, city, country].filter(part => part).join(', ');
+                if (address) {
+                    const li = document.createElement('li');
+                    li.textContent = `Address: ${address}`;
+                    personalInfo.appendChild(li);
+                }
+                
+                // Education
+                const educationSection = document.getElementById('pdf-education');
+                educationSection.innerHTML = '';
+                educationEntries.forEach(edu => {
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '10px';
+                    div.innerHTML = `<p><strong>${edu.school}</strong>${edu.year ? '<br>' + edu.year : ''}</p>`;
+                    educationSection.appendChild(div);
+                });
+                
+                // Work experience
+                const workSection = document.getElementById('pdf-work');
+                workSection.innerHTML = '';
+                workEntries.forEach(work => {
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '15px';
+                    div.innerHTML = `
+                        <p><strong>${work.position}</strong><br>
+                        ${work.company}${work.duration ? ' | ' + work.duration : ''}</p>
+                    `;
+                    workSection.appendChild(div);
+                });
+                
+                // Skills
+                document.getElementById('pdf-skills').textContent = skills.join(', ');
+                
+                // Signature
+                document.getElementById('pdf-signature').textContent = `${lastName}, ${firstName}${middleName ? ' ' + middleName.charAt(0) + '.' : ''}`;
+                
+                // Generate PDF using html2canvas and jsPDF
+                const { jsPDF } = window.jspdf;
+                
+                // Show a loading message
+                const statusMessage = document.getElementById('statusMessage');
+                statusMessage.textContent = "Generating PDF...";
+                statusMessage.className = "status-message info";
+                
+                // Wait a moment to ensure the DOM is updated
+                setTimeout(() => {
+                    const element = document.getElementById('resume-preview');
+                    const options = {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false
+                    };
+                    
+                    html2canvas(element, options).then(canvas => {
+                        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        const imgProps = pdf.getImageProperties(imgData);
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                        
+                        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                        pdf.save(`${lastName}_${firstName}_Resume.pdf`);
+                        
+                        // Update status message
+                        statusMessage.textContent = "PDF downloaded successfully!";
+                        statusMessage.className = "status-message success";
+                        
+                        // Clear message after a delay
+                        setTimeout(() => {
+                            statusMessage.textContent = '';
+                            statusMessage.className = 'status-message';
+                        }, 5000);
+                    }).catch(error => {
+                        console.error('Error generating PDF:', error);
+                        statusMessage.textContent = "Error generating PDF. Please try again.";
+                        statusMessage.className = "status-message error";
+                    });
+                }, 500);
+            });
         </script>
     </main>
+
+    <!-- Hidden Resume Preview for PDF Export -->
+    <div id="resume-preview" style="position: absolute; top: -9999px; left: -9999px;">
+        <div class="resume-pdf-container" style="width: 800px; padding: 40px; font-family: Arial, sans-serif;">
+            <h1 style="text-align: center; margin-bottom: 20px;" id="pdf-name"></h1>
+            <p style="text-align: center; margin-bottom: 30px;" id="pdf-contact"></p>
+            
+            <div style="margin-bottom: 30px;">
+                <h2 style="border-bottom: 1px solid #333; padding-bottom: 5px;">Objectives</h2>
+                <p id="pdf-objectives"></p>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <h2 style="border-bottom: 1px solid #333; padding-bottom: 5px;">Personal Information</h2>
+                <ul id="pdf-personal-info" style="list-style-type: none; padding-left: 0;"></ul>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <h2 style="border-bottom: 1px solid #333; padding-bottom: 5px;">Education</h2>
+                <div id="pdf-education"></div>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <h2 style="border-bottom: 1px solid #333; padding-bottom: 5px;">Work Experience</h2>
+                <div id="pdf-work"></div>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <h2 style="border-bottom: 1px solid #333; padding-bottom: 5px;">Skills</h2>
+                <p id="pdf-skills"></p>
+            </div>
+            
+            <div style="margin-top: 50px; text-align: right;">
+                <p id="pdf-signature"></p>
+            </div>
+        </div>
+    </div>
 
     <!-- Include auth utilities -->
     <script src="scripts/auth.js"></script>

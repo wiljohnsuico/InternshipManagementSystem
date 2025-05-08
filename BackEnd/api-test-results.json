@@ -1,0 +1,150 @@
+[
+  {
+    "route": {
+      "name": "Applications Update-Status",
+      "url": "http://localhost:5004/api/applications/update-status",
+      "method": "POST",
+      "body": {
+        "applicationId": "157",
+        "status": "Pending"
+      },
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer mock_token_for_testing"
+      }
+    },
+    "result": {
+      "status": 403,
+      "statusText": "Forbidden",
+      "responseTime": "31ms",
+      "headers": {
+        "access-control-allow-credentials": "true",
+        "access-control-allow-headers": "Content-Type, Authorization, Accept, Origin, X-Requested-With",
+        "access-control-allow-methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "access-control-allow-origin": "*",
+        "access-control-expose-headers": "Content-Length,X-Total-Count",
+        "connection": "keep-alive",
+        "content-length": "54",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 08 May 2025 08:43:41 GMT",
+        "etag": "W/\"36-XkHl1Guvb0KdrO6Rz4iFFxNNcL4\"",
+        "keep-alive": "timeout=5",
+        "vary": "Origin",
+        "x-powered-by": "Express"
+      },
+      "body": {
+        "success": false,
+        "message": "Invalid or expired token"
+      }
+    },
+    "success": false
+  },
+  {
+    "route": {
+      "name": "Applications Status (PATCH)",
+      "url": "http://localhost:5004/api/applications/157/status",
+      "method": "PATCH",
+      "body": {
+        "status": "Pending"
+      },
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer mock_token_for_testing"
+      }
+    },
+    "result": {
+      "status": 403,
+      "statusText": "Forbidden",
+      "responseTime": "4ms",
+      "headers": {
+        "access-control-allow-credentials": "true",
+        "access-control-allow-headers": "Content-Type, Authorization, Accept, Origin, X-Requested-With",
+        "access-control-allow-methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "access-control-allow-origin": "*",
+        "access-control-expose-headers": "Content-Length,X-Total-Count",
+        "connection": "keep-alive",
+        "content-length": "54",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 08 May 2025 08:43:41 GMT",
+        "etag": "W/\"36-XkHl1Guvb0KdrO6Rz4iFFxNNcL4\"",
+        "keep-alive": "timeout=5",
+        "vary": "Origin",
+        "x-powered-by": "Express"
+      },
+      "body": {
+        "success": false,
+        "message": "Invalid or expired token"
+      }
+    },
+    "success": false
+  },
+  {
+    "route": {
+      "name": "Applications Status (PUT)",
+      "url": "http://localhost:5004/api/applications/157/status",
+      "method": "PUT",
+      "body": {
+        "status": "Pending"
+      },
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer mock_token_for_testing"
+      }
+    },
+    "result": {
+      "status": 404,
+      "statusText": "Not Found",
+      "responseTime": "3ms",
+      "headers": {
+        "access-control-allow-credentials": "true",
+        "access-control-allow-headers": "Content-Type, Authorization, Accept, Origin, X-Requested-With",
+        "access-control-allow-methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "access-control-allow-origin": "*",
+        "access-control-expose-headers": "Content-Length,X-Total-Count",
+        "connection": "keep-alive",
+        "content-length": "45",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 08 May 2025 08:43:41 GMT",
+        "etag": "W/\"2d-cNj29RQ25Pprcj6a6edy/V2YndQ\"",
+        "keep-alive": "timeout=5",
+        "vary": "Origin",
+        "x-powered-by": "Express"
+      },
+      "body": {
+        "success": false,
+        "message": "Route not found"
+      }
+    },
+    "success": false
+  },
+  {
+    "route": {
+      "name": "Health Check",
+      "url": "http://localhost:5004/api/health",
+      "method": "GET"
+    },
+    "result": {
+      "status": 200,
+      "statusText": "OK",
+      "responseTime": "1ms",
+      "headers": {
+        "access-control-allow-credentials": "true",
+        "access-control-expose-headers": "Content-Length,X-Total-Count",
+        "connection": "keep-alive",
+        "content-length": "84",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 08 May 2025 08:43:41 GMT",
+        "etag": "W/\"54-fbVvaqtfSu3xhO5kMFktNCL2pcM\"",
+        "keep-alive": "timeout=5",
+        "vary": "Origin",
+        "x-powered-by": "Express"
+      },
+      "body": {
+        "status": "ok",
+        "message": "Server is running",
+        "timestamp": "2025-05-08T08:43:41.364Z"
+      }
+    },
+    "success": true
+  }
+]

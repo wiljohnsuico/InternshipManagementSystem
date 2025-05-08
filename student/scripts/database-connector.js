@@ -260,28 +260,212 @@ const DB_CONNECTOR = {
             const isApiAvailable = await this.checkApiConnectivity();
             if (!isApiAvailable) {
                 console.warn('API not available, simulating status update success');
-                return { success: true, status: newStatus };
+                // Store the status change locally
+                this.saveLocalStatusChange(applicationId, newStatus, true);
+                return { success: true, status: newStatus, apiSuccess: false };
             }
             
-            // Send the status update
-            const response = await fetch(`${this.API_URL}/applications/${applicationId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+            console.log(`Attempting to update status for application ${applicationId} to ${newStatus}`);
+            
+            // Check for previously successful endpoints
+            let endpoints = [];
+            try {
+                const successfulEndpoints = JSON.parse(localStorage.getItem('successfulSyncEndpoints') || '{}');
+                if (successfulEndpoints.statusUpdate) {
+                    // Add the successful endpoint as the first one to try
+                    endpoints.push({
+                        url: successfulEndpoints.statusUpdate,
+                        method: successfulEndpoints.statusUpdateMethod || 'POST',
+                        body: successfulEndpoints.statusUpdateMethod === 'POST' 
+                            ? { applicationId, status: newStatus }
+                            : { status: newStatus }
+                    });
+                }
+            } catch (e) {
+                console.warn('Could not retrieve successful endpoints from localStorage:', e);
+            }
+            
+            // Add default endpoints
+            endpoints = endpoints.concat([
+                {
+                    url: `${this.API_URL}/applications/update-status`,
+                    method: 'POST',
+                    body: { applicationId, status: newStatus }
                 },
-                body: JSON.stringify({ status: newStatus })
-            });
+                {
+                    url: `${this.API_URL}/applications/${applicationId}/status`,
+                    method: 'PUT',
+                    body: { status: newStatus }
+                },
+                {
+                    url: `${this.API_URL}/applications/${applicationId}`,
+                    method: 'PATCH',
+                    body: { status: newStatus }
+                },
+                {
+                    url: `${this.API_URL}/student/applications/${applicationId}/status`,
+                    method: 'PUT',
+                    body: { status: newStatus }
+                },
+                {
+                    url: `${this.API_URL}/employer/applications/${applicationId}/status`,
+                    method: 'PUT',
+                    body: { status: newStatus }
+                }
+            ]);
             
-            if (response.ok) {
-                const data = await response.json();
-                return { success: true, ...data };
-            } else {
-                return { success: false, error: `API returned ${response.status}` };
+            let lastError = null;
+            let apiSuccess = false;
+            
+            // Try each endpoint with retries for server errors
+            for (const endpoint of endpoints) {
+                if (apiSuccess) break;
+                
+                // Try up to 2 times per endpoint
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        // Create a controller for timeout
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                        
+                        console.log(`Attempt ${attempt+1} to update status via ${endpoint.url} (${endpoint.method})`);
+                        
+                        const response = await fetch(endpoint.url, {
+                            method: endpoint.method,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(endpoint.body),
+                            signal: controller.signal
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        // Get response body for debugging
+                        let responseText = "";
+                        try {
+                            responseText = await response.text();
+                        } catch (textError) {
+                            console.warn('Could not read response text:', textError);
+                        }
+                        
+                        if (response.ok) {
+                            console.log(`Status successfully updated via ${endpoint.url}`);
+                            apiSuccess = true;
+                            
+                            // Store successful endpoint for future use
+                            try {
+                                localStorage.setItem('successfulSyncEndpoints', JSON.stringify({
+                                    statusUpdate: endpoint.url,
+                                    statusUpdateMethod: endpoint.method
+                                }));
+                            } catch (e) {
+                                // Ignore storage errors
+                            }
+                            
+                            // Store the status change locally with pendingSync=false
+                            this.saveLocalStatusChange(applicationId, newStatus, false);
+                            
+                            try {
+                                // Parse response if it's JSON
+                                let responseData = {};
+                                if (responseText && responseText.trim().startsWith('{')) {
+                                    responseData = JSON.parse(responseText);
+                                }
+                                return { success: true, ...responseData, apiSuccess: true };
+                            } catch (e) {
+                                return { success: true, message: 'Status updated', apiSuccess: true };
+                            }
+                        } else {
+                            console.warn(`Status update failed at ${endpoint.url} (${response.status}):`, responseText);
+                            lastError = new Error(responseText || `Server returned ${response.status}`);
+                            
+                            // For server errors, retry after a delay
+                            if (response.status >= 500 && attempt === 0) {
+                                console.log(`Server error (${response.status}), retrying after delay...`);
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            } else {
+                                // For other errors, move to next endpoint
+                                break;
+                            }
+                        }
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            console.warn(`Request to ${endpoint.url} timed out after 5 seconds`);
+                        } else {
+                            console.warn(`Error with endpoint ${endpoint.url}:`, error);
+                        }
+                        lastError = error;
+                        
+                        // Only retry network errors once
+                        if (attempt > 0) break;
+                    }
+                }
             }
+            
+            console.error('All endpoints failed for status update. Last error:', lastError);
+            
+            // Store the status change locally with pendingSync=true
+            this.saveLocalStatusChange(applicationId, newStatus, true);
+            
+            return { 
+                success: true, // Return success, but mark that it requires sync later
+                error: lastError ? lastError.message : 'All API endpoints failed',
+                apiSuccess: false,
+                localSaved: true,
+                status: newStatus
+            };
         } catch (error) {
             console.error('Error updating application status:', error);
-            return { success: false, error: error.message };
+            
+            // Store the status change locally as a fallback
+            try {
+                this.saveLocalStatusChange(applicationId, newStatus, true);
+                return { 
+                    success: true, 
+                    apiSuccess: false, 
+                    error: error.message,
+                    localSaved: true,
+                    status: newStatus
+                };
+            } catch (localError) {
+                console.error('Failed to save status locally:', localError);
+                return { success: false, error: error.message };
+            }
+        }
+    },
+    
+    // Save local status change
+    saveLocalStatusChange: function(applicationId, status, pendingSync = true) {
+        try {
+            // Get existing status changes
+            const statusChanges = JSON.parse(localStorage.getItem('applicationStatusChanges') || '{}');
+            
+            // Add or update this application's status
+            statusChanges[applicationId] = {
+                status: status,
+                updatedAt: new Date().toISOString(),
+                pendingSync: pendingSync
+            };
+            
+            // Save back to localStorage
+            localStorage.setItem('applicationStatusChanges', JSON.stringify(statusChanges));
+            console.log(`Status for application ${applicationId} saved locally (pendingSync: ${pendingSync})`);
+            
+            // Dispatch an event so other parts of the app know the status changed
+            try {
+                document.dispatchEvent(new CustomEvent('application-status-updated', {
+                    detail: { applicationId, status, pendingSync }
+                }));
+            } catch (e) {
+                console.warn('Could not dispatch application-status-updated event:', e);
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error saving status change to localStorage:', error);
+            return false;
         }
     },
     

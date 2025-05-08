@@ -396,32 +396,38 @@ function createApplicationCard(application) {
     const statusClass = getStatusClass(application.status);
     
     // Format position title and company name
-    const positionTitle = application.position_title || application.job_title || "Unknown Position";
-    const companyName = application.company_name || application.employer_name || "Unknown Company";
+    const positionTitle = application.position || application.position_title || application.job_title || "Unknown Position";
+    const companyName = application.company || application.company_name || application.employer_name || "Unknown Company";
+    const location = application.location || '';
     
     // Get job ID for preview
     const jobId = application.job_id || application.listing_id || '';
     
     card.innerHTML = `
-        <div class="application-header">
-            <h3 class="position-title">${escapeHtml(positionTitle)}</h3>
-            <span class="status-badge ${statusClass}">${escapeHtml(application.status || 'Pending')}</span>
-        </div>
-        <div class="company-name">${escapeHtml(companyName)}</div>
-        <div class="application-details">
-            <div class="detail">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Applied: ${formattedDate}</span>
+        <div class="card-header">
+            <h3 class="job-title">${escapeHtml(positionTitle)}</h3>
+            <div class="company-info">
+                <i class="fas fa-building"></i>
+                <span>${escapeHtml(companyName)}</span>
             </div>
-            ${application.location ? `
-            <div class="detail">
+            ${location ? `
+            <div class="location-info">
                 <i class="fas fa-map-marker-alt"></i>
-                <span>${escapeHtml(application.location)}</span>
+                <span>${escapeHtml(location)}</span>
             </div>
             ` : ''}
         </div>
-        <div class="application-actions">
-            <div class="action-buttons" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+        <div class="card-body">
+            <div class="date-applied">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Applied: ${formattedDate}</span>
+            </div>
+            <div class="application-status ${statusClass}">
+                ${escapeHtml(application.status || 'Pending')}
+            </div>
+        </div>
+        <div class="card-actions">
+            <div class="action-buttons">
                 <button class="action-btn preview-btn" data-application-id="${application.id || application.application_id}" data-job-id="${jobId}" title="Preview Application">
                     <i class="fas fa-eye"></i>
                 </button>
@@ -441,7 +447,7 @@ function createApplicationCard(application) {
         previewBtn.addEventListener('click', () => {
             console.log('Preview button clicked for application:', application.id || application.application_id);
             if (jobId) {
-                loadJobPreview(jobId);
+                loadJobPreview(jobId, application);
             } else {
                 showApplicationDetails(application);
             }
@@ -981,6 +987,25 @@ async function loadApplications(forceRefresh = false) {
                 const parsedData = JSON.parse(cachedData);
                 applications = parsedData.applications || [];
                 
+                // Make sure all applications have complete data
+                applications = applications.map(app => {
+                    // Ensure position title is set correctly
+                    app.position = app.position || app.position_title || app.job_title || app.title || "Unknown Position";
+                    app.position_title = app.position;
+                    app.job_title = app.position;
+                    app.title = app.position;
+                    
+                    // Ensure company name is set correctly
+                    app.company = app.company || app.company_name || app.employer_name || "Unknown Company";
+                    app.company_name = app.company;
+                    app.employer_name = app.company;
+                    
+                    return app;
+                });
+                
+                // Update the cache with complete data
+                localStorage.setItem('cachedApplications', JSON.stringify({ applications }));
+                
                 // Render the cached applications right away
                 renderApplications(applications);
                 
@@ -1004,6 +1029,26 @@ async function loadApplications(forceRefresh = false) {
                 try {
                     const parsedData = JSON.parse(cachedData);
                     applications = parsedData.applications || [];
+                    
+                    // Make sure all applications have complete data
+                    applications = applications.map(app => {
+                        // Ensure position title is set correctly
+                        app.position = app.position || app.position_title || app.job_title || app.title || "Unknown Position";
+                        app.position_title = app.position;
+                        app.job_title = app.position;
+                        app.title = app.position;
+                        
+                        // Ensure company name is set correctly
+                        app.company = app.company || app.company_name || app.employer_name || "Unknown Company";
+                        app.company_name = app.company;
+                        app.employer_name = app.company;
+                        
+                        return app;
+                    });
+                    
+                    // Update the cache with complete data
+                    localStorage.setItem('cachedApplications', JSON.stringify({ applications }));
+                    
                     renderApplications(applications);
                     showNotification('Offline mode - Showing cached applications data', 'warning');
                     hideLoadingIndicator();
@@ -1023,7 +1068,9 @@ async function loadApplications(forceRefresh = false) {
         
         // Define possible API endpoints to try in order
         const endpoints = [
-            `${BASE_URL}/applications/my-applications`
+            `${BASE_URL}/applications/my-applications`,
+            `${BASE_URL}/applications`,
+            `${BASE_URL}/student/applications`
         ];
         
         console.log('Trying these endpoints in order:', endpoints);
@@ -1037,7 +1084,7 @@ async function loadApplications(forceRefresh = false) {
                 console.log(`Attempting to fetch applications from: ${endpoint}`);
                 const response = await fetch(endpoint, {
                     method: 'GET',
-            headers: {
+                    headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'Authorization': `Bearer ${token}`
@@ -1051,7 +1098,7 @@ async function loadApplications(forceRefresh = false) {
                     if (!contentType.includes('application/json')) {
                         throw new Error(`Server returned non-JSON response (Content-Type: ${contentType})`);
                     }
-        const data = await response.json();
+                    const data = await response.json();
                     applications = data.applications || data.data || [];
                     console.log(`Successfully fetched ${applications.length} applications from ${endpoint}`);
                     fetchSuccess = true;
@@ -1060,11 +1107,11 @@ async function loadApplications(forceRefresh = false) {
                     // Handle auth error
                     console.error('Authentication error:', response.statusText);
                     throw new Error('Your session has expired. Please log in again.');
-        } else {
+                } else {
                     console.warn(`Endpoint ${endpoint} returned status ${response.status}`);
                     fetchError = new Error(`Server returned ${response.status}: ${response.statusText}`);
-        }
-    } catch (error) {
+                }
+            } catch (error) {
                 console.warn(`Error fetching from ${endpoint}:`, error.message);
                 fetchError = error;
             }
@@ -1096,12 +1143,31 @@ async function loadApplications(forceRefresh = false) {
         // Process and cache applications
         console.log(`Loaded ${applications.length} applications from server`);
         
+        // Make sure all applications have complete data
+        applications = applications.map(app => {
+            // Ensure position title is set correctly
+            app.position = app.position || app.position_title || app.job_title || app.title || "Unknown Position";
+            app.position_title = app.position;
+            app.job_title = app.position;
+            app.title = app.position;
+            
+            // Ensure company name is set correctly
+            app.company = app.company || app.company_name || app.employer_name || "Unknown Company";
+            app.company_name = app.company;
+            app.employer_name = app.company;
+            
+            return app;
+        });
+        
         // Enhance applications with additional job details if needed
         await enhanceApplicationsWithJobDetails(applications);
         
         // Update cache
         localStorage.setItem('cachedApplications', JSON.stringify({ applications }));
         localStorage.setItem('applicationsLastFetched', currentTime.toString());
+        
+        // Also update the applications cache array format
+        localStorage.setItem('applicationsCache', JSON.stringify(applications));
         
         // Render applications
         renderApplications(applications);
@@ -1718,29 +1784,12 @@ function renderApplicationDetails(application) {
  */
 function editApplication(application) {
     try {
-        // Get the application ID
-        const applicationId = application.id || application.application_id;
-        if (!applicationId) {
-            showErrorNotification("Cannot edit: Missing application ID");
-            return;
-        }
-        
-        console.log(`Editing application ${applicationId}`);
-        
-        // Check if we have a token
-        const token = getAuthToken();
-        if (!token) {
-            showErrorNotification("Authentication required to edit applications");
-            return;
-        }
-        
-        // Show the application edit modal
+        // Show the modal
         const applicationModal = document.getElementById('applicationModal');
         const applicationDetailsContainer = document.getElementById('application-details');
         
         if (!applicationModal || !applicationDetailsContainer) {
-            showErrorNotification("Error: Application edit dialog not found");
-            return;
+            throw new Error("Application edit dialog not found");
         }
         
         // Update modal title
@@ -1749,268 +1798,272 @@ function editApplication(application) {
             modalTitle.textContent = 'Edit Application';
         }
         
-        // Show the modal with loading state
-        applicationModal.style.display = 'block';
+        // Get position title from multiple possible fields
+        const positionTitle = application.position || application.position_title || application.job_title || "Unknown Position";
+        const companyName = application.company || application.company_name || application.employer_name || "Unknown Company";
+        
+        // Create the edit form
         applicationDetailsContainer.innerHTML = `
-            <div class="loading-indicator">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Loading application for editing...</p>
-            </div>
+            <form id="edit-application-form" class="edit-application-form">
+                <div class="form-group">
+                    <label for="position-title">Position Title</label>
+                    <input type="text" id="position-title" class="form-control" value="${escapeHtml(positionTitle)}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="company-name">Company</label>
+                    <input type="text" id="company-name" class="form-control" value="${escapeHtml(companyName)}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="application-status">Application Status</label>
+                    <select id="application-status" class="form-control">
+                        <option value="Pending" ${(application.status || '').toLowerCase() === 'pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Under Review" ${(application.status || '').toLowerCase() === 'under review' ? 'selected' : ''}>Under Review</option>
+                        <option value="Interview" ${(application.status || '').toLowerCase() === 'interview' ? 'selected' : ''}>Interview</option>
+                        <option value="Offer" ${(application.status || '').toLowerCase() === 'offer' ? 'selected' : ''}>Offer</option>
+                        <option value="Accepted" ${(application.status || '').toLowerCase() === 'accepted' ? 'selected' : ''}>Accepted</option>
+                        <option value="Rejected" ${(application.status || '').toLowerCase() === 'rejected' ? 'selected' : ''}>Rejected</option>
+                        <option value="Withdrawn" ${(application.status || '').toLowerCase() === 'withdrawn' ? 'selected' : ''}>Withdrawn</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cover-letter">Cover Letter</label>
+                    <textarea id="cover-letter" class="form-control" rows="6">${escapeHtml(application.cover_letter || '')}</textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancel-edit-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="save-changes-btn">Save Changes</button>
+                </div>
+            </form>
         `;
         
-        // Prepare application data for editing
-        setTimeout(() => {
-            const positionTitle = application.position_title || application.job_title || "Unknown Position";
-            const companyName = application.company_name || application.employer_name || "Unknown Company";
-            const coverLetter = application.cover_letter || application.coverLetter || '';
-            const status = application.status || 'pending';
-            
-            // Create edit form
-            applicationDetailsContainer.innerHTML = `
-                <form id="editApplicationForm" class="edit-application-form">
-                    <input type="hidden" name="applicationId" value="${applicationId}">
-                    
-                    <div class="form-group">
-                        <label for="positionTitle">Position Title</label>
-                        <input type="text" id="positionTitle" name="positionTitle" class="form-control" 
-                               value="${escapeHtml(positionTitle)}" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="companyName">Company</label>
-                        <input type="text" id="companyName" name="companyName" class="form-control" 
-                               value="${escapeHtml(companyName)}" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="status">Application Status</label>
-                        <select id="status" name="status" class="form-control">
-                            <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="under_review" ${status === 'under_review' || status === 'under review' ? 'selected' : ''}>Under Review</option>
-                            <option value="interview" ${status === 'interview' ? 'selected' : ''}>Interview</option>
-                            <option value="accepted" ${status === 'accepted' ? 'selected' : ''}>Accepted</option>
-                            <option value="rejected" ${status === 'rejected' ? 'selected' : ''}>Rejected</option>
-                            <option value="withdrawn" ${status === 'withdrawn' ? 'selected' : ''}>Withdrawn</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="coverLetter">Cover Letter</label>
-                        <textarea id="coverLetter" name="coverLetter" class="form-control" rows="8">${escapeHtml(coverLetter)}</textarea>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-outline" id="cancelEditBtn">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="saveApplicationBtn">Save Changes</button>
-                    </div>
-                </form>
-            `;
-            
-            // Add event listeners for the form
-            const editForm = document.getElementById('editApplicationForm');
-            if (editForm) {
-                editForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    saveApplicationChanges(this, application);
-                });
-            }
-            
-            // Add event listener for cancel button
-            const cancelEditBtn = document.getElementById('cancelEditBtn');
-            if (cancelEditBtn) {
-                cancelEditBtn.addEventListener('click', function() {
-                    // Hide the modal
-                    if (applicationModal) {
-                        applicationModal.style.display = 'none';
-                    }
-                });
-            }
-        }, 500);
+        // Show the modal
+        applicationModal.style.display = 'block';
+        
+        // Set up event listeners
+        const form = document.getElementById('edit-application-form');
+        const cancelBtn = document.getElementById('cancel-edit-btn');
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                applicationModal.style.display = 'none';
+            });
+        }
+        
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveApplicationChanges(form, application);
+            });
+        }
     } catch (error) {
-        console.error("Error in editApplication:", error);
-        showErrorNotification("Failed to open application for editing");
+        console.error("Error setting up application edit:", error);
+        showErrorNotification(`Failed to set up application edit: ${error.message}`);
     }
 }
 
 /**
- * Save changes to an application
- * @param {HTMLFormElement} form - The form element containing the data
+ * Saves changes made to an application
+ * @param {HTMLFormElement} form - The form containing the changes
  * @param {Object} originalApplication - The original application data
  */
 async function saveApplicationChanges(form, originalApplication) {
     try {
-        showLoadingIndicator();
+        // Get values from form
+        const positionTitle = form.querySelector('#position-title').value.trim();
+        const companyName = form.querySelector('#company-name').value.trim();
+        const status = form.querySelector('#application-status').value;
+        const coverLetter = form.querySelector('#cover-letter').value.trim();
         
-        // Get form data
-        const formData = new FormData(form);
-        const applicationId = formData.get('applicationId');
-        const status = formData.get('status');
-        const coverLetter = formData.get('coverLetter');
-        
-        if (!applicationId) {
-            throw new Error("Application ID is required");
+        // Validate required fields
+        if (!positionTitle) {
+            throw new Error("Position title is required");
         }
         
-        console.log(`Saving changes to application ${applicationId}`);
+        // Create updated application object with all possible field names to ensure compatibility
+        const updatedApplication = {
+            ...originalApplication,
+            position: positionTitle,
+            position_title: positionTitle,
+            job_title: positionTitle,
+            title: positionTitle,
+            company: companyName,
+            company_name: companyName,
+            employer_name: companyName,
+            status: status,
+            cover_letter: coverLetter,
+            coverLetter: coverLetter
+        };
         
+        console.log("Saving application changes:", updatedApplication);
+        
+        // Get API URL
+        const apiUrl = getApiUrl();
+        const applicationId = originalApplication.id || originalApplication.application_id;
+        
+        // Get auth token
         const token = getAuthToken();
-        if (!token) {
+        if (!token && !DEVELOPMENT_MODE) {
             throw new Error("Authentication required");
         }
         
-        // Prepare the update data
-        const updateData = {
-            status: status,
-            cover_letter: coverLetter
-        };
+        let saveSuccess = false;
         
-        // Define possible API endpoints to try
-        const endpoints = [
-            `${BASE_URL}/applications/${applicationId}`,
-            `${BASE_URL}/applications/${applicationId}/update`,
-            `${BASE_URL}/student/applications/${applicationId}`,
-        ];
-        
-        let success = false;
-        let error = null;
-        
-        // Try each endpoint in sequence
-        for (let i = 0; i < endpoints.length; i++) {
+        // In development mode or if we have a token, try to update application
+        if (DEVELOPMENT_MODE || token) {
             try {
-                const endpoint = endpoints[i];
-                console.log(`Attempting to save application changes with endpoint: ${endpoint}`);
+                const endpoint = `${apiUrl}/applications/${applicationId}`;
+                console.log(`Attempting to update application at: ${endpoint}`);
+                
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                };
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
                 
                 const response = await fetch(endpoint, {
-                    method: 'PUT',  // Use PUT for updates
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(updateData)
+                    method: 'PUT',
+                    headers: headers,
+                    body: JSON.stringify(updatedApplication)
                 });
                 
                 if (response.ok) {
-                    console.log(`Successfully updated application with endpoint ${i+1}`);
-                    success = true;
-                    break;
+                    console.log("Application updated on server");
+                    saveSuccess = true;
                 } else {
-                    console.warn(`Endpoint ${i+1} failed with status: ${response.status}`);
-                    error = new Error(`Server returned ${response.status}: ${response.statusText}`);
+                    console.warn(`Server returned status ${response.status} when updating application`);
+                    
+                    // Try alternate endpoint if first one fails
+                    try {
+                        const altEndpoint = `${apiUrl}/applications/${applicationId}/update`;
+                        console.log(`Trying alternate endpoint: ${altEndpoint}`);
+                        
+                        const altResponse = await fetch(altEndpoint, {
+                            method: 'PUT',
+                            headers: headers,
+                            body: JSON.stringify(updatedApplication)
+                        });
+                        
+                        if (altResponse.ok) {
+                            console.log("Application updated on server using alternate endpoint");
+                            saveSuccess = true;
+                        } else {
+                            // In development mode, continue with local update even if server update fails
+                            if (DEVELOPMENT_MODE) {
+                                console.log("Development mode: proceeding with local update");
+                                saveSuccess = true;
+                            } else {
+                                const errorData = await altResponse.json().catch(() => ({}));
+                                throw new Error(errorData.message || `Failed to update application (${altResponse.status})`);
+                            }
+                        }
+                    } catch (altError) {
+                        console.warn("Error with alternate endpoint:", altError);
+                        
+                        // In development mode, continue with local update even if server update fails
+                        if (DEVELOPMENT_MODE) {
+                            console.log("Development mode: proceeding with local update after alt endpoint failed");
+                            saveSuccess = true;
+                        } else {
+                            throw altError;
+                        }
+                    }
                 }
-            } catch (err) {
-                console.warn(`Error with endpoint ${i+1}:`, err);
-                error = err;
+            } catch (fetchError) {
+                console.error("Error updating application on server:", fetchError);
+                
+                // In development mode, continue with local update even if server update fails
+                if (DEVELOPMENT_MODE) {
+                    console.log("Development mode: proceeding with local update despite error");
+                    saveSuccess = true;
+                } else {
+                    throw fetchError;
+                }
             }
         }
         
-        if (success) {
-            // Update the application in local cache
-            const cachedData = localStorage.getItem('cachedApplications');
-            if (cachedData) {
-                try {
-                    const parsed = JSON.parse(cachedData);
-                    if (parsed.applications && Array.isArray(parsed.applications)) {
-                        // Find and update the application
-                        const appIndex = parsed.applications.findIndex(app => 
-                            (app.id && app.id.toString() === applicationId.toString()) || 
-                            (app.application_id && app.application_id.toString() === applicationId.toString())
-                        );
-                        
-                        if (appIndex !== -1) {
-                            parsed.applications[appIndex] = {
-                                ...parsed.applications[appIndex],
-                                status: status,
-                                cover_letter: coverLetter,
-                                coverLetter: coverLetter
-                            };
-                            
-                            localStorage.setItem('cachedApplications', JSON.stringify(parsed));
+        if (saveSuccess) {
+            // Update all possible cache locations
+            try {
+                // Update applications in local cache
+                const applicationsCache = JSON.parse(localStorage.getItem('applicationsCache') || '[]');
+                const updatedApplicationsCache = Array.isArray(applicationsCache) 
+                    ? applicationsCache.map(app => {
+                        if ((app.id || app.application_id) === applicationId) {
+                            return updatedApplication;
                         }
-                    }
-                } catch (e) {
-                    console.warn('Error updating cached application:', e);
-                }
-            }
-            
-            // Show success notification
-            showSuccessNotification('Application successfully updated');
-            
-            // Close the modal
-            const applicationModal = document.getElementById('applicationModal');
-            if (applicationModal) {
-                applicationModal.style.display = 'none';
-            }
-            
-            // Refresh applications list after a short delay
-            setTimeout(() => loadApplications(true), 1000);
-        } else {
-            // If API call failed but we're in development mode, simulate success
-            if (DEVELOPMENT_MODE) {
-                // Update the application locally only
-                showSuccessNotification('Application updated in demo mode');
+                        return app;
+                    })
+                    : [];
                 
-                // Close the modal
+                localStorage.setItem('applicationsCache', JSON.stringify(updatedApplicationsCache));
+                
+                // Also update the cached applications object format
+                const cachedData = localStorage.getItem('cachedApplications');
+                if (cachedData) {
+                    try {
+                        const parsed = JSON.parse(cachedData);
+                        if (parsed.applications && Array.isArray(parsed.applications)) {
+                            // Find and update the application
+                            const appIndex = parsed.applications.findIndex(app => 
+                                (app.id && app.id.toString() === applicationId.toString()) || 
+                                (app.application_id && app.application_id.toString() === applicationId.toString())
+                            );
+                            
+                            if (appIndex !== -1) {
+                                parsed.applications[appIndex] = updatedApplication;
+                                localStorage.setItem('cachedApplications', JSON.stringify(parsed));
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Error updating cached application data:', e);
+                    }
+                }
+                
+                console.log("Application updated in local cache");
+                
+                // Hide the modal
                 const applicationModal = document.getElementById('applicationModal');
                 if (applicationModal) {
                     applicationModal.style.display = 'none';
                 }
                 
-                // Refresh with local updates
-                setTimeout(() => {
-                    const cachedData = localStorage.getItem('cachedApplications');
-                    if (cachedData) {
-                        try {
-                            const parsed = JSON.parse(cachedData);
-                            if (parsed.applications && Array.isArray(parsed.applications)) {
-                                // Find and update the application
-                                const appIndex = parsed.applications.findIndex(app => 
-                                    (app.id && app.id.toString() === applicationId.toString()) || 
-                                    (app.application_id && app.application_id.toString() === applicationId.toString())
-                                );
-                                
-                                if (appIndex !== -1) {
-                                    parsed.applications[appIndex] = {
-                                        ...parsed.applications[appIndex],
-                                        status: status,
-                                        cover_letter: coverLetter,
-                                        coverLetter: coverLetter
-                                    };
-                                    
-                                    localStorage.setItem('cachedApplications', JSON.stringify(parsed));
-                                    renderApplications(parsed.applications);
-                                }
-                            }
-                        } catch (e) {
-                            console.warn('Error updating cached application:', e);
-                        }
-                    }
-                }, 1000);
+                // Show success notification
+                showSuccessNotification("Application updated successfully");
                 
-                return;
+                // Reload applications to reflect changes
+                loadApplications(true);
+            } catch (cacheError) {
+                console.error("Error updating application in local cache:", cacheError);
+                throw new Error("Failed to save changes locally");
             }
-            
-            throw error || new Error("Failed to update application");
+        } else {
+            throw new Error("Failed to update application");
         }
     } catch (error) {
         console.error("Error saving application changes:", error);
-        showErrorNotification(`Failed to update application: ${error.message}`);
-    } finally {
-        hideLoadingIndicator();
+        showErrorNotification(`Failed to save changes: ${error.message}`);
     }
 }
 
 /**
  * Loads and displays a job preview in a modal
  * @param {string|number} jobId - The ID of the job to preview
+ * @param {Object} applicationData - The application data as fallback
  */
-async function loadJobPreview(jobId) {
+async function loadJobPreview(jobId, applicationData) {
     try {
-        if (!jobId) {
-            throw new Error("Job ID is required for preview");
+        if (!jobId && !applicationData) {
+            throw new Error("Either job ID or application data is required for preview");
         }
         
-        console.log(`Loading preview for job ${jobId}`);
+        console.log(`Loading preview for job ${jobId}`, applicationData);
         
         // Show the application modal with loading state
         const applicationModal = document.getElementById('applicationModal');
@@ -2035,6 +2088,13 @@ async function loadJobPreview(jobId) {
             </div>
         `;
         
+        // If we have application data with a position title, we can use it directly
+        if (applicationData && (applicationData.position || applicationData.position_title || applicationData.job_title)) {
+            console.log('Using application data directly for job preview');
+            renderJobPreview(applicationData, applicationData);
+            return;
+        }
+        
         // Check if we have a token
         const token = getAuthToken();
         
@@ -2047,16 +2107,31 @@ async function loadJobPreview(jobId) {
         if (cachedJob) {
             console.log('Using cached job details');
             jobDetails = cachedJob;
-            renderJobPreview(jobDetails);
+            renderJobPreview(jobDetails, applicationData);
         } else {
             // Need to fetch from server
             console.log('Fetching job details from server');
             
+            // Try to find job details in the applications cache first
+            const cachedApplications = JSON.parse(localStorage.getItem('cachedApplications') || '{}');
+            const applications = cachedApplications.applications || [];
+            
+            const matchingApplication = applications.find(app => 
+                (app.job_id && app.job_id.toString() === jobId.toString()) || 
+                (app.listing_id && app.listing_id.toString() === jobId.toString())
+            );
+            
+            if (matchingApplication && (matchingApplication.position || matchingApplication.position_title || matchingApplication.job_title)) {
+                console.log('Found matching application in cache with job details');
+                renderJobPreview(matchingApplication, applicationData);
+                return;
+            }
+            
             // Define possible API endpoints to try
             const endpoints = [
-                `${BASE_URL}/jobs/${jobId}`,
-                `${BASE_URL}/job-listings/${jobId}`,
-                `${BASE_URL}/listings/${jobId}`
+                `${getApiUrl()}/jobs/${jobId}`,
+                `${getApiUrl()}/job-listings/${jobId}`,
+                `${getApiUrl()}/listings/${jobId}`
             ];
             
             let fetchSuccess = false;
@@ -2101,7 +2176,11 @@ async function loadJobPreview(jobId) {
             }
             
             if (fetchSuccess && jobDetails) {
-                renderJobPreview(jobDetails);
+                renderJobPreview(jobDetails, applicationData);
+            } else if (applicationData) {
+                // If we couldn't fetch from server but have application data, use that
+                console.log('Using application data as fallback for job details');
+                renderJobPreview(applicationData, applicationData);
             } else {
                 // If all endpoints failed but we're in development mode
                 if (DEVELOPMENT_MODE) {
@@ -2109,6 +2188,7 @@ async function loadJobPreview(jobId) {
                     jobDetails = {
                         id: jobId,
                         title: "Sample Job Position",
+                        position_title: "Sample Job Position",
                         company_name: "Demo Company",
                         description: "This is a sample job description for demonstration purposes.",
                         location: "Sample Location",
@@ -2153,95 +2233,6 @@ async function loadJobPreview(jobId) {
                 });
             }
         }
-    }
-}
-
-/**
- * Renders job preview in the modal
- * @param {Object} jobDetails - The job details to render
- */
-function renderJobPreview(jobDetails) {
-    const applicationDetailsContainer = document.getElementById('application-details');
-    if (!applicationDetailsContainer) return;
-    
-    // Format creation date
-    const createdDate = new Date(jobDetails.created_at || jobDetails.posted_date || new Date());
-    const formattedDate = formatDate(createdDate);
-    
-    // Prepare requirements list if available
-    const requirementsList = jobDetails.requirements && Array.isArray(jobDetails.requirements) 
-        ? jobDetails.requirements.map(req => `<li>${escapeHtml(req)}</li>`).join('')
-        : '';
-    
-    applicationDetailsContainer.innerHTML = `
-        <div class="job-preview">
-        <div class="application-detail">
-                <div class="detail-label">Position Title</div>
-                <div class="detail-value">${escapeHtml(jobDetails.title || jobDetails.position_title || 'Not specified')}</div>
-        </div>
-        
-        <div class="application-detail">
-            <div class="detail-label">Company</div>
-                <div class="detail-value">${escapeHtml(jobDetails.company_name || jobDetails.employer_name || 'Not specified')}</div>
-        </div>
-        
-            ${jobDetails.location ? `
-        <div class="application-detail">
-            <div class="detail-label">Location</div>
-                <div class="detail-value">${escapeHtml(jobDetails.location)}</div>
-        </div>
-            ` : ''}
-        
-            ${jobDetails.job_type ? `
-        <div class="application-detail">
-                <div class="detail-label">Job Type</div>
-                <div class="detail-value">${escapeHtml(jobDetails.job_type)}</div>
-        </div>
-            ` : ''}
-        
-            ${jobDetails.salary_range ? `
-        <div class="application-detail">
-                <div class="detail-label">Salary Range</div>
-                <div class="detail-value">${escapeHtml(jobDetails.salary_range)}</div>
-            </div>
-            ` : ''}
-        
-        <div class="application-detail">
-                <div class="detail-label">Posted Date</div>
-                <div class="detail-value">${formattedDate}</div>
-        </div>
-        
-            ${jobDetails.description ? `
-        <div class="application-detail">
-                <div class="detail-label">Description</div>
-                <div class="detail-value job-description">${escapeHtml(jobDetails.description)}</div>
-        </div>
-            ` : ''}
-        
-            ${requirementsList ? `
-        <div class="application-detail">
-                <div class="detail-label">Requirements</div>
-            <div class="detail-value">
-                    <ul class="requirements-list">
-                        ${requirementsList}
-                </ul>
-            </div>
-        </div>
-            ` : ''}
-        
-            <div class="modal-actions">
-                <button class="btn btn-outline close-modal-btn">Close</button>
-        </div>
-        </div>
-    `;
-    
-    // Add event listener to close button
-    const closeBtn = applicationDetailsContainer.querySelector('.close-modal-btn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
-            const modal = document.getElementById('applicationModal');
-            if (modal) modal.style.display = 'none';
-        });
     }
 }
 
@@ -2426,3 +2417,118 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Also add an event listener for when job listings are loaded
 document.addEventListener('job-listings-loaded', updateJobListingUI);
+
+/**
+ * Renders job preview in the modal
+ * @param {Object} jobDetails - The job details to render
+ * @param {Object} applicationData - Optional application data as fallback
+ */
+function renderJobPreview(jobDetails, applicationData) {
+    const applicationDetailsContainer = document.getElementById('application-details');
+    if (!applicationDetailsContainer) return;
+    
+    // Combine data from both sources to ensure we have complete information
+    const combinedData = { 
+        ...(applicationData || {}), 
+        ...(jobDetails || {}) 
+    };
+    
+    // Format creation date
+    const createdDate = new Date(combinedData.created_at || combinedData.posted_date || combinedData.application_date || new Date());
+    const formattedDate = formatDate(createdDate);
+    
+    // Get position title (try multiple possible property names)
+    // Make sure we're displaying the most accurate position title by checking all possible fields
+    const positionTitle = combinedData.position || 
+                         combinedData.position_title || 
+                         combinedData.job_title || 
+                         combinedData.title || 
+                         'Not specified';
+    
+    // Get company name (try multiple possible property names)
+    const companyName = combinedData.company || 
+                        combinedData.company_name || 
+                        combinedData.employer_name || 
+                        'Not specified';
+    
+    // Prepare requirements list if available
+    let requirementsHtml = '';
+    if (combinedData.requirements) {
+        if (Array.isArray(combinedData.requirements)) {
+            requirementsHtml = combinedData.requirements.map(req => `<li>${escapeHtml(req)}</li>`).join('');
+        } else if (typeof combinedData.requirements === 'string') {
+            requirementsHtml = `<li>${escapeHtml(combinedData.requirements)}</li>`;
+        }
+    }
+    
+    applicationDetailsContainer.innerHTML = `
+        <div class="job-preview">
+            <div class="application-detail">
+                <div class="detail-label">Position Title</div>
+                <div class="detail-value">${escapeHtml(positionTitle)}</div>
+            </div>
+            
+            <div class="application-detail">
+                <div class="detail-label">Company</div>
+                <div class="detail-value">${escapeHtml(companyName)}</div>
+            </div>
+            
+            ${combinedData.location ? `
+            <div class="application-detail">
+                <div class="detail-label">Location</div>
+                <div class="detail-value">${escapeHtml(combinedData.location)}</div>
+            </div>
+            ` : ''}
+            
+            ${combinedData.job_type ? `
+            <div class="application-detail">
+                <div class="detail-label">Job Type</div>
+                <div class="detail-value">${escapeHtml(combinedData.job_type)}</div>
+            </div>
+            ` : ''}
+            
+            ${combinedData.salary_range ? `
+            <div class="application-detail">
+                <div class="detail-label">Salary Range</div>
+                <div class="detail-value">${escapeHtml(combinedData.salary_range)}</div>
+            </div>
+            ` : ''}
+            
+            <div class="application-detail">
+                <div class="detail-label">Posted Date</div>
+                <div class="detail-value">${formattedDate}</div>
+            </div>
+            
+            ${combinedData.description ? `
+            <div class="application-detail">
+                <div class="detail-label">Description</div>
+                <div class="detail-value">${escapeHtml(combinedData.description)}</div>
+            </div>
+            ` : ''}
+            
+            ${requirementsHtml ? `
+            <div class="application-detail">
+                <div class="detail-label">Requirements</div>
+                <div class="detail-value">
+                    <ul>
+                        ${requirementsHtml}
+                    </ul>
+                </div>
+            </div>
+            ` : ''}
+            
+            <div class="modal-actions" style="margin-top: 20px; text-align: right;">
+                <button class="btn btn-primary close-modal-btn">Close</button>
+            </div>
+        </div>
+    `;
+    
+    // Add event listener to close button
+    const closeBtn = applicationDetailsContainer.querySelector('.close-modal-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            const modal = document.getElementById('applicationModal');
+            if (modal) modal.style.display = 'none';
+        });
+    }
+}

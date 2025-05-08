@@ -15,6 +15,9 @@
             margin: 0;
             padding: 0;
             color: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
         /* Modern Header Styles */
@@ -113,10 +116,18 @@
             max-width: 1200px;
             margin: 40px auto;
             padding: 0 20px;
+            flex: 1;
         }
         
         .page-header {
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .header-left {
+            flex: 1;
         }
         
         .page-title {
@@ -132,29 +143,57 @@
             font-size: 16px;
         }
         
+        .header-right {
+            margin-left: 20px;
+        }
+        
+        .refresh-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .refresh-btn i {
+            font-size: 14px;
+        }
+        
         .application-cards {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
+            gap: 25px;
         }
         
         .application-card {
             background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid #ecf0f1;
+            border: 1px solid #e0e5e9;
+            display: flex;
+            flex-direction: column;
         }
         
         .application-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
         }
         
         .card-header {
             padding: 20px;
-            border-bottom: 1px solid #ecf0f1;
+            border-bottom: 1px solid #e0e5e9;
             background-color: #f8fafc;
         }
         
@@ -162,7 +201,7 @@
             font-size: 18px;
             font-weight: 600;
             color: #2c3e50;
-            margin: 0 0 5px 0;
+            margin: 0 0 10px 0;
         }
         
         .company-info {
@@ -171,6 +210,7 @@
             margin-bottom: 10px;
             color: #34495e;
             font-size: 14px;
+            font-weight: 500;
         }
         
         .company-info i {
@@ -191,7 +231,11 @@
         }
         
         .card-body {
-            padding: 15px 20px;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         
         .date-applied {
@@ -209,7 +253,7 @@
         
         .application-status {
             display: inline-block;
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 20px;
             font-size: 13px;
             font-weight: 500;
@@ -248,9 +292,10 @@
         
         .card-actions {
             padding: 15px 20px;
-            border-top: 1px solid #ecf0f1;
+            border-top: 1px solid #e0e5e9;
             display: flex;
             justify-content: space-between;
+            background-color: #fafbfc;
         }
         
         .btn {
@@ -302,29 +347,30 @@
         /* Loading and empty states */
         .empty-state {
             background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 50px;
             text-align: center;
             margin: 30px 0;
-            border: 1px solid #ecf0f1;
+            border: 1px solid #e0e5e9;
         }
         
         .empty-state i {
-            font-size: 50px;
+            font-size: 60px;
             color: #bdc3c7;
             margin-bottom: 20px;
         }
         
         .empty-state h3 {
-            font-size: 20px;
+            font-size: 22px;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         
         .empty-state p {
             color: #7f8c8d;
             margin-bottom: 20px;
+            font-size: 16px;
         }
         
         .loading-spinner {
@@ -355,16 +401,16 @@
             margin: 60px auto;
             width: 90%;
             max-width: 600px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             position: relative;
             animation: modalFadeIn 0.3s;
-            border: 1px solid #ecf0f1;
+            border: 1px solid #e0e5e9;
         }
         
         .modal-header {
             padding: 20px 25px;
-            border-bottom: 1px solid #ecf0f1;
+            border-bottom: 1px solid #e0e5e9;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -416,7 +462,7 @@
             white-space: pre-wrap;
             font-size: 14px;
             line-height: 1.6;
-            border: 1px solid #ecf0f1;
+            border: 1px solid #e0e5e9;
         }
         
         .confirm-modal .modal-content {
@@ -451,6 +497,107 @@
             }
         }
         
+        /* Footer styles */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #0275d8;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .footer {
+            background-color: #0f1924;
+            color: white;
+            padding: 30px 0;
+            margin-top: auto;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .footer-info, .footer-links {
+            margin-bottom: 1rem;
+        }
+        
+        .footer-info {
+            flex: 1;
+            min-width: 280px;
+            text-align: left;
+        }
+        
+        .footer-links {
+            flex: 1;
+            text-align: left;
+            margin-left: 2rem;
+        }
+        
+        .footer-info p {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .footer-info p i {
+            margin-right: 10px;
+            width: 20px;
+        }
+        
+        .footer-links h3 {
+            font-size: 18px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .footer-links p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .social-links a {
+            color: white;
+            font-size: 16px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .social-links a:hover {
+            color: #3498db;
+        }
+        
         @media (max-width: 768px) {
             .application-cards {
                 grid-template-columns: 1fr;
@@ -476,6 +623,24 @@
             
             .main-nav a, .logout-btn {
                 padding: 15px 15px;
+            }
+            
+            .page-header {
+                flex-direction: column;
+            }
+            
+            .header-right {
+                margin-left: 0;
+                margin-top: 15px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+            }
+            
+            .footer-links {
+                margin-left: 0;
+                margin-top: 1.5rem;
             }
         }
         
@@ -559,8 +724,15 @@
 
     <div class="applications-container">
         <div class="page-header">
-            <h1 class="page-title">My Applications</h1>
-            <p class="page-description">Track the status of your internship applications</p>
+            <div class="header-left">
+                <h1 class="page-title">My Applications</h1>
+                <p class="page-description">Track the status of your internship applications</p>
+            </div>
+            <div class="header-right">
+                <button id="refreshBtn" class="refresh-btn">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
         </div>
         
         <div id="application-list" class="application-cards">
@@ -612,17 +784,71 @@
         </div>
     </div>
     
+    <div class="scroll-to-top" id="scrollToTop">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <p><i class="fas fa-map-marker-alt"></i> 21 Revolution Street, Paris, France</p>
+                <p><i class="fas fa-phone"></i> +1 555 123456</p>
+                <p><i class="fas fa-envelope"></i> support@company.com</p>
+            </div>
+            <div class="footer-links">
+                <h3>What we do?</h3>
+                <p>QCU Internship management system goal is to connect students with internships that match their skills, streamline communication with partner companies, and enable efficient tracking of attendance and daily progress.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
     <!-- Include utility scripts -->
     <script src="scripts/auth.js"></script>
     <script src="scripts/applications.js"></script>
     
     <script>
-        // Remove logout functionality since the button has been removed
+        // Initialize event listeners
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize notification system
             if (typeof initNotificationSystem === 'function') {
                 initNotificationSystem();
             }
+            
+            // Add refresh button functionality
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    if (typeof loadApplications === 'function') {
+                        loadApplications(true);
+                    }
+                });
+            }
+        });
+
+        // Add scroll to top functionality
+        const scrollToTopBtn = document.getElementById('scrollToTop');
+        
+        window.addEventListener('scroll', function() {
+            // Show button when user scrolls down 300px from the top
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+        
+        scrollToTopBtn.addEventListener('click', function() {
+            // Smooth scroll to top
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
     </script>
 </body>

@@ -60,7 +60,7 @@ const cleanupTempFiles = (files) => {
     console.log('Cleaning up temporary files');
     
     // Handle resume file
-    if (files.resume_file && files.resume_file[0] && files.resume_file[0].path) {
+    if (files.resume_file && Array.isArray(files.resume_file) && files.resume_file.length > 0 && files.resume_file[0] && files.resume_file[0].path) {
         try {
             if (fs.existsSync(files.resume_file[0].path)) {
                 fs.unlinkSync(files.resume_file[0].path);
@@ -72,9 +72,9 @@ const cleanupTempFiles = (files) => {
     }
     
     // Handle supporting docs
-    if (files.supporting_docs) {
+    if (files.supporting_docs && Array.isArray(files.supporting_docs)) {
         files.supporting_docs.forEach(doc => {
-            if (doc.path) {
+            if (doc && doc.path) {
                 try {
                     if (fs.existsSync(doc.path)) {
                         fs.unlinkSync(doc.path);
@@ -185,6 +185,52 @@ router.get('/my-applications', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error fetching applications',
+            error: error.message
+        });
+    }
+});
+
+// Add a diagnostic endpoint for verifying API routes - place EARLY in the routes file
+router.get('/diagnostic/verify-routes', async (req, res) => {
+    try {
+        // Simply return a list of available API endpoints
+        const availableRoutes = [
+            {
+                path: '/applications/update-status',
+                method: 'POST',
+                description: 'Update application status with applicationId in body',
+                requiresAuth: true
+            },
+            {
+                path: '/applications/:applicationId/status',
+                method: 'PATCH',
+                description: 'Update application status with ID in URL',
+                requiresAuth: true
+            },
+            {
+                path: '/applications/:applicationId',
+                method: 'POST',
+                description: 'Simple application update with ID in URL',
+                requiresAuth: true
+            },
+            {
+                path: '/applications/employer',
+                method: 'GET',
+                description: 'Get all applications for employer',
+                requiresAuth: true
+            }
+        ];
+        
+        res.json({
+            success: true,
+            message: 'Available application routes',
+            routes: availableRoutes
+        });
+    } catch (error) {
+        console.error('Error in verify-routes endpoint:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error verifying routes',
             error: error.message
         });
     }
@@ -795,14 +841,16 @@ router.post('/:listingId', authenticateToken, upload.fields([
 
 // Update application status (employer only)
 router.patch('/:applicationId/status', authenticateToken, authorizeRoles(['Employer', 'Admin']), async (req, res) => {
+    let connection;
     try {
-        await db.beginTransaction();
+        // Start transaction and store the connection
+        connection = await db.beginTransaction();
         
         const { applicationId } = req.params;
         const { status } = req.body;
         
         if (!status || !['Pending', 'Reviewing', 'Accepted', 'Rejected', 'Withdrawn'].includes(status)) {
-            await db.rollback();
+            await db.rollback(connection);
             return res.status(400).json({
                 success: false,
                 message: 'Invalid status value'
@@ -818,7 +866,7 @@ router.patch('/:applicationId/status', authenticateToken, authorizeRoles(['Emplo
         `, [applicationId]);
         
         if (applications.length === 0) {
-            await db.rollback();
+            await db.rollback(connection);
             return res.status(404).json({
                 success: false,
                 message: 'Application not found'
@@ -835,7 +883,7 @@ router.patch('/:applicationId/status', authenticateToken, authorizeRoles(['Emplo
             );
             
             if (employers.length === 0) {
-                await db.rollback();
+                await db.rollback(connection);
                 return res.status(403).json({
                     success: false,
                     message: 'You are not authorized to update this application'
@@ -850,7 +898,7 @@ router.patch('/:applicationId/status', authenticateToken, authorizeRoles(['Emplo
         );
         
         // Commit transaction
-        await db.commit();
+        await db.commit(connection);
         
         res.json({
             success: true,
@@ -858,7 +906,9 @@ router.patch('/:applicationId/status', authenticateToken, authorizeRoles(['Emplo
         });
     } catch (error) {
         // Rollback transaction on error
-        await db.rollback();
+        if (connection) {
+            await db.rollback(connection);
+        }
         console.error('Error updating application status:', error);
         res.status(500).json({
             success: false,
@@ -936,14 +986,16 @@ router.post('/:applicationId/withdraw', authenticateToken, async (req, res) => {
 
 // Also add a route for simple application status updates with POST
 router.post('/:applicationId', authenticateToken, async (req, res) => {
+    let connection;
     try {
-        await db.beginTransaction();
+        // Start transaction and store the connection
+        connection = await db.beginTransaction();
         
         const { applicationId } = req.params;
         const { status } = req.body;
         
         if (!status) {
-            await db.rollback();
+            await db.rollback(connection);
             return res.status(400).json({
                 success: false,
                 message: 'Status is required'
@@ -957,7 +1009,7 @@ router.post('/:applicationId', authenticateToken, async (req, res) => {
         );
         
         if (interns.length === 0) {
-            await db.rollback();
+            await db.rollback(connection);
             return res.status(404).json({
                 success: false,
                 message: 'Intern profile not found'
@@ -973,7 +1025,7 @@ router.post('/:applicationId', authenticateToken, async (req, res) => {
         );
         
         if (applications.length === 0) {
-            await db.rollback();
+            await db.rollback(connection);
             return res.status(404).json({
                 success: false,
                 message: 'Application not found or does not belong to you'
@@ -987,7 +1039,7 @@ router.post('/:applicationId', authenticateToken, async (req, res) => {
         );
         
         // Commit transaction
-        await db.commit();
+        await db.commit(connection);
         
         res.json({
             success: true,
@@ -995,7 +1047,110 @@ router.post('/:applicationId', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         // Rollback transaction on error
-        await db.rollback();
+        if (connection) {
+            await db.rollback(connection);
+        }
+        console.error('Error updating application status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating application status',
+            error: error.message
+        });
+    }
+});
+
+// Add a specific route for update-status that the frontend is calling
+router.post('/update-status', authenticateToken, authorizeRoles(['Employer', 'Admin']), async (req, res) => {
+    let connection;
+    try {
+        // Start transaction and store the connection
+        connection = await db.beginTransaction();
+        
+        const { applicationId, status } = req.body;
+        
+        if (!applicationId || !status) {
+            await db.rollback(connection);
+            return res.status(400).json({
+                success: false,
+                message: 'Application ID and status are required'
+            });
+        }
+        
+        // Validate the status
+        if (!['Pending', 'Reviewing', 'Accepted', 'Rejected', 'Withdrawn'].includes(status)) {
+            await db.rollback(connection);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status value'
+            });
+        }
+        
+        // Get application and check if it exists
+        const [applications] = await db.query(`
+            SELECT a.*, j.company_id 
+            FROM applications a
+            JOIN job_listings j ON a.listing_id = j.listing_id
+            WHERE a.application_id = ?
+        `, [applicationId]);
+        
+        if (applications.length === 0) {
+            await db.rollback(connection);
+            return res.status(404).json({
+                success: false,
+                message: 'Application not found'
+            });
+        }
+        
+        const application = applications[0];
+        
+        // For employers, check if they are affiliated with the company
+        if (req.user.role === 'Employer') {
+            const [employers] = await db.query(
+                'SELECT * FROM employers_tbl WHERE user_id = ? AND company_id = ?',
+                [req.user.user_id, application.company_id]
+            );
+            
+            if (employers.length === 0) {
+                await db.rollback(connection);
+                return res.status(403).json({
+                    success: false,
+                    message: 'You are not authorized to update this application'
+                });
+            }
+        }
+        
+        // Update application status
+        await db.query(
+            'UPDATE applications SET status = ?, updated_at = NOW() WHERE application_id = ?',
+            [status, applicationId]
+        );
+        
+        // Add to activity log if applicable
+        try {
+            await db.query(
+                'INSERT INTO application_activity_log (application_id, action, performed_by, performed_by_role) VALUES (?, ?, ?, ?)',
+                [applicationId, `Status updated to ${status}`, req.user.user_id, req.user.role]
+            );
+        } catch (logError) {
+            console.warn('Failed to log activity, but continuing with status update:', logError);
+        }
+        
+        // Commit transaction
+        await db.commit(connection);
+        
+        console.log(`Successfully updated application ${applicationId} status to ${status}`);
+        
+        res.json({
+            success: true,
+            message: `Application status updated to ${status}`,
+            application_id: applicationId,
+            status: status
+        });
+    } catch (error) {
+        // Rollback transaction on error
+        if (connection) {
+            await db.rollback(connection);
+        }
         console.error('Error updating application status:', error);
         res.status(500).json({
             success: false,

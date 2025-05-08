@@ -1,0 +1,13 @@
+<!-- Shared API Connector Components -->
+<!-- Include this file in any page that needs to connect to the API -->
+<script src="../scripts/shared-api-connector.js"></script>
+<script src="../scripts/api-connector-bridge.js"></script>
+
+<!-- Meta tag for API URL configuration -->
+<meta name="api-url" content="http://localhost:5004/api">
+
+<!-- Optional: Debug information (remove in production) -->
+<script>
+  console.log('Shared API connectors loaded. Using API URL:', 
+              document.querySelector('meta[name="api-url"]')?.getAttribute('content') || 'http://localhost:5004/api');
+</script> 

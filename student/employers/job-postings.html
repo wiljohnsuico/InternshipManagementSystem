@@ -170,10 +170,10 @@
             </div>
             
             <div class="nav-links">
-                <a href="http://localhost:3000/student/employers/dashboard.html">Dashboard</a>
-                <a href="http://localhost:3000/student/employers/job-postings.html" class="active">Job Postings</a>
-                <a href="http://localhost:3000/student/employers/applications.html">Applications</a>
-                <a href="http://localhost:3000/student/employers/profile.html">Company Profile</a>
+                <a href="/student/employers/dashboard.html">Dashboard</a>
+                <a href="/student/employers/job-postings.html" class="active">Job Postings</a>
+                <a href="/student/employers/applications.html">Applications</a>
+                <a href="/student/employers/profile.html">Company Profile</a>
                 <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
@@ -253,6 +253,7 @@
             <div class="modal-body">
                 <div id="errorBanner" class="error-banner">
                     <strong>Error:</strong> <span id="errorMessage">Please provide all required information</span>
+                    <div id="errorDetails" class="mt-2" style="font-size: 0.9em;"></div>
                 </div>
                 
                 <form id="jobForm" onsubmit="event.preventDefault(); return false;">

@@ -51,13 +51,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.education-entry').forEach(entry => {
                 const schoolInput = entry.querySelector('input[name="school"]');
                 const yearInput = entry.querySelector('input[name="year"]');
-                const dateInput = entry.querySelector('input[name="date"]');
                 
                 if (schoolInput && schoolInput.value.trim()) {
                     educationEntries.push({
                         school: schoolInput.value,
-                        year: yearInput ? yearInput.value : '',
-                        date: dateInput ? dateInput.value : ''
+                        year: yearInput ? yearInput.value : ''
                     });
                 }
             });
@@ -220,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Format education entries
             if (resumeData.education && resumeData.education.length > 0) {
                 resumeForProfile.education = resumeData.education.map(edu => 
-                    `${edu.school || ''}<br>${edu.year || ''}${edu.date ? ' - ' + edu.date : ''}`
+                    `${edu.school || ''}<br>${edu.year || ''}`
                 ).join('<br><br>');
             }
             
@@ -373,9 +371,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="form-group">
                             <input type="text" name="year" value="${edu.year || ''}">
                         </div>
-                        <div class="form-group" style="flex: 0.5;">
-                            <input type="text" name="date" value="${edu.date || ''}">
-                        </div>
                         <button class="delete-btn" onclick="deleteEducationEntry(this)">×</button>
                     `;
                     
@@ -508,7 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Format education entries
         if (resumeData.education && resumeData.education.length > 0) {
             resumeForProfile.education = resumeData.education.map(edu => 
-                `${edu.school || ''}<br>${edu.year || ''}${edu.date ? ' - ' + edu.date : ''}`
+                `${edu.school || ''}<br>${edu.year || ''}`
             ).join('<br><br>');
         }
         

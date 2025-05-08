@@ -675,16 +675,35 @@ function displayApplicationDetail(application) {
     // Set up action buttons in the footer
     const rejectBtn = document.getElementById('rejectBtn');
     if (rejectBtn) {
-        rejectBtn.addEventListener('click', function() {
+        // Remove any existing event listeners
+        const newRejectBtn = rejectBtn.cloneNode(true);
+        rejectBtn.parentNode.replaceChild(newRejectBtn, rejectBtn);
+        
+        // Add new event listener
+        newRejectBtn.addEventListener('click', function() {
             if (confirm('Are you sure you want to reject this application?')) {
                 updateApplicationStatus(application.id, 'Rejected');
             }
         });
+        
+        // Disable if already rejected
+        if (application.status.toLowerCase() === 'rejected') {
+            newRejectBtn.disabled = true;
+            newRejectBtn.classList.add('disabled');
+        } else {
+            newRejectBtn.disabled = false;
+            newRejectBtn.classList.remove('disabled');
+        }
     }
     
     const scheduleInterviewBtn = document.getElementById('scheduleInterviewBtn');
     if (scheduleInterviewBtn) {
-        scheduleInterviewBtn.addEventListener('click', function() {
+        // Remove any existing event listeners
+        const newScheduleBtn = scheduleInterviewBtn.cloneNode(true);
+        scheduleInterviewBtn.parentNode.replaceChild(newScheduleBtn, scheduleInterviewBtn);
+        
+        // Add new event listener
+        newScheduleBtn.addEventListener('click', function() {
             const interviewDate = prompt('Enter interview date (YYYY-MM-DD):');
             if (interviewDate) {
                 // First update status
@@ -705,11 +724,25 @@ function displayApplicationDetail(application) {
     
     const acceptBtn = document.getElementById('acceptBtn');
     if (acceptBtn) {
-        acceptBtn.addEventListener('click', function() {
+        // Remove any existing event listeners
+        const newAcceptBtn = acceptBtn.cloneNode(true);
+        acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
+        
+        // Add new event listener
+        newAcceptBtn.addEventListener('click', function() {
             if (confirm('Are you sure you want to accept this applicant?')) {
                 updateApplicationStatus(application.id, 'Accepted');
             }
         });
+        
+        // Disable if already accepted
+        if (application.status.toLowerCase() === 'accepted') {
+            newAcceptBtn.disabled = true;
+            newAcceptBtn.classList.add('disabled');
+        } else {
+            newAcceptBtn.disabled = false;
+            newAcceptBtn.classList.remove('disabled');
+        }
     }
     
     // Show the application modal automatically
@@ -802,79 +835,314 @@ async function updateApplicationStatus(applicationId, newStatus) {
         // Show loading toast during API call
         const toastId = showToast('Updating application status...', 'info', 0); // 0 means don't auto-hide
         
-        // Get API server status
-        const apiStatus = await checkApiServerStatus();
-        const apiBaseUrl = apiStatus.url;
+        // Try using connectors first - preferred approach
+        let apiSuccess = false;
+        let error = null;
         
-        // In a real production app, we would try to update the status on the server
-        // But based on the API implementation and observed 404 errors, we'll use client-side storage
-        
-        // Store the status change in localStorage for persistence
-        try {
-            // Get existing application status changes
-            const appStatusChanges = JSON.parse(localStorage.getItem('applicationStatusChanges') || '{}');
-            
-            // Update for this application
-            appStatusChanges[applicationId] = {
-                status: newStatus,
-                updatedAt: new Date().toISOString(),
-                pendingSync: true
-            };
-            
-            // Save back to localStorage
-            localStorage.setItem('applicationStatusChanges', JSON.stringify(appStatusChanges));
-            console.log(`Status for application ${applicationId} saved to localStorage`);
-        } catch (storageError) {
-            console.warn('Error saving to localStorage:', storageError);
+        // First, try using SHARED_API_CONNECTOR
+        if (window.SHARED_API_CONNECTOR) {
+            try {
+                console.log("Using SHARED_API_CONNECTOR to update status");
+                const result = await window.SHARED_API_CONNECTOR.updateApplicationStatus(applicationId, newStatus);
+                if (result && result.success) {
+                    console.log("Status successfully updated via SHARED_API_CONNECTOR");
+                    apiSuccess = true;
+                    hideToast(toastId);
+                    showToast(`Status updated to ${newStatus}`, 'success');
+                    
+                    // Add to activity log
+                    addToActivityLog({
+                        date: new Date(),
+                        action: `Status changed to ${newStatus}`,
+                        user: 'You'
+                    });
+                    
+                    return { success: true, apiSuccess: true };
+                }
+            } catch (connectorError) {
+                console.warn("Error using SHARED_API_CONNECTOR:", connectorError);
+                error = connectorError;
+                // Continue to next approach
+            }
         }
+        
+        // If that failed, try using DB_CONNECTOR
+        if (!apiSuccess && window.DB_CONNECTOR && typeof window.DB_CONNECTOR.updateApplicationStatus === 'function') {
+            try {
+                console.log("Using DB_CONNECTOR to update status");
+                const result = await window.DB_CONNECTOR.updateApplicationStatus(applicationId, newStatus);
+                if (result && result.success) {
+                    console.log("Status successfully updated via DB_CONNECTOR");
+                    apiSuccess = true;
+                    hideToast(toastId);
+                    showToast(`Status updated to ${newStatus}`, 'success');
+                    
+                    // Add to activity log
+                    addToActivityLog({
+                        date: new Date(),
+                        action: `Status changed to ${newStatus}`,
+                        user: 'You'
+                    });
+                    
+                    return { success: true, apiSuccess: true };
+                }
+            } catch (connectorError) {
+                console.warn("Error using DB_CONNECTOR:", connectorError);
+                error = connectorError;
+                // Continue to next approach
+            }
+        }
+        
+        // If connectors failed or aren't available, try direct API calls
+        if (!apiSuccess) {
+            // Get API server status
+            const apiStatus = await checkApiServerStatus();
+            if (!apiStatus.online) {
+                console.log('API server appears to be offline, using client-side storage only');
+                saveLocalStatusChange(applicationId, newStatus, true);
+                
+                hideToast(toastId);
+                showToast(`Status saved offline (will sync when API available)`, 'warning');
+                
+                // Add to activity log
+                addToActivityLog({
+                    date: new Date(),
+                    action: `Status changed to ${newStatus} (offline)`,
+                    user: 'You'
+                });
+                
+                return { success: true, apiSuccess: false, offline: true };
+            }
+            
+            const apiBaseUrl = apiStatus.url;
+            
+            // Try multiple endpoint formats with proper error handling
+            const endpointFormats = [
+                {
+                    url: `${apiBaseUrl}/applications/${applicationId}/status`,
+                    method: 'PUT',
+                    body: { status: newStatus }
+                },
+                {
+                    url: `${apiBaseUrl}/applications/update-status`,
+                    method: 'POST',
+                    body: { applicationId, status: newStatus }
+                },
+                {
+                    url: `${apiBaseUrl}/applications/${applicationId}`,
+                    method: 'PATCH',
+                    body: { status: newStatus }
+                },
+                {
+                    url: `${apiBaseUrl}/student/applications/${applicationId}/status`,
+                    method: 'PUT',
+                    body: { status: newStatus }
+                },
+                {
+                    url: `${apiBaseUrl}/employer/applications/${applicationId}/status`,
+                    method: 'PUT',
+                    body: { status: newStatus }
+                }
+            ];
+            
+            // Check for previously successful endpoints
+            try {
+                const successfulEndpoints = JSON.parse(localStorage.getItem('successfulSyncEndpoints') || '{}');
+                if (successfulEndpoints.statusUpdate) {
+                    // Add the successful endpoint as the first one to try
+                    endpointFormats.unshift({
+                        url: successfulEndpoints.statusUpdate,
+                        method: successfulEndpoints.statusUpdateMethod || 'POST',
+                        body: successfulEndpoints.statusUpdateMethod === 'POST' 
+                            ? { applicationId, status: newStatus }
+                            : { status: newStatus }
+                    });
+                }
+            } catch (e) {
+                // Ignore localStorage errors
+            }
+            
+            // Try each endpoint with retries for server errors
+            for (const endpoint of endpointFormats) {
+                if (apiSuccess) break;
+                
+                // Try up to 2 times per endpoint
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        // Create a controller for timeout
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                        
+                        console.log(`Attempt ${attempt+1} to update status via ${endpoint.url} (${endpoint.method})`);
+                        
+                        const response = await fetch(endpoint.url, {
+                            method: endpoint.method,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(endpoint.body),
+                            signal: controller.signal
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        // Check if response was successful
+                        if (response.ok) {
+                            console.log(`Status successfully updated via ${endpoint.url}`);
+                            apiSuccess = true;
+                            
+                            // Store successful endpoint for future use
+                            try {
+                                localStorage.setItem('successfulSyncEndpoints', JSON.stringify({
+                                    statusUpdate: endpoint.url,
+                                    statusUpdateMethod: endpoint.method
+                                }));
+                            } catch (e) {
+                                // Ignore storage errors
+                            }
+                            
+                            break;
+                        } else {
+                            // Capture response details for better error handling
+                            const errorText = await response.text().catch(() => `Status ${response.status}`);
+                            console.warn(`Failed to update status at ${endpoint.url}: ${response.status}`, errorText);
+                            
+                            // For server errors, retry after a delay
+                            if (response.status >= 500 && attempt === 0) {
+                                console.log(`Server error (${response.status}), retrying after delay...`);
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            } else {
+                                // For other errors, or after retry, move to next endpoint
+                                break;
+                            }
+                        }
+                    } catch (err) {
+                        if (err.name === 'AbortError') {
+                            console.warn(`Request to ${endpoint.url} timed out after 5 seconds`);
+                        } else {
+                            console.warn(`Error with endpoint ${endpoint.url}:`, err);
+                        }
+                        
+                        // Only retry network errors once
+                        if (attempt > 0) break;
+                    }
+                }
+            }
+        }
+        
+        // Always store the status change in localStorage for persistence
+        saveLocalStatusChange(applicationId, newStatus, !apiSuccess);
         
         // Add to activity log
-        const activityLog = document.getElementById('activityLog');
-        if (activityLog) {
-            const li = document.createElement('li');
-            li.className = 'activity-item';
-            li.innerHTML = `
-                <span class="activity-date">${formatDate(new Date())}</span>
-                <span class="activity-action">Status changed to ${newStatus}</span>
-                <span class="activity-user">by You</span>
-            `;
-            activityLog.prepend(li);
+        addToActivityLog({
+            date: new Date(),
+            action: `Status changed to ${newStatus}${apiSuccess ? '' : ' (offline)'}`,
+            user: 'You'
+        });
+        
+        // Trigger refresh of the application list if on applications page
+        try {
+            document.dispatchEvent(new CustomEvent('applications-updated'));
+        } catch (e) {
+            console.warn('Could not dispatch applications-updated event:', e);
         }
         
-        // Clear the loading toast and show success
+        // Clear the loading toast and show success or warning
         hideToast(toastId);
-        showToast(`Status updated to ${newStatus}`, 'success');
-        
-        // Only in development or when API is unreachable, show a notice about client-side storage
-        if (isDevOrOfflineMode) {
-            const indicator = document.createElement('div');
-            indicator.style.position = 'fixed';
-            indicator.style.bottom = '10px';
-            indicator.style.right = '10px';
-            indicator.style.backgroundColor = '#ff9800';
-            indicator.style.color = 'white';
-            indicator.style.padding = '8px 16px';
-            indicator.style.borderRadius = '4px';
-            indicator.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-            indicator.style.zIndex = '9999';
-            indicator.innerHTML = 'Status updated client-side only';
-            document.body.appendChild(indicator);
+        if (apiSuccess) {
+            showToast(`Status updated to ${newStatus}`, 'success');
+        } else {
+            showToast(`Status saved offline (will sync when API available)`, 'warning');
             
-            // Remove after 5 seconds
-            setTimeout(() => {
-                if (indicator.parentNode) {
-                    indicator.parentNode.removeChild(indicator);
-                }
-            }, 5000);
+            // Show indicator for offline mode
+            showOfflineIndicator();
         }
         
-        return { success: true };
+        return { success: true, apiSuccess };
         
     } catch (error) {
         console.error('Error updating application status:', error);
         showToast(`Error: ${error.message || 'Failed to update status'}`, 'error');
         return { success: false, error: error.message };
     }
+}
+
+/**
+ * Add an entry to the activity log
+ * @param {Object} activity - The activity to add
+ */
+function addToActivityLog(activity) {
+    const activityLog = document.getElementById('activityLog');
+    if (activityLog) {
+        const li = document.createElement('li');
+        li.className = 'activity-item';
+        li.innerHTML = `
+            <span class="activity-date">${formatDate(activity.date)}</span>
+            <span class="activity-action">${activity.action}</span>
+            <span class="activity-user">by ${activity.user}</span>
+        `;
+        activityLog.prepend(li);
+    }
+}
+
+/**
+ * Save local status change
+ * @param {string} applicationId - The application ID
+ * @param {string} status - The status
+ * @param {boolean} pendingSync - Whether the change is pending sync
+ */
+function saveLocalStatusChange(applicationId, status, pendingSync = true) {
+    try {
+        // Get existing application status changes
+        const appStatusChanges = JSON.parse(localStorage.getItem('applicationStatusChanges') || '{}');
+        
+        // Update for this application
+        appStatusChanges[applicationId] = {
+            status: status,
+            updatedAt: new Date().toISOString(),
+            pendingSync: pendingSync
+        };
+        
+        // Save back to localStorage
+        localStorage.setItem('applicationStatusChanges', JSON.stringify(appStatusChanges));
+        console.log(`Status for application ${applicationId} saved to localStorage (pendingSync: ${pendingSync})`);
+    } catch (storageError) {
+        console.warn('Error saving to localStorage:', storageError);
+    }
+}
+
+/**
+ * Show offline indicator
+ */
+function showOfflineIndicator() {
+    const indicator = document.createElement('div');
+    indicator.id = 'offlineIndicator';
+    indicator.style.position = 'fixed';
+    indicator.style.bottom = '10px';
+    indicator.style.right = '10px';
+    indicator.style.backgroundColor = '#ff9800';
+    indicator.style.color = 'white';
+    indicator.style.padding = '8px 16px';
+    indicator.style.borderRadius = '4px';
+    indicator.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+    indicator.style.zIndex = '9999';
+    indicator.innerHTML = 'Status saved offline (will sync when API available)';
+    
+    // Remove any existing indicator first
+    const existingIndicator = document.getElementById('offlineIndicator');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    document.body.appendChild(indicator);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        if (indicator.parentNode) {
+            indicator.parentNode.removeChild(indicator);
+        }
+    }, 5000);
 }
 
 /**

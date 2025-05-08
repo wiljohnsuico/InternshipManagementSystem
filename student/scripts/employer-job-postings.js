@@ -532,16 +532,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Show or hide error banner
-    function showErrorBanner(message, show = true) {
+    // Display error banner
+    function showErrorBanner(message, show = true, details = '') {
         const errorBanner = document.getElementById('errorBanner');
         const errorMessage = document.getElementById('errorMessage');
+        const errorDetails = document.getElementById('errorDetails');
         
-        if (!errorBanner || !errorMessage) return;
+        if (!errorBanner || !errorMessage) {
+            console.error('Error banner elements not found in the DOM');
+            return;
+        }
         
         if (show) {
             errorMessage.textContent = message;
             errorBanner.classList.add('show');
+            
+            if (errorDetails && details) {
+                errorDetails.textContent = details;
+                errorDetails.style.display = 'block';
+            } else if (errorDetails) {
+                errorDetails.style.display = 'none';
+            }
         } else {
             errorBanner.classList.remove('show');
         }
@@ -825,9 +836,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show loading state
             $('#saveJobBtn').text('Saving...').prop('disabled', true);
+
+            // If company ID is missing, try to fetch it first
+            if (!companyId && token) {
+                try {
+                    companyId = await fetchCompanyId(token);
+                    console.log('Fetched company ID:', companyId);
+                } catch (error) {
+                    console.error('Failed to fetch company ID:', error);
+                }
+            }
             
             // Get company name from user data
             let companyName = "Company";
+            
+            // Get company name from user data
+            let companyId = null;
             try {
                 // First try to get from employerProfile
                 const employerProfileStr = localStorage.getItem('employerProfile');
@@ -836,34 +860,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (employerProfile && employerProfile.name) {
                         companyName = employerProfile.name;
                     }
+                    if (employerProfile && employerProfile.company_id) {
+                        companyId = employerProfile.company_id;
+                    }
                 }
                 
                 // If not found, try userData
-                if (companyName === "Company") {
+                if (companyName === "Company" || !companyId) {
                     const userDataStr = localStorage.getItem('userData') || localStorage.getItem('user');
                     if (userDataStr) {
                         const userData = JSON.parse(userDataStr);
                         companyName = userData.company_name || userData.companyName || "Company";
+                        companyId = userData.company_id || userData.companyId;
                     }
                 }
                 
-                console.log(`Using company name: ${companyName}`);
+                console.log(`Using company name: ${companyName}, company ID: ${companyId}`);
             } catch (error) {
-                console.error('Error getting company name:', error);
+                console.error('Error getting company data:', error);
             }
             
             // Prepare data for API - match the exact format expected by the backend
             const jobData = {
-                job_title: jobTitle,
+                title: jobTitle,
                 location: location,
                 description: jobDescription,
                 requirements: requirements || 'No specific requirements',
-                skills: skills ? skills.split(',').map(skill => skill.trim()) : [],
-                deadline: deadline,
-                positions: parseInt(positions) || 1,
+                skills_required: skills || '',
+                application_deadline: deadline,
+                positions_available: parseInt(positions) || 1,
                 is_paid: isPaid === '1',
                 salary: isPaid === '1' ? (parseInt(salary) || 0) : 0,
                 status: status || 'Active',
+                company_id: companyId || 1, // Add company ID, required by the backend
                 company_name: companyName // Add company name to job data
             };
             
@@ -879,10 +908,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     location: jobData.location,
                     created_at: new Date().toISOString(),
                     application_count: 0,
-                    skills: jobData.skills,
+                    skills: jobData.skills_required,
                     salary: jobData.salary,
                     is_paid: jobData.is_paid,
-                    positions: jobData.positions,
+                    positions: jobData.positions_available,
                     status: jobData.status,
                     requirements: jobData.requirements,
                     company_name: companyName // Add company name to mock data
@@ -946,20 +975,24 @@ document.addEventListener('DOMContentLoaded', function() {
                         }, 500);
                     } else if (responseData.message && responseData.message.includes('No company associated')) {
                         // Special handling for missing company association
-                        showErrorBanner('You need to create a company profile first');
+                        showErrorBanner('You need to create a company profile first', true, 'Your account does not have a company ID associated with it. Please create or update your company profile before posting jobs.');
                         $('#saveJobBtn').text('Save Job Posting').prop('disabled', false);
+                        debugUserData(); // Log user data for debugging
                         return false;
-                    } else if (responseData.message && responseData.message.includes('title, description, and location')) {
+                    } else if (responseData.message && responseData.message.includes('title, company ID, and description')) {
                         // Special error handling for the common validation error
-                        showErrorBanner('Please provide title, description, and location');
+                        showErrorBanner('Missing required information', true, `API Error: ${responseData.message}\n\nPlease check that your job title, description, and company information are complete.`);
                         $('#saveJobBtn').text('Save Job Posting').prop('disabled', false);
+                        debugUserData(); // Log user data for debugging
                         return false;
                     } else {
                         // Show error message
                         const errorMessage = responseData.message || 'Failed to create job posting';
                         console.error('API error:', errorMessage);
+                        showErrorBanner('Job posting creation failed', true, `API Error: ${errorMessage}\n\nPlease try again or contact support if the problem persists.`);
                         showToast(`Error: ${errorMessage}`, 'error');
                         $('#saveJobBtn').text('Save Job Posting').prop('disabled', false);
+                        debugUserData(); // Log user data for debugging
                         return false;
                     }
                 } catch (apiError) {
@@ -1905,6 +1938,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Get company name from user data
             let companyName = "Company";
+            let companyId = null;
             try {
                 // First try to get from employerProfile
                 const employerProfileStr = localStorage.getItem('employerProfile');
@@ -1913,34 +1947,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (employerProfile && employerProfile.name) {
                         companyName = employerProfile.name;
                     }
+                    if (employerProfile && employerProfile.company_id) {
+                        companyId = employerProfile.company_id;
+                    }
                 }
                 
                 // If not found, try userData
-                if (companyName === "Company") {
+                if (companyName === "Company" || !companyId) {
                     const userDataStr = localStorage.getItem('userData') || localStorage.getItem('user');
                     if (userDataStr) {
                         const userData = JSON.parse(userDataStr);
                         companyName = userData.company_name || userData.companyName || "Company";
+                        companyId = userData.company_id || userData.companyId;
                     }
                 }
                 
-                console.log(`Using company name: ${companyName}`);
+                console.log(`Using company name: ${companyName}, company ID: ${companyId}`);
             } catch (error) {
-                console.error('Error getting company name:', error);
+                console.error('Error getting company data:', error);
             }
             
             // Prepare data for API - match the exact format expected by the backend
             const jobData = {
-                job_title: jobTitle,
+                title: jobTitle,
                 location: location,
                 description: jobDescription,
                 requirements: requirements || 'No specific requirements',
-                skills: skills ? skills.split(',').map(skill => skill.trim()) : [],
-                deadline: deadline,
-                positions: parseInt(positions) || 1,
+                skills_required: skills || '',
+                application_deadline: deadline,
+                positions_available: parseInt(positions) || 1,
                 is_paid: isPaid === '1',
                 salary: isPaid === '1' ? (parseInt(salary) || 0) : 0,
                 status: status || 'Active',
+                company_id: companyId || 1, // Add company ID, required by the backend
                 company_name: companyName // Add company name to job data
             };
             
@@ -2036,6 +2075,109 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (e) {
             console.error('Error tracking deleted job:', e);
+        }
+    }
+
+    // Helper function to log user data for debugging
+    function debugUserData() {
+        console.log('DEBUG: User data inspection');
+        try {
+            // Log all relevant localStorage items
+            console.log('token exists:', !!localStorage.getItem('token'));
+            console.log('userData exists:', !!localStorage.getItem('userData'));
+            console.log('user exists:', !!localStorage.getItem('user'));
+            console.log('employerProfile exists:', !!localStorage.getItem('employerProfile'));
+            
+            // Try to parse and log userData
+            const userDataStr = localStorage.getItem('userData') || localStorage.getItem('user');
+            if (userDataStr) {
+                const userData = JSON.parse(userDataStr);
+                console.log('USER DATA:', userData);
+                console.log('company_id:', userData.company_id);
+                console.log('companyId:', userData.companyId);
+                console.log('company_name:', userData.company_name);
+                console.log('companyName:', userData.companyName);
+                console.log('role:', userData.role);
+            }
+            
+            // Try to parse and log employer profile
+            const profileStr = localStorage.getItem('employerProfile');
+            if (profileStr) {
+                const profile = JSON.parse(profileStr);
+                console.log('EMPLOYER PROFILE:', profile);
+            }
+        } catch (error) {
+            console.error('Error in debugUserData:', error);
+        }
+    }
+
+    // Helper function to fetch company ID from API if it's missing
+    async function fetchCompanyId(token) {
+        try {
+            console.log('Fetching employer profile to get company ID...');
+            
+            // First try employer profile endpoint
+            const response = await fetch(`${API_URL}/employer/profile`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Employer profile data:', data);
+                
+                // Check if we have company ID in the response
+                if (data.employer && data.employer.company_id) {
+                    // Store it for future use
+                    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                    userData.company_id = data.employer.company_id;
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    
+                    return data.employer.company_id;
+                }
+                
+                // If we have company in the response
+                if (data.company && data.company.id) {
+                    // Store it for future use
+                    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                    userData.company_id = data.company.id;
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    
+                    return data.company.id;
+                }
+            }
+            
+            // Fallback to user data endpoint
+            const userResponse = await fetch(`${API_URL}/auth/me`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                console.log('User data:', userData);
+                
+                if (userData.user && userData.user.company_id) {
+                    // Store it for future use
+                    const storedUserData = JSON.parse(localStorage.getItem('userData') || '{}');
+                    storedUserData.company_id = userData.user.company_id;
+                    localStorage.setItem('userData', JSON.stringify(storedUserData));
+                    
+                    return userData.user.company_id;
+                }
+            }
+            
+            // If we still don't have a company ID, use a default
+            return 1; // Default company ID as fallback
+        } catch (error) {
+            console.error('Error fetching company ID:', error);
+            return null;
         }
     }
 }); 

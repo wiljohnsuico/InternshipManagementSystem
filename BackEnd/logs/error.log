@@ -1,0 +1,136 @@
+[2025-05-08T09:07:28.867Z] Error: Unknown column 'c.name' in 'field list'
+  User: unauthenticated
+  Path: GET /api/jobs/employer?status=active&limit=5
+  Query: {"status":"active","limit":"5"}
+  Body: {}
+  Stack: Error: Unknown column 'c.name' in 'field list'
+    at PromisePool.query (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.query (D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\config\database.js:100:36)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\routes\job.routes.js:113:33
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:284:15
+    at param (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:365:14)
+    at param (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:376:14)
+  ------------------------------
+[2025-05-08T09:07:28.876Z] Error: Unknown column 'c.name' in 'field list'
+  User: unauthenticated
+  Path: GET /api/jobs/employer?status=active&limit=5
+  Query: {"status":"active","limit":"5"}
+  Body: {}
+  Stack: Error: Unknown column 'c.name' in 'field list'
+    at PromisePool.query (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.query (D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\config\database.js:100:36)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\routes\job.routes.js:113:33
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:284:15
+    at param (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:365:14)
+    at param (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:376:14)
+  ------------------------------
+[2025-05-08T09:09:29.386Z] Error: Unknown column 'c.name' in 'field list'
+  User: unauthenticated
+  Path: GET /api/jobs/employer?status=active&limit=5
+  Query: {"status":"active","limit":"5"}
+  Body: {}
+  Stack: Error: Unknown column 'c.name' in 'field list'
+    at PromisePool.query (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.query (D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\config\database.js:100:36)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\routes\job.routes.js:113:33
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:284:15
+    at param (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:365:14)
+    at param (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:376:14)
+  ------------------------------
+[2025-05-08T09:09:29.396Z] Error: Unknown column 'c.name' in 'field list'
+  User: unauthenticated
+  Path: GET /api/jobs/employer?status=active&limit=5
+  Query: {"status":"active","limit":"5"}
+  Body: {}
+  Stack: Error: Unknown column 'c.name' in 'field list'
+    at PromisePool.query (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.query (D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\config\database.js:100:36)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\routes\job.routes.js:113:33
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:284:15
+    at param (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:365:14)
+    at param (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:376:14)
+  ------------------------------
+[2025-05-08T09:22:04.164Z] ValidationError: Title, company ID, and description are required
+  User: unauthenticated
+  Path: POST /api/jobs
+  Query: {}
+  Body: {"job_title":"Frontend Developer","location":"Manila","description":"Creativity is what we need","requirements":"must be creative enough to implement eye catching designs","skills":["html","css"],"deadline":"2025-05-31","positions":10,"is_paid":true,"salary":15000,"status":"Active","company_name":"Company"}
+  Stack: ValidationError: Title, company ID, and description are required
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\routes\job.routes.js:196:19
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:346:12)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:280:10)
+    at Function.handle (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:175:3)
+    at router (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:47:12)
+  ------------------------------
+[2025-05-08T09:22:04.166Z] ValidationError: Title, company ID, and description are required
+  User: unauthenticated
+  Path: POST /api/jobs
+  Query: {}
+  Body: {"job_title":"Frontend Developer","location":"Manila","description":"Creativity is what we need","requirements":"must be creative enough to implement eye catching designs","skills":["html","css"],"deadline":"2025-05-31","positions":10,"is_paid":true,"salary":15000,"status":"Active","company_name":"Company"}
+  Stack: ValidationError: Title, company ID, and description are required
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\routes\job.routes.js:196:19
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:346:12)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:280:10)
+    at Function.handle (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:175:3)
+    at router (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:47:12)
+  ------------------------------
+[2025-05-08T09:23:59.373Z] ValidationError: Title, company ID, and description are required
+  User: unauthenticated
+  Path: POST /api/jobs
+  Query: {}
+  Body: {"job_title":"Frontend Developer","location":"Manila","description":"Creativity is what we need","requirements":"must be creative enough to implement eye catching designs","skills":["html","css"],"deadline":"2025-05-31","positions":10,"is_paid":true,"salary":15000,"status":"Active","company_name":"Company"}
+  Stack: ValidationError: Title, company ID, and description are required
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\routes\job.routes.js:196:19
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:346:12)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:280:10)
+    at Function.handle (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:175:3)
+    at router (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:47:12)
+  ------------------------------
+[2025-05-08T09:23:59.375Z] ValidationError: Title, company ID, and description are required
+  User: unauthenticated
+  Path: POST /api/jobs
+  Query: {}
+  Body: {"job_title":"Frontend Developer","location":"Manila","description":"Creativity is what we need","requirements":"must be creative enough to implement eye catching designs","skills":["html","css"],"deadline":"2025-05-31","positions":10,"is_paid":true,"salary":15000,"status":"Active","company_name":"Company"}
+  Stack: ValidationError: Title, company ID, and description are required
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\src\routes\job.routes.js:196:19
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\layer.js:95:5)
+    at D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:346:12)
+    at next (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:280:10)
+    at Function.handle (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:175:3)
+    at router (D:\GIT\IMS\InternshipManagementSystem\BackEnd\node_modules\express\lib\router\index.js:47:12)
+  ------------------------------

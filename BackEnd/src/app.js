@@ -5,19 +5,40 @@ const path = require('path');
 const db = require('./config/database');
 const fs = require('fs');
 const util = require('util');
+const { errorHandler } = require('./middleware/error-handler');
+const ensureDirs = require('./utils/ensure-directories');
 require('dotenv').config();
 
 const app = express();
 
+// Ensure required directories exist
+console.log('Checking required directories...');
+ensureDirs.ensureAllDirectories();
+
 // CORS configuration - must be first!
 app.use(cors({
-    origin: true,
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Check against whitelist or allow all in development
+        const whitelist = process.env.ALLOWED_ORIGINS 
+            ? process.env.ALLOWED_ORIGINS.split(',') 
+            : [];
+            
+        if (whitelist.length === 0 || whitelist.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     exposedHeaders: ['Content-Length', 'X-Total-Count'],
     credentials: true,
     preflightContinue: false,
-    optionsSuccessStatus: 204
+    optionsSuccessStatus: 204,
+    maxAge: 86400 // 1 day in seconds
 }));
 
 // --- HEALTH CHECK ROUTE ---
@@ -44,6 +65,8 @@ const announcementRoutes = require('./routes/announcements.routes');
 const adminRoutes = require('./routes/admin.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const statusRoutes = require('./routes/status');
+const errorReportRoutes = require('./routes/error-report.routes');
+const employerDashboardRoutes = require('./routes/employer-dashboard.routes');
 
 // Import migration scripts
 const runAdminMigration = require('./config/run-admin-migration');
@@ -51,10 +74,12 @@ const runAdminMigration = require('./config/run-admin-migration');
 // Log CORS issues
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    console.log(`Request from origin: ${origin || 'unknown'}`);
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`Request from origin: ${origin || 'unknown'}`);
+    }
     
     // Add CORS headers manually to ensure they're present
-    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Origin', origin || '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
     
@@ -86,14 +111,19 @@ app.use(session({
     }
 }));
 
-// Request logging
+// Request logging - only in development or if DEBUG=true
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-    // Don't log the entire body for large requests
-    if (req.method === 'POST' && req.url.includes('/resume')) {
-        console.log('Request body: [Resume data - too large to log]');
-    } else {
-        console.log('Request body:', req.body);
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true') {
+        console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+        // Don't log the entire body for large requests
+        if (req.method === 'POST' && (req.url.includes('/resume') || req.url.includes('/upload'))) {
+            console.log('Request body: [Large data - too large to log]');
+        } else if (req.url.includes('/auth') && req.body && req.body.password) {
+            const sanitizedBody = { ...req.body, password: '[REDACTED]' };
+            console.log('Request body:', sanitizedBody);
+        } else {
+            console.log('Request body:', req.body);
+        }
     }
     next();
 });
@@ -112,6 +142,8 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/status', statusRoutes);
+app.use('/api/errors', errorReportRoutes);
+app.use('/api/employer', employerDashboardRoutes);
 
 // Test route
 app.get('/', (req, res) => {
@@ -127,53 +159,85 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// Health check endpoint - always returns 200 if server is running
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Server is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Run table setup scripts
 async function setupDatabaseTables() {
   try {
     console.log('Setting up database tables...');
     
+    // Check database connection first
+    const isConnected = await db.isDbConnected();
+    if (!isConnected) {
+      console.error('Cannot set up database tables - database connection failed');
+      return false;
+    }
+    
     // Read and execute report tables script
     const reportTablesPath = path.join(__dirname, 'config', 'report_tables.sql');
     if (fs.existsSync(reportTablesPath)) {
       console.log('Executing report_tables.sql script...');
-      const reportTablesSQL = fs.readFileSync(reportTablesPath, 'utf8');
-      await db.query(reportTablesSQL);
-      console.log('Successfully executed report_tables.sql script');
+      try {
+        const reportTablesSQL = fs.readFileSync(reportTablesPath, 'utf8');
+        await db.query(reportTablesSQL);
+        console.log('Successfully executed report_tables.sql script');
+      } catch (error) {
+        console.error('Error executing report_tables.sql script:', error.message);
+        // Continue execution - non-critical table
+      }
     }
     
     // Read and execute notification tables script
     const notificationTablesPath = path.join(__dirname, 'config', 'notification_tables.sql');
     if (fs.existsSync(notificationTablesPath)) {
       console.log('Executing notification_tables.sql script...');
-      const notificationTablesSQL = fs.readFileSync(notificationTablesPath, 'utf8');
-      await db.query(notificationTablesSQL);
-      console.log('Successfully executed notification_tables.sql script');
+      try {
+        const notificationTablesSQL = fs.readFileSync(notificationTablesPath, 'utf8');
+        await db.query(notificationTablesSQL);
+        console.log('Successfully executed notification_tables.sql script');
+      } catch (error) {
+        console.error('Error executing notification_tables.sql script:', error.message);
+        // Continue execution - non-critical table
+      }
+    }
+    
+    // Read and execute job listings table script
+    const jobListingsTablePath = path.join(__dirname, 'config', 'job_listings_table.sql');
+    if (fs.existsSync(jobListingsTablePath)) {
+      console.log('Executing job_listings_table.sql script...');
+      try {
+        const jobListingsTableSQL = fs.readFileSync(jobListingsTablePath, 'utf8');
+        await db.query(jobListingsTableSQL);
+        console.log('Successfully executed job_listings_table.sql script');
+      } catch (error) {
+        console.error('Error executing job_listings_table.sql script:', error.message);
+        // Continue execution - but this is important for jobs functionality
+      }
+    } else {
+      console.warn('job_listings_table.sql not found. Job listings functionality may not work correctly.');
     }
     
     // Run admin migration script
-    await runAdminMigration();
+    try {
+      await runAdminMigration();
+    } catch (error) {
+      console.error('Error running admin migration:', error.message);
+      // Continue execution - non-critical
+    }
+    
+    return true;
   } catch (error) {
     console.error('Error setting up database tables:', error);
+    return false;
   }
 }
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Error details:', {
-        message: err.message,
-        stack: err.stack,
-        code: err.code,
-        path: req.path,
-        method: req.method,
-        body: req.body
-    });
-
-    res.status(500).json({
-        success: false,
-        message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
-});
 
 // 404 handler
 app.use((req, res) => {
@@ -184,6 +248,9 @@ app.use((req, res) => {
     });
 });
 
+// Use the centralized error handler
+app.use(errorHandler);
+
 // Port configuration
 const DEFAULT_PORT = 5004;
 
@@ -191,7 +258,10 @@ const DEFAULT_PORT = 5004;
 async function startServer(port) {
     try {
         // Set up database tables first
-        await setupDatabaseTables();
+        const databaseSetupSuccess = await setupDatabaseTables();
+        if (!databaseSetupSuccess) {
+            console.warn('Database setup had issues. The server will start, but some features may not work correctly.');
+        }
         
         console.log(`Attempting to start server on port ${port}...`);
         return new Promise((resolve, reject) => {
@@ -247,5 +317,3 @@ if (require.main === module) {
         }
     }, 2000);
 }
-
-app.use('/api', require('./routes/index'));

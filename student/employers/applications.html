@@ -13,6 +13,119 @@
     <link rel="stylesheet" href="/student/styles/employer-dashboard.css">
     <link rel="stylesheet" href="../styles/footer.css">
     <link rel="stylesheet" href="../styles/back-to-top.css">
+    <style>
+        /* Filter styles */
+        .active-filter {
+            font-weight: bold;
+            border-width: 2px;
+        }
+        
+        /* Status badge styles */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-accepted {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Table styling */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 2px solid #dee2e6;
+            text-align: left;
+        }
+        .data-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .data-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-box input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px 0 0 4px;
+            min-width: 250px;
+        }
+        
+        .search-box button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: 1px solid #007bff;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        
+        .filter-options {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-options select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        /* Filter summary */
+        .filter-summary {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #666;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .filter-summary #filteredCount {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .filter-summary #currentFilter {
+            font-style: italic;
+        }
+    </style>
     <!-- Database connector script -->
     <script src="/student/scripts/database-connector.js"></script>
     <script src="/student/scripts/employer-applications-connector.js"></script>
@@ -45,10 +158,10 @@
             </div>
             
             <div class="nav-links">
-                <a href="http://localhost:3000/student/employers/dashboard.html">Dashboard</a>
-                <a href="http://localhost:3000/student/employers/job-postings.html">Job Postings</a>
-                <a href="http://localhost:3000/student/employers/applications.html" class="active">Applications</a>
-                <a href="http://localhost:3000/student/employers/profile.html">Company Profile</a>
+                <a href="/student/employers/dashboard.html">Dashboard</a>
+                <a href="/student/employers/job-postings.html">Job Postings</a>
+                <a href="/student/employers/applications.html" class="active">Applications</a>
+                <a href="/student/employers/profile.html">Company Profile</a>
                 <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
@@ -79,9 +192,6 @@
                     <select id="statusFilter">
                         <option value="all">All Statuses</option>
                         <option value="Pending">Pending</option>
-                        <option value="Reviewed">Reviewed</option>
-                        <option value="Shortlisted">Shortlisted</option>
-                        <option value="Interviewed">Interviewed</option>
                         <option value="Accepted">Accepted</option>
                         <option value="Rejected">Rejected</option>
                     </select>
@@ -93,6 +203,12 @@
                         <option value="month">This Month</option>
                     </select>
                 </div>
+            </div>
+            
+            <!-- Filter Summary -->
+            <div class="filter-summary">
+                Showing <span id="filteredCount">0</span> applications
+                <span id="currentFilter"></span>
             </div>
             
             <div class="applications-list">
@@ -204,9 +320,6 @@
                         <h4>Update Application Status</h4>
                         <div class="status-selector">
                             <button class="status-btn" data-status="Pending">Pending</button>
-                            <button class="status-btn" data-status="Reviewed">Reviewed</button>
-                            <button class="status-btn" data-status="Shortlisted">Shortlisted</button>
-                            <button class="status-btn" data-status="Interviewed">Interviewed</button>
                             <button class="status-btn" data-status="Accepted">Accepted</button>
                             <button class="status-btn" data-status="Rejected">Rejected</button>
                         </div>
@@ -242,7 +355,7 @@
                         <i class="fas fa-times-circle"></i> Reject
                     </button>
                     <button id="scheduleInterviewBtn" class="btn btn-secondary">
-                        <i class="fas fa-calendar-alt"></i> Schedule Interview
+                        <i class="fas fa-calendar-alt"></i> Accept & Schedule
                     </button>
                     <button id="acceptBtn" class="btn btn-success">
                         <i class="fas fa-check-circle"></i> Accept

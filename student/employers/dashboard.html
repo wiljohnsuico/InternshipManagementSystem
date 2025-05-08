@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="api-url" content="http://localhost:5004/api">
+    <meta name="api-health-endpoint" content="http://localhost:5004/api/health">
     <title>Employer Dashboard - QCU IMS</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
@@ -13,10 +14,156 @@
     <link rel="stylesheet" href="/student/styles/employer-dashboard.css">
     <link rel="stylesheet" href="../styles/footer.css">
     <link rel="stylesheet" href="../styles/back-to-top.css">
-    <!-- Database connector script -->
+    <!-- Shared API Connector - Load first for proper dependency order -->
+    <script src="/student/scripts/shared-api-connector.js"></script>
+    <!-- Database connector scripts - Load after shared connector -->
     <script src="/student/scripts/database-connector.js"></script>
+    <script src="/student/scripts/api-connector-bridge.js"></script>
+    <!-- Dashboard specific connectors - Load last -->
     <script src="/student/scripts/employer-dashboard-connector.js"></script>
+    <!-- Initialize fallback DB_CONNECTOR if needed -->
+    <script>
+        // Ensure DB_CONNECTOR exists before the dashboard JavaScript tries to use it
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add a small delay to ensure connectors are initialized
+            setTimeout(function() {
+                if (!window.DB_CONNECTOR) {
+                    console.warn('DB_CONNECTOR not initialized, creating fallback');
+                    window.DB_CONNECTOR = {
+                        checkApiConnectivity: async function() { return false; },
+                        getDashboardStats: async function() { 
+                            return {
+                                active_jobs: 0,
+                                total_applications: 0,
+                                hired_interns: 0,
+                                pending_applications: 0
+                            };
+                        },
+                        getRecentApplications: async function() { return []; },
+                        getActiveJobPostings: async function() { return []; },
+                        formatDate: function(date) { return new Date(date).toLocaleDateString(); }
+                    };
+                }
+            }, 100);
+        });
+    </script>
     <script src="/student/scripts/employer-dashboard.js" defer></script>
+    <style>
+        /* Status badges for simplified status system */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 500;
+            text-align: center;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-accepted {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-active {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        /* Toast notification styling */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            z-index: 9999;
+            max-width: 300px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .toast-info {
+            background-color: #17a2b8;
+        }
+        .toast-success {
+            background-color: #28a745;
+        }
+        .toast-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .toast-error {
+            background-color: #dc3545;
+        }
+        
+        /* Table styling */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .data-table th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 2px solid #dee2e6;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .data-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        /* Action buttons */
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-icon:hover {
+            background-color: #e9ecef;
+            color: #0056b3;
+        }
+        
+        .view-btn {
+            background-color: #e3f2fd;
+            color: #0056b3;
+        }
+        
+        .view-btn:hover {
+            background-color: #d0e5f5;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -28,10 +175,10 @@
             </div>
             
             <div class="nav-links">
-                <a href="http://localhost:3000/student/employers/dashboard.html" class="active">Dashboard</a>
-                <a href="http://localhost:3000/student/employers/job-postings.html">Job Postings</a>
-                <a href="http://localhost:3000/student/employers/applications.html">Applications</a>
-                <a href="http://localhost:3000/student/employers/profile.html">Company Profile</a>
+                <a href="/student/employers/dashboard.html" class="active">Dashboard</a>
+                <a href="/student/employers/job-postings.html">Job Postings</a>
+                <a href="/student/employers/applications.html">Applications</a>
+                <a href="/student/employers/profile.html">Company Profile</a>
                 <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
@@ -99,7 +246,7 @@
                 <div class="section">
                     <div class="section-header">
                         <h2>Recent Applications</h2>
-                        <a href="http://localhost:3000/student/employers/applications.html" class="view-all">View All</a>
+                        <a href="applications.html" class="view-all">View All</a>
                     </div>
                     <div class="section-content">
                         <table class="data-table">
@@ -124,7 +271,7 @@
                 <div class="section">
                     <div class="section-header">
                         <h2>Active Job Postings</h2>
-                        <a href="http://localhost:3000/student/employers/job-postings.html" class="view-all">View All</a>
+                        <a href="job-postings.html" class="view-all">View All</a>
                     </div>
                     <div class="section-content">
                         <table class="data-table">
@@ -165,13 +312,13 @@
         // Post New Internship direct navigation
         document.getElementById('postNewInternshipBtn').addEventListener('click', function() {
             console.log('Post New Internship button clicked');
-            window.location.href = 'http://localhost:3000/student/employers/job-postings.html';
+            window.location.href = 'job-postings.html';
         });
         
         // View Applications direct navigation
         document.getElementById('viewApplicationsBtn').addEventListener('click', function() {
             console.log('View Applications button clicked');
-            window.location.href = 'http://localhost:3000/student/employers/applications.html';
+            window.location.href = 'applications.html';
         });
     });
     </script>

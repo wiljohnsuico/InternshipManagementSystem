@@ -183,7 +183,27 @@ function openEditModal() {
                 </div>
                 <div class="form-group">
                     <label for="editCourse">Course</label>
-                    <input type="text" id="editCourse" value="${userData.course || ''}">
+                    <select id="editCourse" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; height: 35px; font-size: 14px;">
+                        <optgroup label="College of Business">
+                            <option value="Bachelor of Science in Entrepreneurship (BS Entrep)">Bachelor of Science in Entrepreneurship (BS Entrep)</option>
+                        </optgroup>
+                        <optgroup label="College of Accountancy">
+                            <option value="Bachelor of Science in Accountancy (BSA)">Bachelor of Science in Accountancy (BSA)</option>
+                            <option value="Bachelor of Science in Management Accounting (BMSA)">Bachelor of Science in Management Accounting (BMSA)</option>
+                        </optgroup>
+                        <optgroup label="College of Education">
+                            <option value="Bachelor of Early Childhood Education (BECEd)">Bachelor of Early Childhood Education (BECEd)</option>
+                        </optgroup>
+                        <optgroup label="College of Engineering">
+                            <option value="Bachelor of Science in Industrial Engineering (BSIE)">Bachelor of Science in Industrial Engineering (BSIE)</option>
+                            <option value="Bachelor of Science in Electronics Engineering (BSECE)">Bachelor of Science in Electronics Engineering (BSECE)</option>
+                        </optgroup>
+                        <optgroup label="College of Computer Studies">
+                            <option value="Bachelor of Science in Information Technology (BSIT)">Bachelor of Science in Information Technology (BSIT)</option>
+                            <option value="Bachelor of Science in Information Science (BSIS)">Bachelor of Science in Information Science (BSIS)</option>
+                            <option value="Bachelor of Science in Computer Science (BSCS)">Bachelor of Science in Computer Science (BSCS)</option>
+                        </optgroup>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="editContact">Contact Number</label>
@@ -219,6 +239,18 @@ function openEditModal() {
     // Add event listeners
     const closeButton = modal.querySelector('.close');
     closeButton.onclick = () => modal.remove();
+    
+    // Set the selected course in the dropdown if available
+    const courseSelect = document.getElementById('editCourse');
+    if (courseSelect && userData.course) {
+        const options = courseSelect.querySelectorAll('option');
+        for (let option of options) {
+            if (option.value === userData.course) {
+                option.selected = true;
+                break;
+            }
+        }
+    }
     
     const form = modal.querySelector('#editProfileForm');
     form.onsubmit = handleProfileUpdate;
